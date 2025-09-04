@@ -1,13 +1,20 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from "react";
+import { CharacterDashboard } from "@/components/character/CharacterDashboard";
+import { Character } from "@/types/character";
+import { sampleCharacter } from "@/data/sampleCharacter";
 
 const Index = () => {
+  const [character, setCharacter] = useState<Character>(sampleCharacter);
+
+  const handleUpdateCharacter = (updatedCharacter: Character) => {
+    setCharacter(updatedCharacter);
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
-    </div>
+    <CharacterDashboard 
+      character={character} 
+      onUpdateCharacter={handleUpdateCharacter}
+    />
   );
 };
 
