@@ -1,90 +1,71 @@
 import { Character } from "@/types/character";
+import { races } from "./races";
+import { standingStones } from "./standingStones";
+import { calculateMaxHP, calculateMaxFP, calculateFinalStats } from "@/utils/characterCalculations";
+
+const nordRace = races.find(r => r.id === "nord")!;
+const warriorStone = standingStones.find(s => s.id === "warrior")!;
+const finalStats = calculateFinalStats(warriorStone.baseStats, nordRace);
+
+const sampleSkills = [
+  {
+    skillId: "one-handed",
+    rank: "Adept" as const,
+    unlockedPerks: ["Fighting Stance", "Savage Strike"]
+  },
+  {
+    skillId: "heavy-armor",
+    rank: "Apprentice" as const,
+    unlockedPerks: ["Well Fitted"]
+  },
+  {
+    skillId: "smithing",
+    rank: "Apprentice" as const,
+    unlockedPerks: ["Steel Smithing"]
+  }
+];
+
+const maxHP = calculateMaxHP(finalStats, warriorStone, nordRace, sampleSkills);
+const maxFP = calculateMaxFP(finalStats, warriorStone, nordRace, sampleSkills);
 
 export const sampleCharacter: Character = {
   id: "sample-1",
   name: "Lyralei Stormcaller",
   ap: 25,
-  race: {
-    id: "nord",
-    name: "Nord",
-    bonus: "might",
-    abilityName: "Battle Cry",
-    abilityDescription: "Once per combat, you can let out a mighty roar that causes all enemies within 30 feet to make a Guile saving throw or be frightened for 1 round."
-  },
-  standingStone: {
-    id: "warrior",
-    name: "The Warrior",
-    archetype: "Warrior",
-    baseStats: { might: 3, agility: 2, magic: 1, guile: 2 },
-    benefitName: "Combat Focus",
-    benefitDescription: "You gain a +2 bonus to attack rolls when you have 50% or less of your maximum Health Points."
-  },
-  stats: {
-    might: 4, // 3 base + 1 racial bonus
-    agility: 2,
-    magic: 1,
-    guile: 2
-  },
+  race: nordRace,
+  standingStone: warriorStone,
+  stats: finalStats,
   resources: {
     hp: {
-      current: 32,
-      max: 40 // Base calculation
+      current: maxHP,
+      max: maxHP
     },
     fp: {
-      current: 18,
-      max: 24
+      current: maxFP,
+      max: maxFP
     }
   },
-  skills: [
-    {
-      skillId: "one-handed",
-      rank: "Adept",
-      unlockedPerks: ["Armsman", "Fighting Stance", "Savage Strike"]
-    },
-    {
-      skillId: "block",
-      rank: "Apprentice", 
-      unlockedPerks: ["Shield Wall"]
-    },
-    {
-      skillId: "heavy-armor",
-      rank: "Apprentice",
-      unlockedPerks: ["Juggernaut"]
-    },
-    {
-      skillId: "smithing",
-      rank: "Apprentice",
-      unlockedPerks: ["Steel Smithing"]
-    }
-  ],
+  skills: sampleSkills,
   equipment: [
     {
-      id: "steel-sword",
-      name: "Steel Sword",
+      id: "steel-greatsword",
+      name: "Steel Greatsword",
       type: "weapon",
-      damage: 8,
-      description: "A well-crafted steel blade"
+      damage: 5,
+      description: "A well-crafted two-handed blade"
     },
     {
       id: "steel-armor",
       name: "Steel Armor",
       type: "armor", 
-      dr: 4,
-      description: "Heavy steel plate armor"
-    },
-    {
-      id: "steel-shield",
-      name: "Steel Shield",
-      type: "shield",
       dr: 3,
-      description: "A sturdy steel shield"
+      description: "Heavy steel plate armor"
     }
   ],
   inventory: {
-    gold: 245,
+    gold: 25,
     items: [
-      "Health Potion x2",
-      "Lockpicks x5", 
+      "Potion of Minor Healing (x1)",
       "Torch x3",
       "Rations x7"
     ]
