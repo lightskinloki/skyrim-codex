@@ -42,12 +42,29 @@ export function calculateMaxFP(
   race: Race,
   skills: CharacterSkill[]
 ): number {
-  let maxFP = Math.floor(finalStats.agility / 2) + Math.floor(finalStats.magic / 2);
-  
-  // Mage stone special calculation
+  // Mage stone special calculation - overrides standard formula
   if (standingStone.id === "mage") {
-    maxFP = finalStats.magic + 2;
+    let maxFP = finalStats.magic + 2;
+    
+    // High Elf racial bonus still applies
+    if (race.id === "high-elf") {
+      maxFP += 2;
+    }
+    
+    // Light Armor skill bonus still applies
+    const hasLightArmor = skills.some(skill => 
+      skill.skillId === "light-armor" && 
+      ["Apprentice", "Adept", "Expert", "Master"].includes(skill.rank)
+    );
+    if (hasLightArmor) {
+      maxFP += 2;
+    }
+    
+    return Math.max(1, maxFP);
   }
+  
+  // Standard calculation for all other stones
+  let maxFP = Math.floor(finalStats.agility / 2) + Math.floor(finalStats.magic / 2);
   
   // High Elf racial bonus
   if (race.id === "high-elf") {

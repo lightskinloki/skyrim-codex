@@ -7,22 +7,24 @@ const nordRace = races.find(r => r.id === "nord")!;
 const warriorStone = standingStones.find(s => s.id === "warrior")!;
 const finalStats = calculateFinalStats(warriorStone.baseStats, nordRace);
 
+// Valid skill selection: 1 Adept + 3 Apprentice
 const sampleSkills = [
-  {
-    skillId: "one-handed",
-    rank: "Adept" as const,
-    unlockedPerks: ["Fighting Stance", "Savage Strike"]
-  },
-  {
-    skillId: "heavy-armor",
-    rank: "Apprentice" as const,
-    unlockedPerks: ["Well Fitted"]
-  },
-  {
-    skillId: "smithing",
-    rank: "Apprentice" as const,
-    unlockedPerks: ["Steel Smithing"]
-  }
+  // All 15 skills with proper ranks
+  { skillId: "one-handed", rank: "Adept" as const, unlockedPerks: ["Fighting Stance", "Savage Strike"] },
+  { skillId: "two-handed", rank: "Novice" as const, unlockedPerks: [] },
+  { skillId: "archery", rank: "Novice" as const, unlockedPerks: [] },
+  { skillId: "heavy-armor", rank: "Apprentice" as const, unlockedPerks: ["Well Fitted"] },
+  { skillId: "light-armor", rank: "Novice" as const, unlockedPerks: [] },
+  { skillId: "destruction", rank: "Novice" as const, unlockedPerks: [] },
+  { skillId: "restoration", rank: "Apprentice" as const, unlockedPerks: ["Respite"] },
+  { skillId: "alteration", rank: "Novice" as const, unlockedPerks: [] },
+  { skillId: "illusion", rank: "Novice" as const, unlockedPerks: [] },
+  { skillId: "conjuration", rank: "Novice" as const, unlockedPerks: [] },
+  { skillId: "sneak", rank: "Novice" as const, unlockedPerks: [] },
+  { skillId: "lockpicking", rank: "Novice" as const, unlockedPerks: [] },
+  { skillId: "speech", rank: "Apprentice" as const, unlockedPerks: ["Persuasion"] },
+  { skillId: "smithing", rank: "Novice" as const, unlockedPerks: [] },
+  { skillId: "alchemy", rank: "Novice" as const, unlockedPerks: [] }
 ];
 
 const maxHP = calculateMaxHP(finalStats, warriorStone, nordRace, sampleSkills);
@@ -30,8 +32,8 @@ const maxFP = calculateMaxFP(finalStats, warriorStone, nordRace, sampleSkills);
 
 export const sampleCharacter: Character = {
   id: "sample-1",
-  name: "Lyralei Stormcaller",
-  ap: 25,
+  name: "Bjorn Ironshield",
+  ap: 0,
   race: nordRace,
   standingStone: warriorStone,
   stats: finalStats,

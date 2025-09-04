@@ -50,7 +50,7 @@ export interface Skill {
 
 export interface CharacterSkill {
   skillId: string;
-  rank: 'Apprentice' | 'Adept' | 'Expert' | 'Master';
+  rank: 'Novice' | 'Apprentice' | 'Adept' | 'Expert' | 'Master';
   unlockedPerks: string[];
 }
 
