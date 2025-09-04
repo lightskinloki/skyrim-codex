@@ -3,6 +3,7 @@ import { Character } from "@/types/character";
 import { CharacterCard } from "./CharacterCard";
 import { StatBlock } from "./StatBlock";
 import { ResourceBar } from "./ResourceBar";
+import { SkillsDisplay } from "./SkillsDisplay";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -183,31 +184,7 @@ export function CharacterDashboard({ character, onUpdateCharacter }: CharacterDa
 
           {/* Right Column - Skills */}
           <div className="space-y-6">
-            <Card className="p-6 bg-card-secondary">
-              <h3 className="font-cinzel font-semibold text-primary mb-4">
-                Skills & Abilities
-              </h3>
-              
-              <div className="space-y-3">
-                {currentCharacter.skills.length > 0 ? (
-                  currentCharacter.skills.map((skill, index) => (
-                    <div key={index} className="p-3 bg-muted rounded">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium">Skill {index + 1}</span>
-                        <Badge variant="outline">{skill.rank}</Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {skill.unlockedPerks.length} perks unlocked
-                      </p>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-muted-foreground italic">
-                    No skills learned yet
-                  </p>
-                )}
-              </div>
-            </Card>
+            <SkillsDisplay character={currentCharacter} />
 
             <Card className="p-6 bg-card-secondary">
               <h3 className="font-cinzel font-semibold text-primary mb-4 flex items-center">
