@@ -1,14 +1,22 @@
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { UserPlus, Users } from "lucide-react";
+import { CharacterCreatorModal } from "./CharacterCreatorModal";
+import { Character } from "@/types/character";
 
 interface WelcomeScreenProps {
-  onCreateNew: () => void;
+  onCreateNew: (character: Character) => void;
   onLoadCharacter: () => void;
   hasExistingCharacters: boolean;
 }
 
 export function WelcomeScreen({ onCreateNew, onLoadCharacter, hasExistingCharacters }: WelcomeScreenProps) {
+  const [showCreator, setShowCreator] = useState(false);
+
+  const handleCharacterCreated = (character: Character) => {
+    onCreateNew(character);
+  };
   return (
     <div className="min-h-screen bg-gradient-dark flex items-center justify-center p-6">
       <div className="max-w-2xl w-full">
@@ -24,7 +32,7 @@ export function WelcomeScreen({ onCreateNew, onLoadCharacter, hasExistingCharact
 
           <div className="space-y-4">
             <Button
-              onClick={onCreateNew}
+              onClick={() => setShowCreator(true)}
               size="lg"
               className="w-full h-16 text-lg font-medium"
             >
@@ -52,6 +60,12 @@ export function WelcomeScreen({ onCreateNew, onLoadCharacter, hasExistingCharact
           </div>
         </Card>
       </div>
+
+      <CharacterCreatorModal
+        isOpen={showCreator}
+        onClose={() => setShowCreator(false)}
+        onCharacterCreated={handleCharacterCreated}
+      />
     </div>
   );
 }

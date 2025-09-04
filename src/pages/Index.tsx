@@ -31,14 +31,7 @@ const Index = () => {
     setShowWelcome(true);
   }, []);
 
-  const handleCreateNewCharacter = () => {
-    // For now, create a sample character with a unique ID
-    const newCharacter = {
-      ...sampleCharacter,
-      id: `character-${Date.now()}`,
-      name: "New Character"
-    };
-    
+  const handleCreateNewCharacter = (newCharacter: Character) => {
     characterStorage.saveCharacter(newCharacter);
     setCurrentCharacter(newCharacter);
     setShowWelcome(false);
