@@ -38,7 +38,6 @@ export const characterStorage = {
       }
       
       localStorage.setItem(STORAGE_KEYS.CHARACTER_LIBRARY, JSON.stringify(characters));
-      this.setLastLoadedId(character.id);
     } catch (error) {
       console.error('Error saving character:', error);
     }
@@ -56,11 +55,6 @@ export const characterStorage = {
       const characters = this.getAllCharacters();
       const filtered = characters.filter(c => c.id !== id);
       localStorage.setItem(STORAGE_KEYS.CHARACTER_LIBRARY, JSON.stringify(filtered));
-      
-      // Clear last loaded if it was this character
-      if (this.getLastLoadedId() === id) {
-        this.clearLastLoadedId();
-      }
     } catch (error) {
       console.error('Error deleting character:', error);
     }

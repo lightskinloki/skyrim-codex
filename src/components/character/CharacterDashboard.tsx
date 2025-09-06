@@ -5,20 +5,23 @@ import { StatBlock } from "./StatBlock";
 import { ResourceBar } from "./ResourceBar";
 import { SkillsDisplay } from "./SkillsDisplay";
 import { AdvancementModal } from "./AdvancementModal";
+import { GrantAPModal } from "./GrantAPModal";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Zap, Sword, Shield, Settings } from "lucide-react";
+import { Heart, Zap, Sword, Shield, Settings, Plus, UserPlus } from "lucide-react";
 import { calculateMaxHP, calculateMaxFP, calculateTotalDR, getCharacterTier } from "@/utils/characterCalculations";
 
 interface CharacterDashboardProps {
   character: Character;
   onUpdateCharacter: (character: Character) => void;
+  onCreateNewCharacter: () => void;
 }
 
-export function CharacterDashboard({ character, onUpdateCharacter }: CharacterDashboardProps) {
+export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCharacter }: CharacterDashboardProps) {
   const [currentCharacter, setCurrentCharacter] = useState<Character>(character);
   const [showAdvancement, setShowAdvancement] = useState(false);
+  const [showGrantAP, setShowGrantAP] = useState(false);
 
   const handleResourceAdjust = (type: 'hp' | 'fp', amount: number) => {
     const updatedCharacter = {
@@ -72,6 +75,15 @@ export function CharacterDashboard({ character, onUpdateCharacter }: CharacterDa
     onUpdateCharacter(updatedCharacter);
   };
 
+  const handleGrantAP = (amount: number) => {
+    const updatedCharacter = {
+      ...currentCharacter,
+      ap: currentCharacter.ap + amount
+    };
+    setCurrentCharacter(updatedCharacter);
+    onUpdateCharacter(updatedCharacter);
+  };
+
 
   return (
     <div className="min-h-screen bg-gradient-dark p-6">
@@ -87,12 +99,26 @@ export function CharacterDashboard({ character, onUpdateCharacter }: CharacterDa
                 {getCharacterTier(currentCharacter.ap)} Tier
               </Badge>
             </div>
-            <Badge variant="outline" className="text-lg px-3 py-1">
-              AP: {currentCharacter.ap}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-lg px-3 py-1">
+                AP: {currentCharacter.ap}
+              </Badge>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => setShowGrantAP(true)}
+                className="h-8 w-8 p-0"
+              >
+                <Plus className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
           
           <div className="flex gap-3">
+            <Button onClick={onCreateNewCharacter} variant="secondary">
+              <UserPlus className="w-4 h-4 mr-2" />
+              Create New Character
+            </Button>
             <Button onClick={() => setShowAdvancement(true)} variant="default">
               <Settings className="w-4 h-4 mr-2" />
               Advance Character
@@ -233,6 +259,12 @@ export function CharacterDashboard({ character, onUpdateCharacter }: CharacterDa
           onClose={() => setShowAdvancement(false)}
           character={currentCharacter}
           onUpdateCharacter={handleUpdateCharacter}
+        />
+        
+        <GrantAPModal
+          isOpen={showGrantAP}
+          onClose={() => setShowGrantAP(false)}
+          onGrantAP={handleGrantAP}
         />
       </div>
     </div>

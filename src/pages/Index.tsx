@@ -11,25 +11,7 @@ const Index = () => {
   const [showWelcome, setShowWelcome] = useState(true);
   const [showLoadModal, setShowLoadModal] = useState(false);
 
-  useEffect(() => {
-    // Check for existing characters and last loaded character
-    const hasCharacters = characterStorage.hasCharacters();
-    
-    if (hasCharacters) {
-      const lastLoadedId = characterStorage.getLastLoadedId();
-      if (lastLoadedId) {
-        const lastCharacter = characterStorage.getCharacter(lastLoadedId);
-        if (lastCharacter) {
-          setCurrentCharacter(lastCharacter);
-          setShowWelcome(false);
-          return;
-        }
-      }
-    }
-    
-    // If no characters or no last loaded, show welcome screen
-    setShowWelcome(true);
-  }, []);
+  // Always start with welcome screen - no auto-loading
 
   const handleCreateNewCharacter = (newCharacter: Character) => {
     characterStorage.saveCharacter(newCharacter);
@@ -48,6 +30,11 @@ const Index = () => {
       setShowWelcome(false);
       setShowLoadModal(false);
     }
+  };
+
+  const handleCreateNewFromDashboard = () => {
+    setCurrentCharacter(null);
+    setShowWelcome(true);
   };
 
   const handleUpdateCharacter = (updatedCharacter: Character) => {
@@ -81,6 +68,7 @@ const Index = () => {
     <CharacterDashboard 
       character={currentCharacter} 
       onUpdateCharacter={handleUpdateCharacter}
+      onCreateNewCharacter={handleCreateNewFromDashboard}
     />
   );
 };
