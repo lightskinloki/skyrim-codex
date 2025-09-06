@@ -222,38 +222,4 @@ export const skills: Skill[] = [
       }
     ]
   },
-  {
-    id: "smithing",
-    name: "Smithing",
-    type: "Utility",
-    perks: [
-      {
-        rank: "Apprentice",
-        name: "Steel Smithing",
-        description: "You can craft and improve steel weapons and armor, creating items of superior quality."
-      },
-      {
-        rank: "Adept",
-        name: "Arcane Blacksmith",
-        description: "You can enchant weapons and armor during the smithing process, imbuing them with magical properties."
-      }
-    ]
-  },
-  {
-    id: "alchemy",
-    name: "Alchemy",
-    type: "Utility",
-    perks: [
-      {
-        rank: "Apprentice",
-        name: "Benefactor",
-        description: "Potions you create are 25% more powerful and have improved effects."
-      },
-      {
-        rank: "Adept",
-        name: "Poisoner",
-        description: "Poisons you create last for two weapon strikes instead of one and have enhanced potency."
-      }
-    ]
-  }
 ];

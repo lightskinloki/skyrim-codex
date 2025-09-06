@@ -9,7 +9,7 @@ const finalStats = calculateFinalStats(warriorStone.baseStats, nordRace);
 
 // Valid skill selection: 1 Adept + 3 Apprentice
 const sampleSkills = [
-  // All 15 skills with proper ranks
+  // All 13 skills with proper ranks
   { skillId: "one-handed", rank: "Adept" as const, unlockedPerks: ["Fighting Stance", "Savage Strike"] },
   { skillId: "two-handed", rank: "Novice" as const, unlockedPerks: [] },
   { skillId: "archery", rank: "Novice" as const, unlockedPerks: [] },
@@ -20,15 +20,29 @@ const sampleSkills = [
   { skillId: "alteration", rank: "Novice" as const, unlockedPerks: [] },
   { skillId: "illusion", rank: "Novice" as const, unlockedPerks: [] },
   { skillId: "conjuration", rank: "Novice" as const, unlockedPerks: [] },
-  { skillId: "sneak", rank: "Novice" as const, unlockedPerks: [] },
+  { skillId: "sneak", rank: "Apprentice" as const, unlockedPerks: ["Silent Roll"] },
   { skillId: "lockpicking", rank: "Novice" as const, unlockedPerks: [] },
-  { skillId: "speech", rank: "Apprentice" as const, unlockedPerks: ["Persuasion"] },
-  { skillId: "smithing", rank: "Novice" as const, unlockedPerks: [] },
-  { skillId: "alchemy", rank: "Novice" as const, unlockedPerks: [] }
+  { skillId: "speech", rank: "Novice" as const, unlockedPerks: [] }
 ];
 
-const maxHP = calculateMaxHP(finalStats, warriorStone, nordRace, sampleSkills);
-const maxFP = calculateMaxFP(finalStats, warriorStone, nordRace, sampleSkills);
+// Create character first to pass to calculations
+const tempCharacter = {
+  progression: {
+    combatProwessUnlocked: {
+      adept: true,
+      expert: false,
+      master: false
+    },
+    arcaneStudiesUnlocked: {
+      adept: false,
+      expert: false,
+      master: false
+    }
+  }
+} as Character;
+
+const maxHP = calculateMaxHP(finalStats, warriorStone, nordRace, sampleSkills, tempCharacter);
+const maxFP = calculateMaxFP(finalStats, warriorStone, nordRace, sampleSkills, tempCharacter);
 
 export const sampleCharacter: Character = {
   id: "sample-1",

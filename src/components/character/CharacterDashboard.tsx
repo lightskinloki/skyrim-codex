@@ -4,10 +4,12 @@ import { CharacterCard } from "./CharacterCard";
 import { StatBlock } from "./StatBlock";
 import { ResourceBar } from "./ResourceBar";
 import { SkillsDisplay } from "./SkillsDisplay";
+import { AdvancementModal } from "./AdvancementModal";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Heart, Zap, Sword, Shield, Settings } from "lucide-react";
+import { calculateMaxHP, calculateMaxFP, calculateTotalDR, getCharacterTier } from "@/utils/characterCalculations";
 
 interface CharacterDashboardProps {
   character: Character;
@@ -16,6 +18,7 @@ interface CharacterDashboardProps {
 
 export function CharacterDashboard({ character, onUpdateCharacter }: CharacterDashboardProps) {
   const [currentCharacter, setCurrentCharacter] = useState<Character>(character);
+  const [showAdvancement, setShowAdvancement] = useState(false);
 
   const handleResourceAdjust = (type: 'hp' | 'fp', amount: number) => {
     const updatedCharacter = {
@@ -31,6 +34,18 @@ export function CharacterDashboard({ character, onUpdateCharacter }: CharacterDa
         }
       }
     };
+    setCurrentCharacter(updatedCharacter);
+    onUpdateCharacter(updatedCharacter);
+  };
+
+  const handleUpdateCharacter = (updatedCharacter: Character) => {
+    // Recalculate derived stats
+    const newMaxHP = calculateMaxHP(updatedCharacter.stats, updatedCharacter.standingStone, updatedCharacter.race, updatedCharacter.skills, updatedCharacter);
+    const newMaxFP = calculateMaxFP(updatedCharacter.stats, updatedCharacter.standingStone, updatedCharacter.race, updatedCharacter.skills, updatedCharacter);
+    
+    updatedCharacter.resources.hp.max = newMaxHP;
+    updatedCharacter.resources.fp.max = newMaxFP;
+    
     setCurrentCharacter(updatedCharacter);
     onUpdateCharacter(updatedCharacter);
   };
@@ -57,39 +72,36 @@ export function CharacterDashboard({ character, onUpdateCharacter }: CharacterDa
     onUpdateCharacter(updatedCharacter);
   };
 
-  const getCharacterTier = (ap: number) => {
-    if (ap >= 120) return 'Legendary';
-    if (ap >= 90) return 'Master';
-    if (ap >= 60) return 'Expert';
-    if (ap >= 30) return 'Adept';
-    if (ap >= 10) return 'Apprentice';
-    return 'Novice';
-  };
 
   return (
     <div className="min-h-screen bg-gradient-dark p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-4xl font-cinzel font-bold text-primary mb-2">
-              Character Sheet
-            </h1>
-            <Badge variant="secondary" className="text-lg">
-              {getCharacterTier(currentCharacter.ap)} Tier
+          <div className="flex items-center gap-4">
+            <div>
+              <h1 className="text-4xl font-cinzel font-bold text-primary mb-2">
+                Character Sheet
+              </h1>
+              <Badge variant="secondary" className="text-lg">
+                {getCharacterTier(currentCharacter.ap)} Tier
+              </Badge>
+            </div>
+            <Badge variant="outline" className="text-lg px-3 py-1">
+              AP: {currentCharacter.ap}
             </Badge>
           </div>
           
           <div className="flex gap-3">
+            <Button onClick={() => setShowAdvancement(true)} variant="default">
+              <Settings className="w-4 h-4 mr-2" />
+              Advance Character
+            </Button>
             <Button onClick={() => handleRest('short')} variant="outline">
               Short Rest
             </Button>
             <Button onClick={() => handleRest('long')} variant="outline">
               Long Rest
-            </Button>
-            <Button variant="secondary">
-              <Settings className="w-4 h-4 mr-2" />
-              Advance Character
             </Button>
           </div>
         </div>
@@ -196,7 +208,7 @@ export function CharacterDashboard({ character, onUpdateCharacter }: CharacterDa
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Total DR</span>
                   <span className="text-xl font-bold text-primary">
-                    {currentCharacter.equipment.reduce((total, item) => total + (item.dr || 0), 0)}
+                    {calculateTotalDR(currentCharacter.equipment, currentCharacter.standingStone)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -215,6 +227,13 @@ export function CharacterDashboard({ character, onUpdateCharacter }: CharacterDa
             </Card>
           </div>
         </div>
+        
+        <AdvancementModal
+          isOpen={showAdvancement}
+          onClose={() => setShowAdvancement(false)}
+          character={currentCharacter}
+          onUpdateCharacter={handleUpdateCharacter}
+        />
       </div>
     </div>
   );

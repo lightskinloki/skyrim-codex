@@ -10,7 +10,8 @@ export function calculateMaxHP(
   finalStats: Stats,
   standingStone: StandingStone,
   race: Race,
-  skills: CharacterSkill[]
+  skills: CharacterSkill[],
+  character?: Character
 ): number {
   let maxHP = 8 + Math.floor(finalStats.might / 4);
   
@@ -28,6 +29,16 @@ export function calculateMaxHP(
     maxHP += 2;
   }
   
+  // Combat Prowess Adept bonus
+  if (character?.progression.combatProwessUnlocked.adept) {
+    maxHP += 2;
+  }
+  
+  // Combat Prowess Expert bonus
+  if (character?.progression.combatProwessUnlocked.expert) {
+    maxHP += 2;
+  }
+  
   // Apprentice stone penalty
   if (standingStone.id === "apprentice") {
     maxHP -= 2;
@@ -40,7 +51,8 @@ export function calculateMaxFP(
   finalStats: Stats,
   standingStone: StandingStone,
   race: Race,
-  skills: CharacterSkill[]
+  skills: CharacterSkill[],
+  character?: Character
 ): number {
   // Mage stone special calculation - overrides standard formula
   if (standingStone.id === "mage") {
@@ -77,6 +89,11 @@ export function calculateMaxFP(
     ["Apprentice", "Adept", "Expert", "Master"].includes(skill.rank)
   );
   if (hasLightArmor) {
+    maxFP += 2;
+  }
+
+  // Combat Prowess Expert bonus (FP)
+  if (character?.progression.combatProwessUnlocked.expert) {
     maxFP += 2;
   }
   
