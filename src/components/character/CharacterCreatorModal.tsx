@@ -26,7 +26,6 @@ interface CharacterCreatorModalProps {
 interface CreatorState {
   selectedRace: Race | null;
   selectedStone: StandingStone | null;
-  finalStats: Stats | null;
   selectedSkills: CharacterSkill[];
   selectedKit: Kit | null;
   characterName: string;
@@ -45,7 +44,6 @@ export function CharacterCreatorModal({ isOpen, onClose, onCharacterCreated }: C
   const [creatorState, setCreatorState] = useState<CreatorState>({
     selectedRace: null,
     selectedStone: null,
-    finalStats: null,
     selectedSkills: [],
     selectedKit: null,
     characterName: ""
@@ -87,7 +85,7 @@ export function CharacterCreatorModal({ isOpen, onClose, onCharacterCreated }: C
   const handleFinishCharacter = () => {
     if (!creatorState.selectedRace || !creatorState.selectedStone || !creatorState.selectedKit) return;
 
-    const finalStats = creatorState.finalStats;
+    const finalStats = calculateFinalStats(creatorState.selectedStone.baseStats, creatorState.selectedRace);
     
     // Create complete skills array with all 15 skills
     const allSkills: CharacterSkill[] = skills.map(skill => {
@@ -145,9 +143,7 @@ export function CharacterCreatorModal({ isOpen, onClose, onCharacterCreated }: C
           <StandingStoneSelection
             stones={standingStones}
             selectedStone={creatorState.selectedStone}
-            onStoneSelect={(stone) => {
-              const newFinalStats = calculateFinalStats(stone.baseStats, creatorState.selectedRace!);
-              setCreatorState(prev => ({ ...prev, selectedStone: stone, finalStats: newFinalStats }))}
+            onStoneSelect={(stone) => setCreatorState(prev => ({ ...prev, selectedStone: stone }))}
           />
         );
       case 2:
@@ -247,7 +243,6 @@ export function CharacterCreatorModal({ isOpen, onClose, onCharacterCreated }: C
             <CreatorSummaryPanel
               race={creatorState.selectedRace}
               stone={creatorState.selectedStone}
-              finalStats={creatorState.finalStats}
               skills={creatorState.selectedSkills}
               kit={creatorState.selectedKit}
               characterName={creatorState.characterName}
