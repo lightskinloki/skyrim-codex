@@ -9,7 +9,8 @@ export const skills: Skill[] = [
       {
         rank: "Apprentice",
         name: "Fighting Stance",
-        description: "Once per combat, you may spend 1 FP to make an additional attack with your one-handed weapon as a Minor Action."
+        description: "Once per combat, you may spend 1 FP to make an additional attack with your one-handed weapon as a Minor Action.",
+        fpCost: 1
       },
       {
         rank: "Adept",
@@ -26,7 +27,8 @@ export const skills: Skill[] = [
       {
         rank: "Apprentice",
         name: "Cleave",
-        description: "When you successfully hit an enemy, you can spend 1 FP to deal 1 damage to another enemy standing directly next to your target."
+        description: "When you successfully hit an enemy, you can spend 1 FP to deal 1 damage to another enemy standing directly next to your target.",
+        fpCost: 1
       },
       {
         rank: "Adept",
@@ -43,12 +45,14 @@ export const skills: Skill[] = [
       {
         rank: "Apprentice",
         name: "Eagle Eye",
-        description: "You can spend 1 FP to aim as a Minor Action. Your next bow attack this turn is made with a +2 bonus to your Agility score."
+        description: "You can spend 1 FP to aim as a Minor Action. Your next bow attack this turn is made with a +2 bonus to your Agility score.",
+        fpCost: 1
       },
       {
         rank: "Adept",
         name: "Power Shot",
-        description: "You can spend 1 FP when you hit with a bow to stagger your target, causing them to lose their next Minor Action."
+        description: "You can spend 1 FP when you hit with a bow to stagger your target, causing them to lose their next Minor Action.",
+        fpCost: 1
       }
     ]
   },
@@ -82,7 +86,8 @@ export const skills: Skill[] = [
       {
         rank: "Adept",
         name: "Wind Walker",
-        description: "Your stamina (FP) regenerates faster. Once per combat, you can regain 1 FP as a free action."
+        description: "Your stamina (FP) regenerates faster. Once per combat, you can regain 1 FP as a free action.",
+        fpCost: 0
       }
     ]
   },
@@ -94,7 +99,8 @@ export const skills: Skill[] = [
       {
         rank: "Apprentice",
         name: "Impact",
-        description: "When you cast a Destruction spell, you can spend 1 additional FP to stagger the target, making them lose their next Minor Action."
+        description: "When you cast a Destruction spell, you can spend 1 additional FP to stagger the target, making them lose their next Minor Action.",
+        fpCost: 1
       },
       {
         rank: "Adept",
@@ -179,7 +185,8 @@ export const skills: Skill[] = [
       {
         rank: "Apprentice",
         name: "Silent Roll",
-        description: "As a Minor Action, you can spend 1 FP to move to a new location while making an Agility roll to remain hidden."
+        description: "As a Minor Action, you can spend 1 FP to move to a new location while making an Agility roll to remain hidden.",
+        fpCost: 1
       },
       {
         rank: "Adept",

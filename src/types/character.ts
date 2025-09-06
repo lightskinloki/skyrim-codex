@@ -39,6 +39,7 @@ export interface Perk {
   rank: 'Apprentice' | 'Adept' | 'Expert' | 'Master';
   name: string;
   description: string;
+  fpCost?: number;
 }
 
 export interface Skill {

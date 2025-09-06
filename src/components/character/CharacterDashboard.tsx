@@ -4,6 +4,8 @@ import { CharacterCard } from "./CharacterCard";
 import { StatBlock } from "./StatBlock";
 import { ResourceBar } from "./ResourceBar";
 import { SkillsDisplay } from "./SkillsDisplay";
+import { KnownSpells } from "./KnownSpells";
+import { FPSpendModal } from "./FPSpendModal";
 import { AdvancementModal } from "./AdvancementModal";
 import { GrantAPModal } from "./GrantAPModal";
 import { Button } from "@/components/ui/button";
@@ -22,6 +24,15 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
   const [currentCharacter, setCurrentCharacter] = useState<Character>(character);
   const [showAdvancement, setShowAdvancement] = useState(false);
   const [showGrantAP, setShowGrantAP] = useState(false);
+  const [fpSpendModal, setFpSpendModal] = useState<{
+    isOpen: boolean;
+    actionName: string;
+    fpCost: number;
+  }>({
+    isOpen: false,
+    actionName: '',
+    fpCost: 0
+  });
 
   const handleResourceAdjust = (type: 'hp' | 'fp', amount: number) => {
     const updatedCharacter = {
@@ -79,6 +90,29 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
     const updatedCharacter = {
       ...currentCharacter,
       ap: currentCharacter.ap + amount
+    };
+    setCurrentCharacter(updatedCharacter);
+    onUpdateCharacter(updatedCharacter);
+  };
+
+  const handleSpendFP = (amount: number, actionName: string) => {
+    setFpSpendModal({
+      isOpen: true,
+      actionName,
+      fpCost: amount
+    });
+  };
+
+  const confirmSpendFP = () => {
+    const updatedCharacter = {
+      ...currentCharacter,
+      resources: {
+        ...currentCharacter.resources,
+        fp: {
+          ...currentCharacter.resources.fp,
+          current: currentCharacter.resources.fp.current - fpSpendModal.fpCost
+        }
+      }
     };
     setCurrentCharacter(updatedCharacter);
     onUpdateCharacter(updatedCharacter);
@@ -222,7 +256,9 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
 
           {/* Right Column - Skills */}
           <div className="space-y-6">
-            <SkillsDisplay character={currentCharacter} />
+            <SkillsDisplay character={currentCharacter} onSpendFP={handleSpendFP} />
+            
+            <KnownSpells character={currentCharacter} onSpendFP={handleSpendFP} />
 
             <Card className="p-6 bg-card-secondary">
               <h3 className="font-cinzel font-semibold text-primary mb-4 flex items-center">
@@ -265,6 +301,15 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
           isOpen={showGrantAP}
           onClose={() => setShowGrantAP(false)}
           onGrantAP={handleGrantAP}
+        />
+        
+        <FPSpendModal
+          isOpen={fpSpendModal.isOpen}
+          onClose={() => setFpSpendModal(prev => ({ ...prev, isOpen: false }))}
+          onConfirm={confirmSpendFP}
+          actionName={fpSpendModal.actionName}
+          fpCost={fpSpendModal.fpCost}
+          currentFP={currentCharacter.resources.fp.current}
         />
       </div>
     </div>
