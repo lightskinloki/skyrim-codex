@@ -111,11 +111,11 @@ export function getMaxApprenticeSkills(standingStone: StandingStone): number {
 }
 
 export function getCharacterTier(ap: number): string {
-  if (ap >= 120) return 'Legendary';
-  if (ap >= 90) return 'Master';
-  if (ap >= 60) return 'Expert';
-  if (ap >= 30) return 'Adept';
-  if (ap >= 10) return 'Apprentice';
+  if (ap >= 12) return 'Legendary';
+  if (ap >= 7) return 'Master';
+  if (ap >= 5) return 'Expert';
+  if (ap >= 3) return 'Adept';
+  if (ap >= 1) return 'Apprentice';
   return 'Novice';
 }
 
