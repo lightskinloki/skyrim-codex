@@ -40,6 +40,7 @@ export interface Perk {
   name: string;
   description: string;
   fpCost?: number;
+  limitation?: 'per combat' | 'per adventure';
 }
 
 export interface Skill {
@@ -99,6 +100,8 @@ export interface Character {
       master: boolean;
     };
   };
+  usedAbilities?: string[];
+  combatMode?: boolean;
 }
 
 export type CharacterTier = 'Novice' | 'Apprentice' | 'Adept' | 'Expert' | 'Master' | 'Legendary';

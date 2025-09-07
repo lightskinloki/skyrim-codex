@@ -10,7 +10,8 @@ export const skills: Skill[] = [
         rank: "Apprentice",
         name: "Fighting Stance",
         description: "Once per combat, you may spend 1 FP to make an additional attack with your one-handed weapon as a Minor Action.",
-        fpCost: 1
+        fpCost: 1,
+        limitation: 'per combat'
       },
       {
         rank: "Adept",
@@ -69,7 +70,8 @@ export const skills: Skill[] = [
       {
         rank: "Adept",
         name: "Tower of Strength",
-        description: "Once per combat, you can choose to automatically succeed on a roll to resist being staggered or knocked down."
+        description: "Once per combat, you can choose to automatically succeed on a roll to resist being staggered or knocked down.",
+        limitation: 'per combat'
       }
     ]
   },
@@ -87,7 +89,8 @@ export const skills: Skill[] = [
         rank: "Adept",
         name: "Wind Walker",
         description: "Your stamina (FP) regenerates faster. Once per combat, you can regain 1 FP as a free action.",
-        fpCost: 0
+        fpCost: 0,
+        limitation: 'per combat'
       }
     ]
   },

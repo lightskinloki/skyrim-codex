@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Character, CharacterSkill } from "@/types/character";
 import { skills } from "@/data/skills";
 import { useToast } from "@/hooks/use-toast";
+import { ProgressionModal } from "./ProgressionModal";
 
 interface AdvancementModalProps {
   isOpen: boolean;
@@ -96,9 +97,13 @@ export function AdvancementModal({ isOpen, onClose, character, onUpdateCharacter
     setSelectedResource("");
   };
 
+  const [pendingProgressions, setPendingProgressions] = useState<Array<{type: 'arcane-expert' | 'arcane-master' | 'combat-master'}>>([]);
+
   const checkProgressionBenefits = (updatedCharacter: Character, skillId: string, newRank: string) => {
     const skill = skills.find(s => s.id === skillId);
-    if (!skill) return updatedCharacter;
+    if (!skill) return { character: updatedCharacter, progressions: [] };
+
+    const progressions: Array<{type: 'arcane-expert' | 'arcane-master' | 'combat-master'}> = [];
 
     // Combat Prowess benefits
     if (skill.type === "Combat") {
@@ -119,6 +124,9 @@ export function AdvancementModal({ isOpen, onClose, character, onUpdateCharacter
           title: "Combat Prowess Mastery!",
           description: "Your stamina becomes legendary. You gain +2 maximum FP.",
         });
+      }
+      if (newRank === "Master" && !updatedCharacter.progression.combatProwessUnlocked.master) {
+        progressions.push({ type: 'combat-master' });
       }
     }
 
@@ -141,9 +149,15 @@ export function AdvancementModal({ isOpen, onClose, character, onUpdateCharacter
           });
         }
       }
+      if (newRank === "Expert" && !updatedCharacter.progression.arcaneStudiesUnlocked.expert) {
+        progressions.push({ type: 'arcane-expert' });
+      }
+      if (newRank === "Master" && !updatedCharacter.progression.arcaneStudiesUnlocked.master) {
+        progressions.push({ type: 'arcane-master' });
+      }
     }
 
-    return updatedCharacter;
+    return { character: updatedCharacter, progressions };
   };
 
   const handleConfirmUpgrade = () => {
@@ -173,7 +187,9 @@ export function AdvancementModal({ isOpen, onClose, character, onUpdateCharacter
             skill.rank = "Adept";
             const skillData = skills.find(s => s.id === selectedSkills[0]);
             skill.unlockedPerks = skillData?.perks.filter(p => ["Apprentice", "Adept"].includes(p.rank)).map(p => p.name) || [];
-            updatedCharacter = checkProgressionBenefits(updatedCharacter, selectedSkills[0], "Adept");
+            const result = checkProgressionBenefits(updatedCharacter, selectedSkills[0], "Adept");
+            updatedCharacter = result.character;
+            setPendingProgressions(result.progressions);
           }
         }
         break;
@@ -185,7 +201,9 @@ export function AdvancementModal({ isOpen, onClose, character, onUpdateCharacter
             skill.rank = "Expert";
             const skillData = skills.find(s => s.id === selectedSkills[0]);
             skill.unlockedPerks = skillData?.perks.filter(p => ["Apprentice", "Adept", "Expert"].includes(p.rank)).map(p => p.name) || [];
-            updatedCharacter = checkProgressionBenefits(updatedCharacter, selectedSkills[0], "Expert");
+            const result = checkProgressionBenefits(updatedCharacter, selectedSkills[0], "Expert");
+            updatedCharacter = result.character;
+            setPendingProgressions(result.progressions);
           }
         }
         break;
@@ -197,7 +215,9 @@ export function AdvancementModal({ isOpen, onClose, character, onUpdateCharacter
             skill.rank = "Master";
             const skillData = skills.find(s => s.id === selectedSkills[0]);
             skill.unlockedPerks = skillData?.perks.map(p => p.name) || [];
-            updatedCharacter = checkProgressionBenefits(updatedCharacter, selectedSkills[0], "Master");
+            const result = checkProgressionBenefits(updatedCharacter, selectedSkills[0], "Master");
+            updatedCharacter = result.character;
+            setPendingProgressions(result.progressions);
           }
         }
         break;
@@ -420,6 +440,17 @@ export function AdvancementModal({ isOpen, onClose, character, onUpdateCharacter
             </div>
           )}
         </div>
+        
+        {pendingProgressions.map((progression, index) => (
+          <ProgressionModal
+            key={index}
+            isOpen={true}
+            onClose={() => setPendingProgressions(prev => prev.filter((_, i) => i !== index))}
+            character={character}
+            onUpdateCharacter={onUpdateCharacter}
+            type={progression.type}
+          />
+        ))}
       </DialogContent>
     </Dialog>
   );

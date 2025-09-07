@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Character } from "@/types/character";
+import { Character, Equipment } from "@/types/character";
 import { CharacterCard } from "./CharacterCard";
 import { StatBlock } from "./StatBlock";
 import { ResourceBar } from "./ResourceBar";
@@ -8,11 +8,25 @@ import { KnownSpells } from "./KnownSpells";
 import { FPSpendModal } from "./FPSpendModal";
 import { AdvancementModal } from "./AdvancementModal";
 import { GrantAPModal } from "./GrantAPModal";
+import { EquipmentModal } from "./EquipmentModal";
+import { AbilityTracker } from "./AbilityTracker";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Zap, Sword, Shield, Settings, Plus, UserPlus } from "lucide-react";
-import { calculateMaxHP, calculateMaxFP, calculateTotalDR, getCharacterTier } from "@/utils/characterCalculations";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Heart, Zap, Sword, Shield, Settings, Plus, UserPlus, Play, RotateCcw, Package } from "lucide-react";
+import { 
+  calculateMaxHP, 
+  calculateMaxFP, 
+  calculateTotalDR, 
+  getCharacterTier, 
+  updateCharacterResources,
+  getKhajiitClawDamage,
+  performShortRest,
+  performLongRest
+} from "@/utils/characterCalculations";
+import { useToast } from "@/hooks/use-toast";
 
 interface CharacterDashboardProps {
   character: Character;
@@ -24,6 +38,7 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
   const [currentCharacter, setCurrentCharacter] = useState<Character>(character);
   const [showAdvancement, setShowAdvancement] = useState(false);
   const [showGrantAP, setShowGrantAP] = useState(false);
+  const [showEquipment, setShowEquipment] = useState(false);
   const [fpSpendModal, setFpSpendModal] = useState<{
     isOpen: boolean;
     actionName: string;
@@ -33,6 +48,7 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
     actionName: '',
     fpCost: 0
   });
+  const { toast } = useToast();
 
   const handleResourceAdjust = (type: 'hp' | 'fp', amount: number) => {
     const updatedCharacter = {
@@ -53,37 +69,25 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
   };
 
   const handleUpdateCharacter = (updatedCharacter: Character) => {
-    // Recalculate derived stats
-    const newMaxHP = calculateMaxHP(updatedCharacter.stats, updatedCharacter.standingStone, updatedCharacter.race, updatedCharacter.skills, updatedCharacter);
-    const newMaxFP = calculateMaxFP(updatedCharacter.stats, updatedCharacter.standingStone, updatedCharacter.race, updatedCharacter.skills, updatedCharacter);
+    // Use the new updateCharacterResources function for proper resource recalculation
+    const characterWithUpdatedResources = updateCharacterResources(updatedCharacter);
     
-    updatedCharacter.resources.hp.max = newMaxHP;
-    updatedCharacter.resources.fp.max = newMaxFP;
-    
-    setCurrentCharacter(updatedCharacter);
-    onUpdateCharacter(updatedCharacter);
+    setCurrentCharacter(characterWithUpdatedResources);
+    onUpdateCharacter(characterWithUpdatedResources);
   };
 
   const handleRest = (type: 'short' | 'long') => {
-    const { hp, fp } = currentCharacter.resources;
-    
-    const updatedResources = type === 'short' 
-      ? {
-          hp: { ...hp, current: Math.min(hp.max, hp.current + Math.floor(hp.max / 2)) },
-          fp: { ...fp, current: Math.min(fp.max, fp.current + Math.floor(fp.max / 2)) }
-        }
-      : {
-          hp: { ...hp, current: hp.max },
-          fp: { ...fp, current: fp.max }
-        };
-
-    const updatedCharacter = {
-      ...currentCharacter,
-      resources: updatedResources
-    };
+    const updatedCharacter = type === 'short' 
+      ? performShortRest(currentCharacter)
+      : performLongRest(currentCharacter);
     
     setCurrentCharacter(updatedCharacter);
     onUpdateCharacter(updatedCharacter);
+    
+    toast({
+      title: `${type === 'short' ? 'Short' : 'Long'} Rest Complete`,
+      description: `Resources restored${type === 'long' ? ' and per-adventure abilities reset' : ''}.`,
+    });
   };
 
   const handleGrantAP = (amount: number) => {
@@ -118,6 +122,81 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
     onUpdateCharacter(updatedCharacter);
   };
 
+  const handleCombatModeToggle = (enabled: boolean) => {
+    let updatedCharacter = { ...currentCharacter, combatMode: enabled };
+
+    // If enabling combat mode, reset per-combat abilities
+    if (enabled) {
+      const usedAbilities = currentCharacter.usedAbilities || [];
+      const combatAbilities = usedAbilities.filter(abilityId => 
+        abilityId.includes('warrior-') || 
+        abilityId.includes('thief-') ||
+        abilityId.includes('atronach-') ||
+        abilityId.includes('serpent-')
+      );
+      
+      updatedCharacter.usedAbilities = usedAbilities.filter(id => !combatAbilities.includes(id));
+      
+      toast({
+        title: "Combat Mode Activated",
+        description: "Per-combat abilities have been reset.",
+      });
+    }
+
+    // Apprentice stone FP regeneration happens at end of turn, not mode toggle
+    setCurrentCharacter(updatedCharacter);
+    onUpdateCharacter(updatedCharacter);
+  };
+
+  const handleEndTurn = () => {
+    if (currentCharacter.standingStone.id === "apprentice") {
+      const updatedCharacter = {
+        ...currentCharacter,
+        resources: {
+          ...currentCharacter.resources,
+          fp: {
+            ...currentCharacter.resources.fp,
+            current: Math.min(
+              currentCharacter.resources.fp.max,
+              currentCharacter.resources.fp.current + 1
+            )
+          }
+        }
+      };
+      setCurrentCharacter(updatedCharacter);
+      onUpdateCharacter(updatedCharacter);
+      
+      toast({
+        title: "Turn Ended",
+        description: "Arcane Instability: You regenerate 1 FP.",
+      });
+    } else {
+      toast({
+        title: "Turn Ended",
+        description: "Your turn has ended.",
+      });
+    }
+  };
+
+  // Get equipment including Khajiit claws
+  const getAllEquipment = (): Equipment[] => {
+    const equipment = [...currentCharacter.equipment];
+    
+    // Add Khajiit claws if character is Khajiit
+    if (currentCharacter.race.id === "khajiit") {
+      const clawDamage = getKhajiitClawDamage(currentCharacter.ap);
+      equipment.push({
+        id: "khajiit-claws",
+        name: "Khajiit Claws",
+        type: "weapon",
+        damage: clawDamage,
+        description: `Natural weapons that scale with character tier. Current tier: ${getCharacterTier(currentCharacter.ap)}`
+      });
+    }
+    
+    return equipment;
+  };
+
 
   return (
     <div className="min-h-screen bg-gradient-dark p-6">
@@ -148,21 +227,48 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
             </div>
           </div>
           
-          <div className="flex gap-3">
-            <Button onClick={onCreateNewCharacter} variant="secondary">
-              <UserPlus className="w-4 h-4 mr-2" />
-              Create New Character
-            </Button>
-            <Button onClick={() => setShowAdvancement(true)} variant="default">
-              <Settings className="w-4 h-4 mr-2" />
-              Advance Character
-            </Button>
-            <Button onClick={() => handleRest('short')} variant="outline">
-              Short Rest
-            </Button>
-            <Button onClick={() => handleRest('long')} variant="outline">
-              Long Rest
-            </Button>
+          <div className="flex flex-col gap-3">
+            <div className="flex gap-3">
+              <Button onClick={onCreateNewCharacter} variant="secondary">
+                <UserPlus className="w-4 h-4 mr-2" />
+                Create New Character
+              </Button>
+              <Button onClick={() => setShowAdvancement(true)} variant="default">
+                <Settings className="w-4 h-4 mr-2" />
+                Advance Character
+              </Button>
+              <Button onClick={() => setShowEquipment(true)} variant="outline">
+                <Package className="w-4 h-4 mr-2" />
+                Manage Equipment
+              </Button>
+            </div>
+            
+            <div className="flex gap-3 items-center">
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="combat-mode"
+                  checked={currentCharacter.combatMode || false}
+                  onCheckedChange={handleCombatModeToggle}
+                />
+                <Label htmlFor="combat-mode" className="text-sm font-medium">
+                  Combat Mode
+                </Label>
+              </div>
+              
+              {currentCharacter.combatMode && (
+                <Button size="sm" onClick={handleEndTurn} variant="outline">
+                  <RotateCcw className="w-4 h-4 mr-1" />
+                  End Turn
+                </Button>
+              )}
+              
+              <Button onClick={() => handleRest('short')} variant="outline" size="sm">
+                Short Rest
+              </Button>
+              <Button onClick={() => handleRest('long')} variant="outline" size="sm">
+                Long Rest
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -201,12 +307,15 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
               </h3>
               
               <div className="space-y-3">
-                {currentCharacter.equipment.length > 0 ? (
-                  currentCharacter.equipment.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-muted rounded">
+                {getAllEquipment().length > 0 ? (
+                  getAllEquipment().map((item, index) => (
+                    <div key={item.id || index} className="flex items-center justify-between p-3 bg-muted rounded">
                       <div>
                         <p className="font-medium">{item.name}</p>
                         <p className="text-sm text-muted-foreground capitalize">{item.type}</p>
+                        {item.description && (
+                          <p className="text-xs text-muted-foreground mt-1">{item.description}</p>
+                        )}
                       </div>
                       <div className="text-right">
                         {item.damage && (
@@ -260,6 +369,8 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
             
             <KnownSpells character={currentCharacter} onSpendFP={handleSpendFP} />
 
+            <AbilityTracker character={currentCharacter} onUpdateCharacter={handleUpdateCharacter} />
+
             <Card className="p-6 bg-card-secondary">
               <h3 className="font-cinzel font-semibold text-primary mb-4 flex items-center">
                 <Shield className="w-5 h-5 mr-2" />
@@ -270,7 +381,7 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Total DR</span>
                   <span className="text-xl font-bold text-primary">
-                    {calculateTotalDR(currentCharacter.equipment, currentCharacter.standingStone)}
+                    {calculateTotalDR(getAllEquipment(), currentCharacter.standingStone)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -301,6 +412,13 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
           isOpen={showGrantAP}
           onClose={() => setShowGrantAP(false)}
           onGrantAP={handleGrantAP}
+        />
+        
+        <EquipmentModal
+          isOpen={showEquipment}
+          onClose={() => setShowEquipment(false)}
+          character={currentCharacter}
+          onUpdateCharacter={handleUpdateCharacter}
         />
         
         <FPSpendModal

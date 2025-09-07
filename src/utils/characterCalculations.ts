@@ -123,3 +123,81 @@ export function getCharacterTier(ap: number): string {
   if (ap >= 10) return 'Apprentice';
   return 'Novice';
 }
+
+export function updateCharacterResources(character: Character): Character {
+  const newMaxHP = calculateMaxHP(character.stats, character.standingStone, character.race, character.skills, character);
+  const newMaxFP = calculateMaxFP(character.stats, character.standingStone, character.race, character.skills, character);
+  
+  const oldMaxHP = character.resources.hp.max;
+  const oldMaxFP = character.resources.fp.max;
+  
+  // Calculate HP adjustment - if max increased, add the difference to current
+  const hpIncrease = Math.max(0, newMaxHP - oldMaxHP);
+  const fpIncrease = Math.max(0, newMaxFP - oldMaxFP);
+  
+  return {
+    ...character,
+    resources: {
+      hp: {
+        max: newMaxHP,
+        current: Math.min(newMaxHP, character.resources.hp.current + hpIncrease)
+      },
+      fp: {
+        max: newMaxFP,
+        current: Math.min(newMaxFP, character.resources.fp.current + fpIncrease)
+      }
+    }
+  };
+}
+
+export function getKhajiitClawDamage(ap: number): number {
+  const tier = getCharacterTier(ap);
+  switch (tier) {
+    case 'Novice': return 2;
+    case 'Apprentice': return 3;
+    case 'Adept': return 4;
+    case 'Expert': return 5;
+    case 'Master':
+    case 'Legendary': return 6;
+    default: return 2;
+  }
+}
+
+export function performShortRest(character: Character): Character {
+  const { hp, fp } = character.resources;
+  
+  // Atronach stone special rule - no FP recovery on short rest
+  const fpRecovery = character.standingStone.id === "atronach" ? 0 : Math.floor(fp.max / 2);
+  
+  return {
+    ...character,
+    resources: {
+      hp: { ...hp, current: Math.min(hp.max, hp.current + Math.floor(hp.max / 2)) },
+      fp: { ...fp, current: Math.min(fp.max, fp.current + fpRecovery) }
+    }
+  };
+}
+
+export function performLongRest(character: Character): Character {
+  const usedAbilities = character.usedAbilities || [];
+  
+  // Reset all 'per adventure' abilities
+  const resetAbilities = usedAbilities.filter(abilityId => {
+    // Keep combat abilities, remove adventure abilities
+    return !abilityId.includes('racial-') && 
+           !abilityId.includes('stone-') &&
+           !abilityId.includes('tower-') &&
+           !abilityId.includes('shadow-') &&
+           !abilityId.includes('ritual-') &&
+           !abilityId.includes('lord-');
+  });
+  
+  return {
+    ...character,
+    resources: {
+      hp: { ...character.resources.hp, current: character.resources.hp.max },
+      fp: { ...character.resources.fp, current: character.resources.fp.max }
+    },
+    usedAbilities: resetAbilities
+  };
+}
