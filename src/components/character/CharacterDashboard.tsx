@@ -15,7 +15,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Heart, Zap, Sword, Shield, Settings, Plus, UserPlus, Play, RotateCcw, Package } from "lucide-react";
+import { Heart, Zap, Sword, Shield, Settings, Plus, UserPlus, Play, RotateCcw, Package, Download } from "lucide-react";
 import { 
   calculateMaxHP, 
   calculateMaxFP, 
@@ -197,6 +197,34 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
     return equipment;
   };
 
+  const handleExportCharacter = () => {
+    try {
+      const characterData = JSON.stringify(currentCharacter, null, 2);
+      const blob = new Blob([characterData], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${currentCharacter.name}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Character Exported!",
+        description: `${currentCharacter.name}.json has been downloaded.`,
+      });
+    } catch (error) {
+      console.error('Export error:', error);
+      toast({
+        title: "Export Failed",
+        description: "Failed to export character data.",
+        variant: "destructive"
+      });
+    }
+  };
+
 
   return (
     <div className="min-h-screen bg-gradient-dark p-6">
@@ -240,6 +268,10 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
               <Button onClick={() => setShowEquipment(true)} variant="outline">
                 <Package className="w-4 h-4 mr-2" />
                 Manage Equipment
+              </Button>
+              <Button onClick={handleExportCharacter} variant="outline">
+                <Download className="w-4 h-4 mr-2" />
+                Export Character
               </Button>
             </div>
             
