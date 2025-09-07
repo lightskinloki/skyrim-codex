@@ -15,7 +15,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Heart, Zap, Sword, Shield, Settings, Plus, UserPlus, Play, RotateCcw, Package, Download } from "lucide-react";
+import { Heart, Zap, Sword, Shield, Settings, Plus, UserPlus, Play, RotateCcw, Package, Download, Minus } from "lucide-react";
 import { 
   calculateMaxHP, 
   calculateMaxFP, 
@@ -64,6 +64,46 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
         }
       }
     };
+    setCurrentCharacter(updatedCharacter);
+    onUpdateCharacter(updatedCharacter);
+  };
+
+  const handleGoldAdjust = (amount: number) => {
+    const updatedCharacter = {
+      ...currentCharacter,
+      inventory: {
+        ...currentCharacter.inventory,
+        gold: Math.max(0, currentCharacter.inventory.gold + amount)
+      }
+    };
+    setCurrentCharacter(updatedCharacter);
+    onUpdateCharacter(updatedCharacter);
+  };
+
+  const handleDrAdjust = (equipmentId: string, amount: number) => {
+    const updatedEquipment = currentCharacter.equipment.map(item => {
+      if (item.id === equipmentId && item.dr !== undefined) {
+        // Ensure baseDr exists, defaulting to current dr if not present
+        const baseDr = (item as any).baseDr ?? item.dr;
+        const newDr = item.dr + amount;
+        
+        // Apply constraints: cannot be less than 0 or greater than baseDr
+        const constrainedDr = Math.max(0, Math.min(baseDr, newDr));
+        
+        return {
+          ...item,
+          dr: constrainedDr,
+          baseDr: baseDr // Ensure baseDr is preserved
+        };
+      }
+      return item;
+    });
+
+    const updatedCharacter = {
+      ...currentCharacter,
+      equipment: updatedEquipment
+    };
+    
     setCurrentCharacter(updatedCharacter);
     onUpdateCharacter(updatedCharacter);
   };
@@ -356,9 +396,29 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
                           </p>
                         )}
                         {item.dr && (
-                          <p className="text-sm font-bold text-primary">
-                            {item.dr} DR
-                          </p>
+                          <div className="flex items-center gap-1">
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              onClick={() => handleDrAdjust(item.id, -1)}
+                              className="h-6 w-6 p-0"
+                              disabled={item.dr <= 0}
+                            >
+                              <Minus className="w-3 h-3" />
+                            </Button>
+                            <p className="text-sm font-bold text-primary min-w-[3rem] text-center">
+                              {item.dr} DR
+                            </p>
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              onClick={() => handleDrAdjust(item.id, 1)}
+                              className="h-6 w-6 p-0"
+                              disabled={item.dr >= ((item as any).baseDr ?? item.dr)}
+                            >
+                              <Plus className="w-3 h-3" />
+                            </Button>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -377,9 +437,28 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-3 bg-primary/10 rounded">
                   <span className="font-medium">Gold</span>
-                  <span className="text-xl font-bold text-primary">
-                    {currentCharacter.inventory.gold}
-                  </span>
+                  <div className="flex items-center gap-1">
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      onClick={() => handleGoldAdjust(-1)}
+                      className="h-6 w-6 p-0"
+                      disabled={currentCharacter.inventory.gold <= 0}
+                    >
+                      <Minus className="w-3 h-3" />
+                    </Button>
+                    <span className="text-xl font-bold text-primary min-w-[3rem] text-center">
+                      {currentCharacter.inventory.gold}
+                    </span>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      onClick={() => handleGoldAdjust(1)}
+                      className="h-6 w-6 p-0"
+                    >
+                      <Plus className="w-3 h-3" />
+                    </Button>
+                  </div>
                 </div>
                 
                 {currentCharacter.inventory.items.length > 0 && (
