@@ -34,11 +34,6 @@ export function calculateMaxHP(
     maxHP += 2;
   }
   
-  // Combat Prowess Expert bonus
-  if (character?.progression.combatProwessUnlocked.expert) {
-    maxHP += 2;
-  }
-  
   // Apprentice stone penalty
   if (standingStone.id === "apprentice") {
     maxHP -= 2;

@@ -8,6 +8,7 @@ import { Character, CharacterSkill } from "@/types/character";
 import { skills } from "@/data/skills";
 import { useToast } from "@/hooks/use-toast";
 import { ProgressionModal } from "./ProgressionModal";
+import { updateCharacterResources } from "@/utils/characterCalculations";
 
 interface AdvancementModalProps {
   isOpen: boolean;
@@ -97,13 +98,13 @@ export function AdvancementModal({ isOpen, onClose, character, onUpdateCharacter
     setSelectedResource("");
   };
 
-  const [pendingProgressions, setPendingProgressions] = useState<Array<{type: 'arcane-expert' | 'arcane-master' | 'combat-master'}>>([]);
+  const [pendingProgressions, setPendingProgressions] = useState<Array<{type: 'arcane-adept' | 'arcane-expert' | 'arcane-master' | 'combat-master'}>>([]);
 
   const checkProgressionBenefits = (updatedCharacter: Character, skillId: string, newRank: string) => {
     const skill = skills.find(s => s.id === skillId);
     if (!skill) return { character: updatedCharacter, progressions: [] };
 
-    const progressions: Array<{type: 'arcane-expert' | 'arcane-master' | 'combat-master'}> = [];
+    const progressions: Array<{type: 'arcane-adept' | 'arcane-expert' | 'arcane-master' | 'combat-master'}> = [];
 
     // Combat Prowess benefits
     if (skill.type === "Combat") {
@@ -133,21 +134,7 @@ export function AdvancementModal({ isOpen, onClose, character, onUpdateCharacter
     // Arcane Studies benefits
     if (skill.type === "Magic") {
       if (newRank === "Adept" && !updatedCharacter.progression.arcaneStudiesUnlocked.adept) {
-        updatedCharacter.progression.arcaneStudiesUnlocked.adept = true;
-        // Promote one Novice magic skill to Apprentice
-        const noviceMagicSkills = updatedCharacter.skills.filter(s => 
-          s.rank === "Novice" && skills.find(skill => skill.id === s.skillId)?.type === "Magic"
-        );
-        if (noviceMagicSkills.length > 0) {
-          const skillToPromote = noviceMagicSkills[0];
-          skillToPromote.rank = "Apprentice";
-          const skillData = skills.find(s => s.id === skillToPromote.skillId);
-          skillToPromote.unlockedPerks = skillData?.perks.filter(p => p.rank === "Apprentice").map(p => p.name) || [];
-          toast({
-            title: "Arcane Studies Unlocked!",
-            description: `Your ${getSkillName(skillToPromote.skillId)} skill has been promoted to Apprentice for free!`,
-          });
-        }
+        progressions.push({ type: 'arcane-adept' });
       }
       if (newRank === "Expert" && !updatedCharacter.progression.arcaneStudiesUnlocked.expert) {
         progressions.push({ type: 'arcane-expert' });
@@ -224,17 +211,19 @@ export function AdvancementModal({ isOpen, onClose, character, onUpdateCharacter
 
       case "resource-training":
         if (selectedResource === "hp") {
-          updatedCharacter.resources.hp.max += 1;
-          updatedCharacter.resources.hp.current += 1;
+          updatedCharacter.resources.hp.max += 2;
+          updatedCharacter.resources.hp.current += 2;
         } else if (selectedResource === "fp") {
-          updatedCharacter.resources.fp.max += 1;
-          updatedCharacter.resources.fp.current += 1;
+          updatedCharacter.resources.fp.max += 2;
+          updatedCharacter.resources.fp.current += 2;
         }
         break;
 
       case "stat-increase":
         if (selectedStat && updatedCharacter.stats[selectedStat as keyof typeof updatedCharacter.stats] < 18) {
           (updatedCharacter.stats as any)[selectedStat] += 1;
+          // Recalculate resources after stat increase
+          updatedCharacter = updateCharacterResources(updatedCharacter);
         }
         break;
     }

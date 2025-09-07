@@ -12,7 +12,7 @@ interface ProgressionModalProps {
   onClose: () => void;
   character: Character;
   onUpdateCharacter: (character: Character) => void;
-  type: 'arcane-expert' | 'arcane-master' | 'combat-master';
+  type: 'arcane-adept' | 'arcane-expert' | 'arcane-master' | 'combat-master';
 }
 
 export function ProgressionModal({ isOpen, onClose, character, onUpdateCharacter, type }: ProgressionModalProps) {
@@ -21,6 +21,11 @@ export function ProgressionModal({ isOpen, onClose, character, onUpdateCharacter
 
   const getAvailableSkills = () => {
     switch (type) {
+      case 'arcane-adept':
+        return character.skills.filter(skill => 
+          skill.rank === "Novice" && 
+          skills.find(s => s.id === skill.skillId)?.type === "Magic"
+        );
       case 'arcane-expert':
       case 'arcane-master':
         return character.skills.filter(skill => 
@@ -44,6 +49,8 @@ export function ProgressionModal({ isOpen, onClose, character, onUpdateCharacter
 
   const getModalTitle = () => {
     switch (type) {
+      case 'arcane-adept':
+        return "Arcane Studies - Adept Benefit";
       case 'arcane-expert':
         return "Arcane Studies - Expert Benefit";
       case 'arcane-master':
@@ -57,6 +64,8 @@ export function ProgressionModal({ isOpen, onClose, character, onUpdateCharacter
 
   const getModalDescription = () => {
     switch (type) {
+      case 'arcane-adept':
+        return "Your focused study in magic naturally unlocks understanding of other schools. Choose one Novice magic skill to promote to Apprentice for free.";
       case 'arcane-expert':
         return "Your mastery of magic grants you deeper understanding. Choose one Apprentice magic skill to promote to Adept for free.";
       case 'arcane-master':
@@ -75,12 +84,20 @@ export function ProgressionModal({ isOpen, onClose, character, onUpdateCharacter
     const skill = updatedCharacter.skills.find(s => s.skillId === selectedSkill);
     
     if (skill) {
-      skill.rank = "Adept";
-      const skillData = skills.find(s => s.id === selectedSkill);
-      skill.unlockedPerks = skillData?.perks.filter(p => ["Apprentice", "Adept"].includes(p.rank)).map(p => p.name) || [];
+      if (type === 'arcane-adept') {
+        skill.rank = "Apprentice";
+        const skillData = skills.find(s => s.id === selectedSkill);
+        skill.unlockedPerks = skillData?.perks.filter(p => p.rank === "Apprentice").map(p => p.name) || [];
+      } else {
+        skill.rank = "Adept";
+        const skillData = skills.find(s => s.id === selectedSkill);
+        skill.unlockedPerks = skillData?.perks.filter(p => ["Apprentice", "Adept"].includes(p.rank)).map(p => p.name) || [];
+      }
 
       // Mark the progression as unlocked
-      if (type === 'arcane-expert') {
+      if (type === 'arcane-adept') {
+        updatedCharacter.progression.arcaneStudiesUnlocked.adept = true;
+      } else if (type === 'arcane-expert') {
         updatedCharacter.progression.arcaneStudiesUnlocked.expert = true;
       } else if (type === 'arcane-master') {
         updatedCharacter.progression.arcaneStudiesUnlocked.master = true;
@@ -131,7 +148,7 @@ export function ProgressionModal({ isOpen, onClose, character, onUpdateCharacter
                         </Badge>
                       </div>
                       <Badge variant="secondary">
-                        {skill.rank} → Adept
+                        {skill.rank} → {type === 'arcane-adept' ? 'Apprentice' : 'Adept'}
                       </Badge>
                     </div>
                   </CardContent>
