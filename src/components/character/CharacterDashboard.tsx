@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Character, Equipment } from "@/types/character";
 import { CharacterCard } from "./CharacterCard";
 import { StatBlock } from "./StatBlock";
@@ -15,7 +15,8 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Heart, Zap, Sword, Shield, Settings, Plus, UserPlus, Play, RotateCcw, Package, Download, Minus } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Heart, Zap, Sword, Shield, Settings, Plus, UserPlus, Play, RotateCcw, Package, Download, Minus, BookText } from "lucide-react";
 import { 
   calculateMaxHP, 
   calculateMaxFP, 
