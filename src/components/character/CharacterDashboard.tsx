@@ -472,6 +472,8 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
                 )}
               </div>
             </Card>
+
+            <SessionNotes characterId={currentCharacter.id} />
           </div>
 
           {/* Right Column - Skills */}
