@@ -32,7 +32,7 @@ This project is being built in phases. Here is our plan for upcoming features an
 *   [x] Implement a Character Import/Export system.
 
 ### **Phase 2: Advanced Gameplay Interactivity (Current Priority)**
-*   **[ ] Advanced Gold Management:** Upgrade the current `+/-` buttons to a more sophisticated modal that allows for typed input of any amount to be added or subtracted.
+*   [x] Advanced Gold Management:** Upgrade the current `+/-` buttons to a more sophisticated modal that allows for typed input of any amount to be added or subtracted.
 *   **[ ] Dynamic Item & Equipment Management:** Implement contextual `Add`/`Edit`/`Delete` controls within the Inventory and Equipment panels. This includes building the "Smart Add Equipment" modal with autocomplete for official items and manual entry for custom gear.
 *   **[ ] Dynamic Summon Display:** Create a new dashboard panel that appears when a summoning spell is cast, displaying the creature's stat block for easy reference.
 *   **[ ] Active Effects Tracker:** Implement a new dashboard panel to track the duration of temporary effects (e.g., `Berserker Rage`), managed by a single "End Turn" button.
