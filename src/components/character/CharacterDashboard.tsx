@@ -89,6 +89,13 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
   const [showAdvancement, setShowAdvancement] = useState(false);
   const [showGrantAP, setShowGrantAP] = useState(false);
   const [showEquipment, setShowEquipment] = useState(false);
+  const [goldModal, setGoldModal] = useState<{
+    isOpen: boolean;
+    type: 'add' | 'remove';
+  }>({
+    isOpen: false,
+    type: 'add'
+  });
   const [fpSpendModal, setFpSpendModal] = useState<{
     isOpen: boolean;
     actionName: string;
@@ -118,16 +125,24 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
     onUpdateCharacter(updatedCharacter);
   };
 
-  const handleGoldAdjust = (amount: number) => {
+  const handleGoldAdjust = (amount: number, type: 'add' | 'remove') => {
+    const adjustedAmount = type === 'add' ? amount : -amount;
+    const newGold = Math.max(0, currentCharacter.inventory.gold + adjustedAmount);
+    
     const updatedCharacter = {
       ...currentCharacter,
       inventory: {
         ...currentCharacter.inventory,
-        gold: Math.max(0, currentCharacter.inventory.gold + amount)
+        gold: newGold
       }
     };
     setCurrentCharacter(updatedCharacter);
     onUpdateCharacter(updatedCharacter);
+    
+    toast({
+      title: type === 'add' ? 'Gold Added' : 'Gold Removed',
+      description: `${amount} gold ${type === 'add' ? 'added to' : 'removed from'} inventory.`,
+    });
   };
 
   const handleDrAdjust = (equipmentId: string, amount: number) => {
@@ -315,6 +330,74 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
     }
   };
 
+  // Gold Modal Component
+  const GoldModal = () => {
+    const [amount, setAmount] = useState<string>('');
+
+    const handleSubmit = () => {
+      const numAmount = parseInt(amount);
+      if (!isNaN(numAmount) && numAmount > 0) {
+        handleGoldAdjust(numAmount, goldModal.type);
+        setGoldModal({ ...goldModal, isOpen: false });
+        setAmount('');
+      }
+    };
+
+    const handleKeyPress = (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        handleSubmit();
+      }
+    };
+
+    if (!goldModal.isOpen) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="bg-card p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+          <h3 className="text-xl font-cinzel font-bold text-primary mb-4">
+            {goldModal.type === 'add' ? 'Add Gold' : 'Remove Gold'}
+          </h3>
+          
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-2">
+              Amount
+            </label>
+            <input
+              type="number"
+              min="1"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              onKeyPress={handleKeyPress}
+              autoFocus
+              className="w-full px-3 py-2 bg-muted border border-muted-foreground/20 rounded focus:outline-none focus:ring-2 focus:ring-primary"
+              placeholder="Enter amount..."
+            />
+          </div>
+
+          <div className="flex gap-3">
+            <Button
+              onClick={() => {
+                setGoldModal({ ...goldModal, isOpen: false });
+                setAmount('');
+              }}
+              variant="outline"
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              disabled={!amount || parseInt(amount) <= 0}
+              className="flex-1"
+            >
+              Confirm
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
 
   return (
     <div className="min-h-screen bg-gradient-dark p-6">
@@ -487,26 +570,26 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-3 bg-primary/10 rounded">
                   <span className="font-medium">Gold</span>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-2">
                     <Button 
                       size="sm" 
                       variant="outline" 
-                      onClick={() => handleGoldAdjust(-1)}
-                      className="h-6 w-6 p-0"
+                      onClick={() => setGoldModal({ isOpen: true, type: 'remove' })}
+                      className="h-8 w-8 p-0"
                       disabled={currentCharacter.inventory.gold <= 0}
                     >
-                      <Minus className="w-3 h-3" />
+                      <Minus className="w-4 h-4" />
                     </Button>
-                    <span className="text-xl font-bold text-primary min-w-[3rem] text-center">
+                    <span className="text-xl font-bold text-primary min-w-[4rem] text-center">
                       {currentCharacter.inventory.gold}
                     </span>
                     <Button 
                       size="sm" 
                       variant="outline" 
-                      onClick={() => handleGoldAdjust(1)}
-                      className="h-6 w-6 p-0"
+                      onClick={() => setGoldModal({ isOpen: true, type: 'add' })}
+                      className="h-8 w-8 p-0"
                     >
-                      <Plus className="w-3 h-3" />
+                      <Plus className="w-4 h-4" />
                     </Button>
                   </div>
                 </div>
@@ -592,6 +675,8 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
           fpCost={fpSpendModal.fpCost}
           currentFP={currentCharacter.resources.fp.current}
         />
+        
+        <GoldModal />
       </div>
     </div>
   );
