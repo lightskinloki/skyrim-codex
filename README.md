@@ -39,7 +39,7 @@ This project is being built in phases. Here is our plan for upcoming features an
 *   [x] Limited-Use Ability Tracker:** Add a simple checkbox system to track the usage of "per combat" and "per adventure" abilities.
 
 ### **Phase 3: Visual & Immersive Upgrades (Future)**
-*   **[ ] Character & Standing Stone Art:** Integrate custom art assets into the Character Creator to enhance the visual experience.
+*   [%] Character & Standing Stone Art:** Integrate custom art assets into the Character Creator to enhance the visual experience.
 *   **[ ] Character Portrait Upload:** Add a feature to the main dashboard allowing users to upload a custom image for their character's portrait.
 
 ### **Phase 4: "Keystone" & Roleplaying Features (Long-Term Goals)**
