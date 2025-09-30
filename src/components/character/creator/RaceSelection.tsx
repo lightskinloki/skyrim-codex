@@ -51,14 +51,24 @@ export function RaceSelection({ races, selectedRace, onRaceSelect }: RaceSelecti
                 </Badge>
               </div>
 
-              {selectedRace?.id === race.id && (
-                <div className="mt-4 p-3 bg-muted/30 rounded border-l-4 border-primary">
-                  <h5 className="font-semibold text-primary mb-1">
-                    {race.abilityName}
-                  </h5>
-                  <p className="text-sm text-muted-foreground">
-                    {race.abilityDescription}
-                  </p>
+              {selectedRace?.id === race.id && race.image && (
+                <div className="mt-4 space-y-3">
+                  <div className="relative w-full h-48 rounded-lg overflow-hidden border-2 border-primary">
+                    <img 
+                      src={`/images/races/${race.image}`}
+                      alt={race.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  
+                  <div className="p-3 bg-muted/30 rounded border-l-4 border-primary">
+                    <h5 className="font-semibold text-primary mb-1">
+                      {race.abilityName}
+                    </h5>
+                    <p className="text-sm text-muted-foreground">
+                      {race.abilityDescription}
+                    </p>
+                  </div>
                 </div>
               )}
             </CardContent>
