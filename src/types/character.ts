@@ -1,5 +1,4 @@
 // Character data types for Skyrim TTRPG
-
 export interface Stats {
   might: number;
   agility: number;
@@ -24,6 +23,7 @@ export interface Race {
   bonus: keyof Stats;
   abilityName: string;
   abilityDescription: string;
+  image: string; // Added for race images
 }
 
 export interface StandingStone {
