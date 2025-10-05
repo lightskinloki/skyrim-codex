@@ -203,7 +203,7 @@ export const skills: Skill[] = [
       {
         rank: "Apprentice",
         name: "Impact",
-        description: "You can cast Apprentice Destruction spells (e.g., Firebolt). When you cast a Destruction spell, you can spend 1 additional FP to stagger the target, making them lose their next Minor Action.",
+        description: "You can cast Apprentice Destruction spells (e.g., Firebolt). When you cast a Destruction spell, you can spend 1 additional FP to slow the target, making them lose their next Minor Action.",
         fpCost: 1
       },
       {
