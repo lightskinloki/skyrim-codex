@@ -6,7 +6,7 @@ export const skills: Skill[] = [
     id: "one-handed",
     name: "One-Handed",
     type: "Combat",
-    governingStat: "Might",
+    governingStat: "might",
     perks: [
       {
         rank: "Novice",
@@ -43,7 +43,7 @@ export const skills: Skill[] = [
     id: "two-handed",
     name: "Two-Handed",
     type: "Combat",
-    governingStat: "Might",
+    governingStat: "might",
     perks: [
       {
         rank: "Novice",
@@ -79,7 +79,7 @@ export const skills: Skill[] = [
     id: "archery",
     name: "Archery",
     type: "Combat",
-    governingStat: "Agility",
+    governingStat: "agility",
     perks: [
       {
         rank: "Novice",
@@ -119,7 +119,7 @@ export const skills: Skill[] = [
     id: "heavy-armor",
     name: "Heavy Armor",
     type: "Armor",
-    governingStat: "Might",
+    governingStat: "might",
     perks: [
       {
         rank: "Novice",
@@ -154,7 +154,7 @@ export const skills: Skill[] = [
     id: "light-armor",
     name: "Light Armor",
     type: "Armor",
-    governingStat: "Agility",
+    governingStat: "agility",
     perks: [
       {
         rank: "Novice",
@@ -193,7 +193,7 @@ export const skills: Skill[] = [
     id: "destruction",
     name: "Destruction",
     type: "Magic",
-    governingStat: "Magic",
+    governingStat: "magic",
     perks: [
       {
         rank: "Novice",
@@ -228,7 +228,7 @@ export const skills: Skill[] = [
     id: "restoration",
     name: "Restoration",
     type: "Magic",
-    governingStat: "Magic",
+    governingStat: "magic",
     perks: [
       {
         rank: "Novice",
@@ -263,7 +263,7 @@ export const skills: Skill[] = [
     id: "alteration",
     name: "Alteration",
     type: "Magic",
-    governingStat: "Magic",
+    governingStat: "magic",
     perks: [
       {
         rank: "Novice",
@@ -297,7 +297,7 @@ export const skills: Skill[] = [
     id: "illusion",
     name: "Illusion",
     type: "Magic",
-    governingStat: "Magic",
+    governingStat: "magic",
     perks: [
       {
         rank: "Novice",
@@ -330,7 +330,7 @@ export const skills: Skill[] = [
     id: "conjuration",
     name: "Conjuration",
     type: "Magic",
-    governingStat: "Magic",
+    governingStat: "magic",
     perks: [
       {
         rank: "Novice",
@@ -365,7 +365,7 @@ export const skills: Skill[] = [
     id: "sneak",
     name: "Sneak",
     type: "Utility",
-    governingStat: "Agility",
+    governingStat: "agility",
     perks: [
       {
         rank: "Novice",
@@ -402,7 +402,7 @@ export const skills: Skill[] = [
     id: "lockpicking",
     name: "Lockpicking",
     type: "Utility",
-    governingStat: "Guile",
+    governingStat: "guile",
     perks: [
       {
         rank: "Novice",
@@ -436,7 +436,7 @@ export const skills: Skill[] = [
     id: "speech",
     name: "Speech",
     type: "Utility",
-    governingStat: "Guile",
+    governingStat: "guile",
     perks: [
       {
         rank: "Novice",

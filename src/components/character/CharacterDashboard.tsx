@@ -8,7 +8,7 @@ import { KnownSpells } from "./KnownSpells";
 import { FPSpendModal } from "./FPSpendModal";
 import { AdvancementModal } from "./AdvancementModal";
 import { GrantAPModal } from "./GrantAPModal";
-import { EquipmentModal } from "./EquipmentModal";
+import { EquipmentManagerModal } from "./EquipmentManagerModal";
 import { AbilityTracker } from "./AbilityTracker";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
