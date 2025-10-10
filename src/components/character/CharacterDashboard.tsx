@@ -660,7 +660,7 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
           onGrantAP={handleGrantAP}
         />
         
-        <EquipmentModal
+        <EquipmentManagerModal
           isOpen={showEquipment}
           onClose={() => setShowEquipment(false)}
           character={currentCharacter}
