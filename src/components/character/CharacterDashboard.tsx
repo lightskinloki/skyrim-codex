@@ -16,7 +16,9 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Heart, Zap, Sword, Shield, Settings, Plus, UserPlus, Play, RotateCcw, Package, Download, Minus, BookText } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Heart, Zap, Sword, Shield, Settings, Plus, UserPlus, Play, RotateCcw, Package, Download, Minus, BookText, Edit2, Trash2, X, Check } from "lucide-react";
+import { officialEquipment } from "@/data/equipment";
 import { 
   calculateMaxHP, 
   calculateMaxFP, 
@@ -105,6 +107,17 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
     actionName: '',
     fpCost: 0
   });
+  
+  // Equipment management state
+  const [addingEquipment, setAddingEquipment] = useState(false);
+  const [editingEquipmentId, setEditingEquipmentId] = useState<string | null>(null);
+  const [equipmentForm, setEquipmentForm] = useState({ name: '', type: 'weapon' as 'weapon' | 'armor' | 'shield', damage: '', dr: '', description: '' });
+  const [equipmentSuggestions, setEquipmentSuggestions] = useState<typeof officialEquipment>([]);
+  
+  // Item management state
+  const [addingItem, setAddingItem] = useState(false);
+  const [newItemName, setNewItemName] = useState('');
+  
   const { toast } = useToast();
 
   const handleResourceAdjust = (type: 'hp' | 'fp', amount: number) => {
@@ -300,6 +313,133 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
     }
     
     return equipment;
+  };
+
+  // Equipment Management Functions
+  const handleEquipmentNameChange = (value: string) => {
+    setEquipmentForm({ ...equipmentForm, name: value });
+    
+    if (value.length > 0) {
+      const matches = officialEquipment.filter(item => 
+        item.name.toLowerCase().includes(value.toLowerCase())
+      );
+      setEquipmentSuggestions(matches.slice(0, 5));
+    } else {
+      setEquipmentSuggestions([]);
+    }
+  };
+  
+  const handleSelectSuggestion = (item: typeof officialEquipment[0]) => {
+    setEquipmentForm({
+      name: item.name,
+      type: item.type === 'clothing' ? 'armor' : item.type,
+      damage: item.damage?.toString() || '',
+      dr: item.dr?.toString() || '',
+      description: item.description
+    });
+    setEquipmentSuggestions([]);
+  };
+  
+  const handleAddEquipment = () => {
+    if (!equipmentForm.name) return;
+    
+    const newEquipment: Equipment = {
+      id: `custom-${Date.now()}`,
+      name: equipmentForm.name,
+      type: equipmentForm.type,
+      ...(equipmentForm.damage && { damage: parseInt(equipmentForm.damage) }),
+      ...(equipmentForm.dr && { dr: parseInt(equipmentForm.dr), baseDr: parseInt(equipmentForm.dr) }),
+      ...(equipmentForm.description && { description: equipmentForm.description })
+    };
+    
+    const updatedCharacter = {
+      ...currentCharacter,
+      equipment: [...currentCharacter.equipment, newEquipment]
+    };
+    
+    setCurrentCharacter(updatedCharacter);
+    onUpdateCharacter(updatedCharacter);
+    setAddingEquipment(false);
+    setEquipmentForm({ name: '', type: 'weapon', damage: '', dr: '', description: '' });
+    setEquipmentSuggestions([]);
+  };
+  
+  const handleEditEquipment = (item: Equipment) => {
+    setEditingEquipmentId(item.id);
+    setEquipmentForm({
+      name: item.name,
+      type: item.type,
+      damage: item.damage?.toString() || '',
+      dr: item.dr?.toString() || '',
+      description: item.description || ''
+    });
+  };
+  
+  const handleSaveEquipment = (itemId: string) => {
+    const updatedEquipment = currentCharacter.equipment.map(item => {
+      if (item.id === itemId) {
+        return {
+          ...item,
+          name: equipmentForm.name,
+          type: equipmentForm.type,
+          ...(equipmentForm.damage && { damage: parseInt(equipmentForm.damage) }),
+          ...(equipmentForm.dr && { dr: parseInt(equipmentForm.dr), baseDr: (item as any).baseDr || parseInt(equipmentForm.dr) }),
+          ...(equipmentForm.description && { description: equipmentForm.description })
+        };
+      }
+      return item;
+    });
+    
+    const updatedCharacter = {
+      ...currentCharacter,
+      equipment: updatedEquipment
+    };
+    
+    setCurrentCharacter(updatedCharacter);
+    onUpdateCharacter(updatedCharacter);
+    setEditingEquipmentId(null);
+    setEquipmentForm({ name: '', type: 'weapon', damage: '', dr: '', description: '' });
+  };
+  
+  const handleDeleteEquipment = (itemId: string) => {
+    const updatedCharacter = {
+      ...currentCharacter,
+      equipment: currentCharacter.equipment.filter(item => item.id !== itemId)
+    };
+    
+    setCurrentCharacter(updatedCharacter);
+    onUpdateCharacter(updatedCharacter);
+  };
+  
+  // Item Management Functions
+  const handleAddItem = () => {
+    if (!newItemName.trim()) return;
+    
+    const updatedCharacter = {
+      ...currentCharacter,
+      inventory: {
+        ...currentCharacter.inventory,
+        items: [...currentCharacter.inventory.items, newItemName.trim()]
+      }
+    };
+    
+    setCurrentCharacter(updatedCharacter);
+    onUpdateCharacter(updatedCharacter);
+    setNewItemName('');
+    setAddingItem(false);
+  };
+  
+  const handleDeleteItem = (index: number) => {
+    const updatedCharacter = {
+      ...currentCharacter,
+      inventory: {
+        ...currentCharacter.inventory,
+        items: currentCharacter.inventory.items.filter((_, i) => i !== index)
+      }
+    };
+    
+    setCurrentCharacter(updatedCharacter);
+    onUpdateCharacter(updatedCharacter);
   };
 
   const handleExportCharacter = () => {
@@ -512,52 +652,221 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
               </h3>
               
               <div className="space-y-3">
-                {getAllEquipment().length > 0 ? (
-                  getAllEquipment().map((item, index) => (
-                    <div key={item.id || index} className="flex items-center justify-between p-3 bg-muted rounded">
-                      <div>
-                        <p className="font-medium">{item.name}</p>
-                        <p className="text-sm text-muted-foreground capitalize">{item.type}</p>
-                        {item.description && (
-                          <p className="text-xs text-muted-foreground mt-1">{item.description}</p>
-                        )}
-                      </div>
-                      <div className="text-right">
-                        {item.damage && (
-                          <p className="text-sm font-bold text-destructive">
-                            {item.damage} DMG
-                          </p>
-                        )}
-                        {item.dr && (
-                          <div className="flex items-center gap-1">
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              onClick={() => handleDrAdjust(item.id, -1)}
-                              className="h-6 w-6 p-0"
-                              disabled={item.dr <= 0}
+                {getAllEquipment().filter(item => item.id !== 'khajiit-claws').length > 0 ? (
+                  <>
+                    {getAllEquipment().map((item, index) => {
+                      const isKhajiitClaws = item.id === 'khajiit-claws';
+                      const isEditing = editingEquipmentId === item.id;
+                      
+                      if (isEditing) {
+                        return (
+                          <div key={item.id || index} className="p-3 bg-muted rounded space-y-2 relative">
+                            <Input
+                              value={equipmentForm.name}
+                              onChange={(e) => handleEquipmentNameChange(e.target.value)}
+                              placeholder="Item name"
+                              className="mb-2"
+                            />
+                            {equipmentSuggestions.length > 0 && (
+                              <div className="absolute z-50 w-full bg-popover border rounded-md shadow-lg mt-1 max-h-48 overflow-y-auto">
+                                {equipmentSuggestions.map((suggestion, i) => (
+                                  <button
+                                    key={i}
+                                    onClick={() => handleSelectSuggestion(suggestion)}
+                                    className="w-full text-left px-3 py-2 hover:bg-accent text-sm"
+                                  >
+                                    <div className="font-medium">{suggestion.name}</div>
+                                    <div className="text-xs text-muted-foreground">{suggestion.description}</div>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                            <select
+                              value={equipmentForm.type}
+                              onChange={(e) => setEquipmentForm({ ...equipmentForm, type: e.target.value as any })}
+                              className="w-full px-3 py-2 bg-background border rounded"
                             >
-                              <Minus className="w-3 h-3" />
-                            </Button>
-                            <p className="text-sm font-bold text-primary min-w-[3rem] text-center">
-                              {item.dr} DR
-                            </p>
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              onClick={() => handleDrAdjust(item.id, 1)}
-                              className="h-6 w-6 p-0"
-                              disabled={item.dr >= ((item as any).baseDr ?? item.dr)}
-                            >
-                              <Plus className="w-3 h-3" />
-                            </Button>
+                              <option value="weapon">Weapon</option>
+                              <option value="armor">Armor</option>
+                              <option value="shield">Shield</option>
+                            </select>
+                            <div className="flex gap-2">
+                              <Input
+                                type="number"
+                                value={equipmentForm.damage}
+                                onChange={(e) => setEquipmentForm({ ...equipmentForm, damage: e.target.value })}
+                                placeholder="Damage"
+                              />
+                              <Input
+                                type="number"
+                                value={equipmentForm.dr}
+                                onChange={(e) => setEquipmentForm({ ...equipmentForm, dr: e.target.value })}
+                                placeholder="DR"
+                              />
+                            </div>
+                            <Input
+                              value={equipmentForm.description}
+                              onChange={(e) => setEquipmentForm({ ...equipmentForm, description: e.target.value })}
+                              placeholder="Description"
+                            />
+                            <div className="flex gap-2">
+                              <Button size="sm" onClick={() => handleSaveEquipment(item.id)} className="flex-1">
+                                <Check className="w-4 h-4 mr-1" /> Save
+                              </Button>
+                              <Button size="sm" variant="outline" onClick={() => {
+                                setEditingEquipmentId(null);
+                                setEquipmentForm({ name: '', type: 'weapon', damage: '', dr: '', description: '' });
+                              }} className="flex-1">
+                                <X className="w-4 h-4 mr-1" /> Cancel
+                              </Button>
+                            </div>
                           </div>
-                        )}
-                      </div>
-                    </div>
-                  ))
+                        );
+                      }
+                      
+                      return (
+                        <div key={item.id || index} className="flex items-center justify-between p-3 bg-muted rounded">
+                          <div className="flex-1">
+                            <p className="font-medium">{item.name}</p>
+                            <p className="text-sm text-muted-foreground capitalize">{item.type}</p>
+                            {item.description && (
+                              <p className="text-xs text-muted-foreground mt-1">{item.description}</p>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="text-right">
+                              {item.damage && (
+                                <p className="text-sm font-bold text-destructive">
+                                  {item.damage} DMG
+                                </p>
+                              )}
+                              {item.dr && (
+                                <div className="flex items-center gap-1">
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline" 
+                                    onClick={() => handleDrAdjust(item.id, -1)}
+                                    className="h-6 w-6 p-0"
+                                    disabled={item.dr <= 0}
+                                  >
+                                    <Minus className="w-3 h-3" />
+                                  </Button>
+                                  <p className="text-sm font-bold text-primary min-w-[3rem] text-center">
+                                    {item.dr} DR
+                                  </p>
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline" 
+                                    onClick={() => handleDrAdjust(item.id, 1)}
+                                    className="h-6 w-6 p-0"
+                                    disabled={item.dr >= ((item as any).baseDr ?? item.dr)}
+                                  >
+                                    <Plus className="w-3 h-3" />
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                            {!isKhajiitClaws && (
+                              <div className="flex gap-1">
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost" 
+                                  onClick={() => handleEditEquipment(item)}
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Edit2 className="w-4 h-4" />
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost" 
+                                  onClick={() => handleDeleteEquipment(item.id)}
+                                  className="h-8 w-8 p-0 text-destructive"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </>
                 ) : (
                   <p className="text-muted-foreground italic">No equipment equipped</p>
+                )}
+                
+                {addingEquipment ? (
+                  <div className="p-3 bg-muted rounded space-y-2 relative">
+                    <Input
+                      value={equipmentForm.name}
+                      onChange={(e) => handleEquipmentNameChange(e.target.value)}
+                      placeholder="Start typing item name..."
+                      autoFocus
+                    />
+                    {equipmentSuggestions.length > 0 && (
+                      <div className="absolute z-50 w-[calc(100%-1.5rem)] bg-popover border rounded-md shadow-lg mt-1 max-h-48 overflow-y-auto">
+                        {equipmentSuggestions.map((suggestion, i) => (
+                          <button
+                            key={i}
+                            onClick={() => handleSelectSuggestion(suggestion)}
+                            className="w-full text-left px-3 py-2 hover:bg-accent text-sm"
+                          >
+                            <div className="font-medium">{suggestion.name}</div>
+                            <div className="text-xs text-muted-foreground">{suggestion.description}</div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    <select
+                      value={equipmentForm.type}
+                      onChange={(e) => setEquipmentForm({ ...equipmentForm, type: e.target.value as any })}
+                      className="w-full px-3 py-2 bg-background border rounded"
+                    >
+                      <option value="weapon">Weapon</option>
+                      <option value="armor">Armor</option>
+                      <option value="shield">Shield</option>
+                    </select>
+                    <div className="flex gap-2">
+                      <Input
+                        type="number"
+                        value={equipmentForm.damage}
+                        onChange={(e) => setEquipmentForm({ ...equipmentForm, damage: e.target.value })}
+                        placeholder="Damage"
+                      />
+                      <Input
+                        type="number"
+                        value={equipmentForm.dr}
+                        onChange={(e) => setEquipmentForm({ ...equipmentForm, dr: e.target.value })}
+                        placeholder="DR"
+                      />
+                    </div>
+                    <Input
+                      value={equipmentForm.description}
+                      onChange={(e) => setEquipmentForm({ ...equipmentForm, description: e.target.value })}
+                      placeholder="Description (optional)"
+                    />
+                    <div className="flex gap-2">
+                      <Button size="sm" onClick={handleAddEquipment} className="flex-1">
+                        <Check className="w-4 h-4 mr-1" /> Add
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => {
+                        setAddingEquipment(false);
+                        setEquipmentForm({ name: '', type: 'weapon', damage: '', dr: '', description: '' });
+                        setEquipmentSuggestions([]);
+                      }} className="flex-1">
+                        <X className="w-4 h-4 mr-1" /> Cancel
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={() => setAddingEquipment(true)}
+                    className="w-full"
+                  >
+                    <Plus className="w-4 h-4 mr-2" /> Add Equipment
+                  </Button>
                 )}
               </div>
             </Card>
@@ -597,11 +906,49 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
                 {currentCharacter.inventory.items.length > 0 && (
                   <div className="space-y-2">
                     {currentCharacter.inventory.items.map((item, index) => (
-                      <div key={index} className="p-2 bg-muted rounded">
-                        {item}
+                      <div key={index} className="flex items-center justify-between p-2 bg-muted rounded">
+                        <span>{item}</span>
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          onClick={() => handleDeleteItem(index)}
+                          className="h-6 w-6 p-0 text-destructive"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
                       </div>
                     ))}
                   </div>
+                )}
+                
+                {addingItem ? (
+                  <div className="flex gap-2">
+                    <Input
+                      value={newItemName}
+                      onChange={(e) => setNewItemName(e.target.value)}
+                      placeholder="Item name"
+                      autoFocus
+                      onKeyDown={(e) => e.key === 'Enter' && handleAddItem()}
+                    />
+                    <Button size="sm" onClick={handleAddItem}>
+                      <Check className="w-4 h-4" />
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => {
+                      setAddingItem(false);
+                      setNewItemName('');
+                    }}>
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={() => setAddingItem(true)}
+                    className="w-full"
+                  >
+                    <Plus className="w-4 h-4 mr-2" /> Add Item
+                  </Button>
                 )}
               </div>
             </Card>
