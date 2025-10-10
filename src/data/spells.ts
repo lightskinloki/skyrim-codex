@@ -7,21 +7,21 @@ export const spells: Spell[] = [
     school: "Destruction", 
     tier: "Novice", 
     fpCost: 1, 
-    description: "Project a stream of fire dealing 1 fire damage to a single target in melee range. The target starts Burning for 1 damage at the start of their next turn." 
+    description: "Project a stream of fire at a target in melee range, dealing 1 fire damage. The target starts Burning for 1 damage at the start of their next turn." 
   },
   { 
     name: "Frostbite", 
     school: "Destruction", 
     tier: "Novice", 
     fpCost: 1, 
-    description: "Project a jet of freezing cold dealing 1 frost damage and draining 1 FP from a single target in melee range." 
+    description: "Project a jet of freezing cold at a target in melee range, dealing 1 frost damage and draining 1 FP." 
   },
   { 
     name: "Sparks", 
     school: "Destruction", 
     tier: "Novice", 
     fpCost: 1, 
-    description: "Project a torrent of lightning draining 2 FP from a single target in melee range." 
+    description: "Project a torrent of lightning at a target in melee range, draining 2 FP." 
   },
 
   // DESTRUCTION - APPRENTICE
@@ -30,42 +30,42 @@ export const spells: Spell[] = [
     school: "Destruction", 
     tier: "Apprentice", 
     fpCost: 2, 
-    description: "Launch a bolt of fire dealing 3 fire damage. Targets hit start Burning for 1 damage per turn for 2 turns." 
+    description: "Launch a bolt of fire, dealing 3 fire damage. The target starts Burning for 1 damage per turn for 2 turns." 
   },
   { 
     name: "Ice Spike", 
     school: "Destruction", 
     tier: "Apprentice", 
     fpCost: 2, 
-    description: "Launch a deadly shard of ice dealing 2 frost damage and 2 FP damage." 
+    description: "Launch a deadly shard of ice, dealing 2 frost damage and 2 FP damage." 
   },
   { 
     name: "Lightning Bolt", 
     school: "Destruction", 
     tier: "Apprentice", 
     fpCost: 2, 
-    description: "Launch a bolt of lightning dealing 1 shock damage and 5 FP damage." 
+    description: "Launch a bolt of lightning, dealing 1 shock damage and 5 FP damage." 
   },
   { 
     name: "Fire Rune", 
     school: "Destruction", 
     tier: "Apprentice", 
     fpCost: 3, 
-    description: "Place a magical trap on a nearby surface. The next creature to approach triggers an explosion dealing 4 fire damage and Burning for 1 damage per turn for 2 turns." 
+    description: "Place a magical trap on a nearby surface. The next creature to approach triggers an explosion, dealing 4 fire damage and Burning for 1 damage per turn for 2 turns." 
   },
   { 
     name: "Frost Rune", 
     school: "Destruction", 
     tier: "Apprentice", 
     fpCost: 3, 
-    description: "Place a chilling trap. The next creature to approach triggers an explosion dealing 3 frost damage and becoming Slowed (cannot use Minor Action for movement) for their next turn." 
+    description: "Place a chilling trap on a nearby surface. The next creature to approach triggers an explosion, dealing 3 frost damage and becoming Slowed (cannot use Minor Action for movement) for their next turn." 
   },
   { 
     name: "Lightning Rune", 
     school: "Destruction", 
     tier: "Apprentice", 
     fpCost: 3, 
-    description: "Place a shocking trap. The next creature to approach triggers an explosion dealing 2 shock damage and draining 6 FP." 
+    description: "Place a shocking trap on a nearby surface. The next creature to approach triggers an explosion, dealing 2 shock damage and draining 6 FP." 
   },
 
   // DESTRUCTION - ADEPT
@@ -74,14 +74,14 @@ export const spells: Spell[] = [
     school: "Destruction", 
     tier: "Adept", 
     fpCost: 4, 
-    description: "A fiery explosion deals 5 fire damage to your target and 3 fire damage to anyone within 20 feet. All targets hit start Burning for 1 damage per turn for 3 turns." 
+    description: "A fiery explosion deals 5 fire damage to your target and 3 fire damage to anyone within 20 feet. All targets start Burning for 1 damage per turn for 3 turns." 
   },
   { 
     name: "Ice Storm", 
     school: "Destruction", 
     tier: "Adept", 
     fpCost: 4, 
-    description: "A swirling vortex of ice moves forward in a line, dealing 3 frost damage and 3 FP damage per turn to all in its path. All targets hit are Slowed." 
+    description: "A swirling vortex of ice moves forward in a line, dealing 3 frost damage and 3 FP damage per turn to all in its path. All targets are Slowed." 
   },
   { 
     name: "Chain Lightning", 
@@ -118,21 +118,21 @@ export const spells: Spell[] = [
     school: "Destruction", 
     tier: "Expert", 
     fpCost: 5, 
-    description: "Launch an immense blast of fire dealing 8 fire damage. Targets hit are guaranteed to start Burning for 2 damage per turn for 3 turns." 
+    description: "Launch an immense blast of fire, dealing 8 fire damage. The target is guaranteed to start Burning for 2 damage per turn for 3 turns." 
   },
   { 
     name: "Icy Spear", 
     school: "Destruction", 
     tier: "Expert", 
     fpCost: 5, 
-    description: "Launch a massive spear of ice dealing 6 frost damage and 6 FP damage. Targets hit are Slowed for two turns." 
+    description: "Launch a massive spear of ice, dealing 6 frost damage and 6 FP damage. The target is Slowed for two turns." 
   },
   { 
     name: "Thunderbolt", 
     school: "Destruction", 
     tier: "Expert", 
     fpCost: 5, 
-    description: "Launch a powerful bolt of lightning dealing 4 shock damage and draining 8 FP. If this kills a non-boss enemy, they disintegrate into ash." 
+    description: "Launch a powerful bolt of lightning, dealing 4 shock damage and draining 8 FP. If this kills a non-boss enemy, they disintegrate into ash." 
   },
   { 
     name: "Wall of Flames", 
@@ -146,14 +146,14 @@ export const spells: Spell[] = [
     school: "Destruction", 
     tier: "Expert", 
     fpCost: 5, 
-    description: "Create a wall of biting frost for 1 round. Enemies entering or standing in it take 2 frost damage and 2 FP damage per turn and are Slowed." 
+    description: "Create a wall of biting frost on the ground for 1 round. Enemies entering or standing in it take 2 frost damage and 2 FP damage per turn and are Slowed." 
   },
   { 
     name: "Wall of Storms", 
     school: "Destruction", 
     tier: "Expert", 
     fpCost: 5, 
-    description: "Create a wall of electrical energy for 1 round. Enemies entering or standing in it take 1 shock damage and lose 5 FP per turn." 
+    description: "Create a wall of electrical energy on the ground for 1 round. Enemies entering or standing in it take 1 shock damage and lose 5 FP per turn." 
   },
 
   // DESTRUCTION - MASTER
@@ -169,14 +169,14 @@ export const spells: Spell[] = [
     school: "Destruction", 
     tier: "Master", 
     fpCost: 8, 
-    description: "Once per encounter. Create a raging blizzard in a 40 foot area for 2 rounds. All creatures within it (excluding you) take 10 frost damage at the start of their turn and are Slowed. Visibility is heavily obscured." 
+    description: "Once per encounter. Create a raging blizzard in a 40 foot area for 2 rounds. All creatures within (excluding you) take 10 frost damage at the start of their turn and are Slowed. Visibility is heavily obscured." 
   },
   { 
     name: "Lightning Storm", 
     school: "Destruction", 
     tier: "Master", 
     fpCost: 8, 
-    description: "Once per encounter. Channel a continuous beam of lightning at one target dealing 8 shock damage and draining 15 FP. You can sustain the beam on subsequent turns by spending 8 FP and your Major Action. You cannot move while channeling." 
+    description: "Once per encounter. Channel a continuous beam of lightning at one target, dealing 8 shock damage and draining 15 FP. Sustain the beam on subsequent turns by spending 8 FP and your Major Action. You cannot move while channeling." 
   },
 
   // RESTORATION - NOVICE
@@ -192,7 +192,7 @@ export const spells: Spell[] = [
     school: "Restoration", 
     tier: "Novice", 
     fpCost: 2, 
-    description: "As a Minor Action, create a magical field. Until the start of your next turn, you gain Damage Reduction 3 against spells. You can hold the ward on subsequent turns by spending 1 FP and your Minor Action." 
+    description: "As a Minor Action, create a magical field that grants Damage Reduction 3 against spells until the start of your next turn. Hold the ward on subsequent turns by spending 1 FP and your Minor Action." 
   },
 
   // RESTORATION - APPRENTICE
@@ -215,14 +215,14 @@ export const spells: Spell[] = [
     school: "Restoration", 
     tier: "Apprentice", 
     fpCost: 2, 
-    description: "A bolt of pure sunlight strikes a target, dealing 3 damage. This damage is doubled against undead targets." 
+    description: "A bolt of pure sunlight strikes a target, dealing 3 damage. Deals double damage to undead targets." 
   },
   { 
     name: "Turn Lesser Undead", 
     school: "Restoration", 
     tier: "Apprentice", 
     fpCost: 3, 
-    description: "Release a wave of holy energy. A single undead creature (e.g., Draugr, Skeleton) must succeed on a Guile roll or be terrified, losing its next turn." 
+    description: "Release a wave of holy energy at a single undead creature (e.g., Draugr, Skeleton). On a failed Guile roll, the target is terrified and loses its next turn." 
   },
 
   // RESTORATION - ADEPT
@@ -231,28 +231,28 @@ export const spells: Spell[] = [
     school: "Restoration", 
     tier: "Adept", 
     fpCost: 4, 
-    description: "Channel a continuous stream of healing energy into an ally you are touching, restoring 6 HP for each turn you maintain the spell (costs 4 FP per turn)." 
+    description: "Channel a continuous stream of healing energy into an ally you are touching, restoring 6 HP per turn. Costs 4 FP each turn to maintain." 
   },
   { 
     name: "Steadfast Ward", 
     school: "Restoration", 
     tier: "Adept", 
     fpCost: 3, 
-    description: "As a Minor Action, create a superior magical field. Until the start of your next turn, you gain Damage Reduction 5 against spells." 
+    description: "As a Minor Action, create a superior magical field that grants Damage Reduction 5 against spells until the start of your next turn." 
   },
   { 
     name: "Vampire's Bane", 
     school: "Restoration", 
     tier: "Adept", 
     fpCost: 4, 
-    description: "A solar explosion erupts around a target, dealing 5 damage to them and 2 damage to anyone nearby. This damage is doubled against undead targets." 
+    description: "A solar explosion erupts around a target, dealing 5 damage to them and 2 damage to anyone nearby. Deals double damage to undead targets." 
   },
   { 
     name: "Turn Undead", 
     school: "Restoration", 
     tier: "Adept", 
     fpCost: 4, 
-    description: "Release a wave of holy energy. Up to two undead creatures are terrified for 2 rounds on a failed Guile roll." 
+    description: "Release a wave of holy energy at up to two undead creatures. On a failed Guile roll, targets are terrified for 2 rounds." 
   },
 
   // RESTORATION - EXPERT
@@ -268,7 +268,7 @@ export const spells: Spell[] = [
     school: "Restoration", 
     tier: "Expert", 
     fpCost: 4, 
-    description: "As a Minor Action, create a master's ward, granting Damage Reduction 8 against spells until your next turn." 
+    description: "As a Minor Action, create a master's ward that grants Damage Reduction 8 against spells until your next turn." 
   },
   { 
     name: "Stendarr's Aura", 
@@ -282,7 +282,7 @@ export const spells: Spell[] = [
     school: "Restoration", 
     tier: "Expert", 
     fpCost: 5, 
-    description: "Create a circle on the ground that lasts for 2 rounds. Any undead that attempts to enter it is automatically turned and must flee. Living allies standing in the circle have Advantage on rolls to resist fear." 
+    description: "Create a circle on the ground that lasts for 2 rounds. Any undead attempting to enter is automatically turned and must flee. Living allies standing in the circle have Advantage on rolls to resist fear." 
   },
 
   // RESTORATION - MASTER
@@ -291,14 +291,14 @@ export const spells: Spell[] = [
     school: "Restoration", 
     tier: "Master", 
     fpCost: 8, 
-    description: "Once per encounter. Create a large circle on the ground that lasts for 3 rounds. Undead cannot enter it, and any allies standing within it regain 5 HP at the start of their turn." 
+    description: "Once per encounter. Create a large circle on the ground that lasts for 3 rounds. Undead cannot enter it. Allies standing within regain 5 HP at the start of their turn." 
   },
   { 
     name: "Bane of the Undead", 
     school: "Restoration", 
     tier: "Master", 
     fpCost: 8, 
-    description: "Once per encounter. Release a wave of pure sunlight. All undead in a very large area around you are set ablaze, taking 5 holy damage at the start of their turn for the next 3 rounds." 
+    description: "Once per encounter. Release a wave of pure sunlight in a very large area around you. All undead are set ablaze, taking 5 holy damage at the start of their turn for the next 3 rounds." 
   },
 
   // ALTERATION - NOVICE
@@ -307,7 +307,7 @@ export const spells: Spell[] = [
     school: "Alteration", 
     tier: "Novice", 
     fpCost: 2, 
-    description: "Magically harden your skin to the toughness of oak. For the rest of the encounter, if you are not wearing armor, you gain Damage Reduction 2." 
+    description: "Magically harden your skin to the toughness of oak. If you are not wearing armor, gain Damage Reduction 2 for the rest of the encounter." 
   },
   { 
     name: "Magelight", 
@@ -323,21 +323,21 @@ export const spells: Spell[] = [
     school: "Alteration", 
     tier: "Apprentice", 
     fpCost: 3, 
-    description: "A stronger version of Oakflesh that grants Damage Reduction 4 for the encounter (if unarmored)." 
+    description: "A stronger version of Oakflesh. If you are not wearing armor, gain Damage Reduction 4 for the rest of the encounter." 
   },
   { 
     name: "Ash Shell", 
     school: "Alteration", 
     tier: "Apprentice", 
     fpCost: 3, 
-    description: "Hurl a ball of ash at a target. They must succeed on a Might roll or be encased in hardened ash for 2 rounds. An encased target is immune to all damage but cannot take any actions." 
+    description: "Hurl a ball of ash at a target. On a failed Might roll, they are encased in hardened ash for 2 rounds. An encased target is immune to all damage but cannot take any actions." 
   },
   { 
     name: "Detect Life", 
     school: "Alteration", 
     tier: "Apprentice", 
     fpCost: 2, 
-    description: "For the rest of the scene, you can perceive the life force of living creatures through walls and obstacles. While this spell is active, you cannot be surprised by living enemies." 
+    description: "For the rest of the scene, perceive the life force of living creatures through walls and obstacles. You cannot be surprised by living enemies while this spell is active." 
   },
 
   // ALTERATION - ADEPT
@@ -346,7 +346,7 @@ export const spells: Spell[] = [
     school: "Alteration", 
     tier: "Adept", 
     fpCost: 4, 
-    description: "A powerful flesh spell that grants Damage Reduction 6 for the encounter (if unarmored)." 
+    description: "A powerful flesh spell. If you are not wearing armor, gain Damage Reduction 6 for the rest of the encounter." 
   },
   { 
     name: "Waterbreathing", 
@@ -360,14 +360,14 @@ export const spells: Spell[] = [
     school: "Alteration", 
     tier: "Adept", 
     fpCost: 3, 
-    description: "Magically lift and move one unattended object (no larger than yourself) within 30 feet. You can hold it for up to 3 rounds, moving it with your mind as a Minor Action." 
+    description: "Magically lift and move one unattended object (no larger than yourself) within 30 feet. Hold it for up to 3 rounds, moving it with your mind as a Minor Action." 
   },
   { 
     name: "Detect Dead", 
     school: "Alteration", 
     tier: "Adept", 
     fpCost: 3, 
-    description: "For the rest of the scene, you can perceive the lingering energy of undead creatures through walls and obstacles. While this spell is active, you cannot be surprised by undead enemies." 
+    description: "For the rest of the scene, perceive the lingering energy of undead creatures through walls and obstacles. You cannot be surprised by undead enemies while this spell is active." 
   },
 
   // ALTERATION - EXPERT
@@ -376,21 +376,21 @@ export const spells: Spell[] = [
     school: "Alteration", 
     tier: "Expert", 
     fpCost: 5, 
-    description: "The strongest non-master flesh spell, granting Damage Reduction 8 for the encounter (if unarmored)." 
+    description: "The strongest non-master flesh spell. If you are not wearing armor, gain Damage Reduction 8 for the rest of the encounter." 
   },
   { 
     name: "Ash Rune", 
     school: "Alteration", 
     tier: "Expert", 
     fpCost: 4, 
-    description: "Place an ash rune on a nearby surface. The next enemy to approach it triggers the rune, and must succeed on a Might roll or be encased in hardened ash for 2 rounds (as Ash Shell)." 
+    description: "Place an ash rune on a nearby surface. The next enemy to approach triggers the rune. On a failed Might roll, they are encased in hardened ash for 2 rounds (as Ash Shell)." 
   },
   { 
     name: "Paralyze", 
     school: "Alteration", 
     tier: "Expert", 
     fpCost: 5, 
-    description: "Send a wave of magical force at a single target. They must succeed on a Might roll or be completely paralyzed, losing their next turn." 
+    description: "Send a wave of magical force at a single target. On a failed Might roll, they are completely paralyzed and lose their next turn." 
   },
 
   // ALTERATION - MASTER
@@ -399,14 +399,14 @@ export const spells: Spell[] = [
     school: "Alteration", 
     tier: "Master", 
     fpCost: 8, 
-    description: "Once per encounter. You are infused with the resilience of a dragon. For 3 rounds, you gain Damage Reduction 10. This DR replaces any DR from worn armor; it does stack with flesh spells." 
+    description: "Once per encounter. You are infused with the resilience of a dragon. For 3 rounds, gain Damage Reduction 10. This DR replaces any DR from worn armor but stacks with flesh spells." 
   },
   { 
     name: "Mass Paralysis", 
     school: "Alteration", 
     tier: "Master", 
     fpCost: 8, 
-    description: "Once per encounter. Unleash a wave of paralyzing energy. All non-boss enemies in a 30 foot area must succeed on a Might roll or be completely paralyzed, losing their next 3 turns." 
+    description: "Once per encounter. Unleash a wave of paralyzing energy in a 30 foot area. All non-boss enemies who fail a Might roll are completely paralyzed and lose their next 3 turns." 
   },
 
   // ILLUSION - NOVICE
@@ -429,7 +429,7 @@ export const spells: Spell[] = [
     school: "Illusion", 
     tier: "Novice", 
     fpCost: 1, 
-    description: "A faint magical line appears before you, showing you the most direct path to your current, declared objective." 
+    description: "A faint magical line appears before you, showing the most direct path to your current, declared objective." 
   },
 
   // ILLUSION - APPRENTICE
@@ -438,14 +438,14 @@ export const spells: Spell[] = [
     school: "Illusion", 
     tier: "Apprentice", 
     fpCost: 3, 
-    description: "Instill magical terror in a single non-boss enemy. They must succeed on a Guile roll or spend their next turn moving away from you by the safest route possible." 
+    description: "Instill magical terror in a single non-boss enemy. On a failed Guile roll, they spend their next turn moving away from you by the safest route possible." 
   },
   { 
     name: "Calm", 
     school: "Illusion", 
     tier: "Apprentice", 
     fpCost: 3, 
-    description: "Magically soothe a single non-boss enemy. They must succeed on a Guile roll or become non-hostile for 2 rounds. They will not fight unless they are attacked." 
+    description: "Magically soothe a single non-boss enemy. On a failed Guile roll, they become non-hostile for 2 rounds and will not fight unless attacked." 
   },
   { 
     name: "Muffle", 
@@ -461,7 +461,7 @@ export const spells: Spell[] = [
     school: "Illusion", 
     tier: "Adept", 
     fpCost: 4, 
-    description: "As Fury, but it affects all non-boss enemies in a 20-foot radius." 
+    description: "As Fury, but affects all non-boss enemies in a 20-foot radius." 
   },
   { 
     name: "Rally", 
@@ -484,14 +484,14 @@ export const spells: Spell[] = [
     school: "Illusion", 
     tier: "Expert", 
     fpCost: 5, 
-    description: "As Fear, but it affects all non-boss enemies in a 30-foot radius." 
+    description: "As Fear, but affects all non-boss enemies in a 30-foot radius." 
   },
   { 
     name: "Pacify", 
     school: "Illusion", 
     tier: "Expert", 
     fpCost: 5, 
-    description: "As Calm, but it affects all non-boss enemies in a 30-foot radius." 
+    description: "As Calm, but affects all non-boss enemies in a 30-foot radius." 
   },
   { 
     name: "Call to Arms", 
@@ -507,21 +507,21 @@ export const spells: Spell[] = [
     school: "Illusion", 
     tier: "Master", 
     fpCost: 8, 
-    description: "Once per encounter. Project an overwhelming aura of peace. All non-boss enemies able to see you become non-hostile for the rest of the scene or until they are attacked. This effectively ends the current combat." 
+    description: "Once per encounter. Project an overwhelming aura of peace. All non-boss enemies able to see you become non-hostile for the rest of the scene or until attacked. This effectively ends the current combat." 
   },
   { 
     name: "Mayhem", 
     school: "Illusion", 
     tier: "Master", 
     fpCost: 8, 
-    description: "Once per encounter. Project an overwhelming aura of rage. All non-boss enemies able to see you are thrown into a homicidal rage for 3 rounds, attacking the nearest creature, regardless of allegiance." 
+    description: "Once per encounter. Project an overwhelming aura of rage. All non-boss enemies able to see you are thrown into a homicidal rage for 3 rounds, attacking the nearest creature regardless of allegiance." 
   },
   { 
     name: "Hysteria", 
     school: "Illusion", 
     tier: "Master", 
     fpCost: 8, 
-    description: "Once per encounter. Project an overwhelming aura of terror. All enemies able to see you must succeed on a Guile roll or become terrified, fleeing from you for 3 rounds." 
+    description: "Once per encounter. Project an overwhelming aura of terror. All enemies able to see you who fail a Guile roll become terrified and flee from you for 3 rounds." 
   },
 
   // CONJURATION - NOVICE
@@ -537,7 +537,7 @@ export const spells: Spell[] = [
     school: "Conjuration", 
     tier: "Novice", 
     fpCost: 3, 
-    description: "Reanimate a weak, dead humanoid/creature (Zombie) to serve you for the duration of the encounter." 
+    description: "Reanimate a weak, dead humanoid or creature (Zombie) to serve you for the duration of the encounter." 
   },
   { 
     name: "Bound Dagger", 
@@ -567,7 +567,7 @@ export const spells: Spell[] = [
     school: "Conjuration", 
     tier: "Apprentice", 
     fpCost: 4, 
-    description: "Reanimate a moderately powerful dead humanoid/creature (Reanimated Corpse) for the duration of the encounter." 
+    description: "Reanimate a moderately powerful dead humanoid or creature (Reanimated Corpse) for the duration of the encounter." 
   },
   { 
     name: "Soul Trap", 
@@ -597,7 +597,7 @@ export const spells: Spell[] = [
     school: "Conjuration", 
     tier: "Adept", 
     fpCost: 5, 
-    description: "Reanimate a powerful dead humanoid/creature (Revenant) for the duration of the encounter. When reduced to 0 HP, it rises again with half Max HP." 
+    description: "Reanimate a powerful dead humanoid or creature (Revenant) for the duration of the encounter. When reduced to 0 HP, it rises again with half Max HP." 
   },
   { 
     name: "Banish Daedra", 
@@ -671,6 +671,4 @@ export const spells: Spell[] = [
     school: "Conjuration", 
     tier: "Master", 
     fpCost: 10, 
-    description: "Once per encounter. Summon a mighty Dremora Lord clad in Daedric armor. It wields a flaming greatsword and exists only to destroy your enemies. It lasts for 3 rounds. While the Dremora Lord is active, all other friendly summoned creatures deal +1 damage." 
-  }
-];
+    description: "Once per encounter. Summon a mighty Dremora Lord clad in Daedric armor. It wields a flaming greatsword and exists only to destroy your enemies. It lasts for 3 rounds. While the Dremora
