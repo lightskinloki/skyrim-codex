@@ -81,9 +81,9 @@ export const sampleCharacter: Character = {
   inventory: {
     gold: 25,
     items: [
-      "Potion of Minor Healing (x1)",
-      "Torch x3",
-      "Rations x7"
+      { name: "Potion of Minor Healing", quantity: 1 },
+      { name: "Torch", quantity: 3 },
+      { name: "Rations", quantity: 7 }
     ]
   },
   progression: {

@@ -71,7 +71,7 @@ export interface Kit {
   name: string;
   description: string;
   equipment: Equipment[];
-  items: string[];
+  items: Array<{ name: string; quantity: number }>;
   gold: number;
 }
 
@@ -87,7 +87,7 @@ export interface Character {
   equipment: Equipment[];
   inventory: {
     gold: number;
-    items: string[];
+    items: Array<{ name: string; quantity: number }>;
   };
   progression: {
     combatProwessUnlocked: {

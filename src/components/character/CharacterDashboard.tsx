@@ -415,16 +415,33 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
   const handleAddItem = () => {
     if (!newItemName.trim()) return;
     
-    const updatedCharacter = {
-      ...currentCharacter,
-      inventory: {
-        ...currentCharacter.inventory,
-        items: [...currentCharacter.inventory.items, newItemName.trim()]
-      }
-    };
+    const existingIndex = currentCharacter.inventory.items.findIndex(
+      item => item.name.toLowerCase() === newItemName.trim().toLowerCase()
+    );
     
-    setCurrentCharacter(updatedCharacter);
-    onUpdateCharacter(updatedCharacter);
+    if (existingIndex >= 0) {
+      const newItems = [...currentCharacter.inventory.items];
+      newItems[existingIndex] = {
+        ...newItems[existingIndex],
+        quantity: newItems[existingIndex].quantity + 1
+      };
+      const updatedCharacter = {
+        ...currentCharacter,
+        inventory: { ...currentCharacter.inventory, items: newItems }
+      };
+      setCurrentCharacter(updatedCharacter);
+      onUpdateCharacter(updatedCharacter);
+    } else {
+      const updatedCharacter = {
+        ...currentCharacter,
+        inventory: {
+          ...currentCharacter.inventory,
+          items: [...currentCharacter.inventory.items, { name: newItemName.trim(), quantity: 1 }]
+        }
+      };
+      setCurrentCharacter(updatedCharacter);
+      onUpdateCharacter(updatedCharacter);
+    }
     setNewItemName('');
     setAddingItem(false);
   };
@@ -437,9 +454,25 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
         items: currentCharacter.inventory.items.filter((_, i) => i !== index)
       }
     };
-    
     setCurrentCharacter(updatedCharacter);
     onUpdateCharacter(updatedCharacter);
+  };
+  
+  const handleAdjustItemQuantity = (index: number, delta: number) => {
+    const newItems = [...currentCharacter.inventory.items];
+    const newQuantity = newItems[index].quantity + delta;
+    
+    if (newQuantity <= 0) {
+      handleDeleteItem(index);
+    } else {
+      newItems[index] = { ...newItems[index], quantity: newQuantity };
+      const updatedCharacter = {
+        ...currentCharacter,
+        inventory: { ...currentCharacter.inventory, items: newItems }
+      };
+      setCurrentCharacter(updatedCharacter);
+      onUpdateCharacter(updatedCharacter);
+    }
   };
 
   const handleExportCharacter = () => {
@@ -906,16 +939,37 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
                 {currentCharacter.inventory.items.length > 0 && (
                   <div className="space-y-2">
                     {currentCharacter.inventory.items.map((item, index) => (
-                      <div key={index} className="flex items-center justify-between p-2 bg-muted rounded">
-                        <span>{item}</span>
-                        <Button 
-                          size="sm" 
-                          variant="ghost" 
-                          onClick={() => handleDeleteItem(index)}
-                          className="h-6 w-6 p-0 text-destructive"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
+                      <div key={index} className="flex items-center justify-between p-2 bg-muted rounded gap-2">
+                        <span className="text-sm flex-1">{item.name}</span>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleAdjustItemQuantity(index, -1)}
+                            className="h-6 w-6 p-0"
+                          >
+                            <Minus className="w-3 h-3" />
+                          </Button>
+                          <span className="text-sm font-medium min-w-[2rem] text-center">
+                            {item.quantity}
+                          </span>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleAdjustItemQuantity(index, 1)}
+                            className="h-6 w-6 p-0"
+                          >
+                            <Plus className="w-3 h-3" />
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            onClick={() => handleDeleteItem(index)}
+                            className="h-6 w-6 p-0 text-destructive ml-1"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>

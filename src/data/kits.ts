@@ -19,7 +19,7 @@ export const kits: Kit[] = [
         dr: 3
       }
     ],
-    items: ["Potion of Minor Healing (x1)"],
+    items: ["Potion of Minor Healing"].map(name => ({ name, quantity: 1 })),
     gold: 25
   },
   {
@@ -46,7 +46,7 @@ export const kits: Kit[] = [
         dr: 1
       }
     ],
-    items: ["20 Steel Arrows", "3 Lockpicks", "Vial of Weak Poison (x1)"],
+    items: ["20 Steel Arrows", "3 Lockpicks", "Vial of Weak Poison"].map(name => ({ name, quantity: 1 })),
     gold: 25
   },
   {
@@ -67,7 +67,7 @@ export const kits: Kit[] = [
         dr: 0
       }
     ],
-    items: ["Potion of Minor Magicka (x2)"],
+    items: ["Potion of Minor Magicka", "Potion of Minor Magicka"].map(name => ({ name, quantity: 1 })),
     gold: 50
   }
 ];

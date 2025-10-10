@@ -68,7 +68,7 @@ export function KitSelection({ kits, selectedKit, onKitSelect }: KitSelectionPro
                   <div className="space-y-1">
                     {kit.items.map((item, index) => (
                       <div key={index} className="text-sm">
-                        {item}
+                        {item.name} x{item.quantity}
                       </div>
                     ))}
                   </div>
