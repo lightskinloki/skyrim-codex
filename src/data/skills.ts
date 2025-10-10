@@ -253,7 +253,7 @@ export const skills: Skill[] = [
       },
       {
         rank: "Master",
-        name: "Circle of Protection",
+        name: "Guardian's Ward",
         description: "Once per adventure, for 0 FP, you can create a large 30-foot circle on the ground that lasts for 5 rounds. While within the circle: Allies who receive healing from any Restoration spell or effect regain an additional 2 HP, and Undead creatures take an additional 2 damage from any source.",
         limitation: 'per adventure'
       }
