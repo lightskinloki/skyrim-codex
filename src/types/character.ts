@@ -36,7 +36,7 @@ export interface StandingStone {
 }
 
 export interface Perk {
-  rank: 'Novice' | 'Apprentice' | 'Adept' | 'Expert' | 'Master';
+  rank: 'Apprentice' | 'Adept' | 'Expert' | 'Master';
   name: string;
   description: string;
   fpCost?: number;
@@ -47,7 +47,6 @@ export interface Skill {
   id: string;
   name: string;
   type: 'Combat' | 'Magic' | 'Armor' | 'Utility';
-  governingStat?: keyof Stats;
   perks: Perk[];
 }
 

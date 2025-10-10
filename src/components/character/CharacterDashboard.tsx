@@ -8,7 +8,7 @@ import { KnownSpells } from "./KnownSpells";
 import { FPSpendModal } from "./FPSpendModal";
 import { AdvancementModal } from "./AdvancementModal";
 import { GrantAPModal } from "./GrantAPModal";
-import { EquipmentManagerModal } from "./EquipmentManagerModal";
+import { EquipmentModal } from "./EquipmentModal";
 import { AbilityTracker } from "./AbilityTracker";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -660,7 +660,7 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
           onGrantAP={handleGrantAP}
         />
         
-        <EquipmentManagerModal
+        <EquipmentModal
           isOpen={showEquipment}
           onClose={() => setShowEquipment(false)}
           character={currentCharacter}
