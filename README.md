@@ -62,7 +62,7 @@ This section lists any known bugs in the current live version of the application
 
 *   **Armor DR Repair Bug:**
     *   **Description:** Armor that has had its DR reduced to 0 cannot currently be repaired back above 0 using the `+` button.
-    *   **Workaround:** Use the "Edit Equipment" feature (to be implemented) or ask the GM to manually edit the character file.
+    *   **Workaround:** Use the "Edit Equipment" feature or ask the GM to manually edit the character file.
     *   **Status:** Slated for a fix in Phase 2.
 
 *   **AP Granting Bug:**
