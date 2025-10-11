@@ -109,11 +109,13 @@ export function AdvancementModal({ isOpen, onClose, character, onUpdateCharacter
     // Combat Prowess benefits
     if (skill.type === "Combat") {
       if (newRank === "Adept") {
+        // Master's Form notification - always show when reaching Adept in any Combat skill
         toast({
           title: "Master's Form Unlocked!",
           description: "You have reached Adept tier in a Combat Skill! You can now design your own signature combat technique. See the rulebook for details.",
         });
         
+        // Combat Prowess HP bonus - only grant once
         if (!updatedCharacter.progression.combatProwessUnlocked.adept) {
           updatedCharacter.progression.combatProwessUnlocked.adept = true;
           updatedCharacter.resources.hp.max += 2;
@@ -224,6 +226,8 @@ export function AdvancementModal({ isOpen, onClose, character, onUpdateCharacter
           updatedCharacter.resources.fp.max += 2;
           updatedCharacter.resources.fp.current += 2;
         }
+        // Recalculate resources to ensure UI updates properly
+        updatedCharacter = updateCharacterResources(updatedCharacter);
         break;
 
       case "stat-increase":
