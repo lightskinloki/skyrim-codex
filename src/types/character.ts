@@ -100,6 +100,10 @@ export interface Character {
       expert: boolean;
       master: boolean;
     };
+    resourceTraining?: {
+      hp: number;
+      fp: number;
+    };
   };
   usedAbilities?: string[];
   combatMode?: boolean;

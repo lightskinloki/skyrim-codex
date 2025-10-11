@@ -219,12 +219,14 @@ export function AdvancementModal({ isOpen, onClose, character, onUpdateCharacter
         break;
 
       case "resource-training":
+        // Track permanent resource bonuses so recalculation preserves them
+        if (!updatedCharacter.progression.resourceTraining) {
+          updatedCharacter.progression.resourceTraining = { hp: 0, fp: 0 } as any;
+        }
         if (selectedResource === "hp") {
-          updatedCharacter.resources.hp.max += 2;
-          updatedCharacter.resources.hp.current += 2;
+          updatedCharacter.progression.resourceTraining.hp += 2;
         } else if (selectedResource === "fp") {
-          updatedCharacter.resources.fp.max += 2;
-          updatedCharacter.resources.fp.current += 2;
+          updatedCharacter.progression.resourceTraining.fp += 2;
         }
         // Recalculate resources to ensure UI updates properly
         updatedCharacter = updateCharacterResources(updatedCharacter);

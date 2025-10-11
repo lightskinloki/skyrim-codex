@@ -671,4 +671,6 @@ export const spells: Spell[] = [
     school: "Conjuration", 
     tier: "Master", 
     fpCost: 10, 
-    description: "Once per encounter. Summon a mighty Dremora Lord clad in Daedric armor. It wields a flaming greatsword and exists only to destroy your enemies. It lasts for 3 rounds. While the Dremora
+    description: "Once per encounter. Summon a mighty Dremora Lord clad in Daedric armor. It wields a flaming greatsword and exists only to destroy your enemies. It lasts for 3 rounds. While the Dremora Lord is active, all other friendly summoned creatures deal +1 damage." 
+  }
+];

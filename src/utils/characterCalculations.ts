@@ -38,6 +38,11 @@ export function calculateMaxHP(
   if (standingStone.id === "apprentice") {
     maxHP -= 2;
   }
+
+  // Resource Training permanent bonus
+  if (character?.progression?.resourceTraining?.hp) {
+    maxHP += character.progression.resourceTraining.hp;
+  }
   
   return Math.max(1, maxHP); // Minimum 1 HP
 }
@@ -66,6 +71,11 @@ export function calculateMaxFP(
     if (hasLightArmor) {
       maxFP += 2;
     }
+
+    // Resource Training permanent bonus
+    if (character?.progression?.resourceTraining?.fp) {
+      maxFP += character.progression.resourceTraining.fp;
+    }
     
     return Math.max(1, maxFP);
   }
@@ -90,6 +100,11 @@ export function calculateMaxFP(
   // Combat Prowess Expert bonus (FP)
   if (character?.progression.combatProwessUnlocked.expert) {
     maxFP += 2;
+  }
+  
+  // Resource Training permanent bonus
+  if (character?.progression?.resourceTraining?.fp) {
+    maxFP += character.progression.resourceTraining.fp;
   }
   
   return Math.max(1, maxFP); // Minimum 1 FP
