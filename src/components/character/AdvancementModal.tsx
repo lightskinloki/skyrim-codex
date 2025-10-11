@@ -100,7 +100,7 @@ export function AdvancementModal({ isOpen, onClose, character, onUpdateCharacter
 
   const [pendingProgressions, setPendingProgressions] = useState<Array<{type: 'arcane-adept' | 'arcane-expert' | 'arcane-master' | 'combat-master'}>>([]);
 
-  const checkProgressionBenefits = (updatedCharacter: Character, skillId: string, newRank: string) => {
+  const checkProgressionBenefits = (updatedCharacter: Character, skillId: string, newRank: string, toastFn: ReturnType<typeof useToast>['toast']) => {
     const skill = skills.find(s => s.id === skillId);
     if (!skill) return { character: updatedCharacter, progressions: [] };
 
@@ -110,7 +110,7 @@ export function AdvancementModal({ isOpen, onClose, character, onUpdateCharacter
     if (skill.type === "Combat") {
       if (newRank === "Adept") {
         // Master's Form notification - always show when reaching Adept in any Combat skill
-        toast({
+        toastFn({
           title: "Master's Form Unlocked!",
           description: "You have reached Adept tier in a Combat Skill! You can now design your own signature combat technique. See the rulebook for details.",
         });
@@ -120,7 +120,7 @@ export function AdvancementModal({ isOpen, onClose, character, onUpdateCharacter
           updatedCharacter.progression.combatProwessUnlocked.adept = true;
           updatedCharacter.resources.hp.max += 2;
           updatedCharacter.resources.hp.current += 2;
-          toast({
+          toastFn({
             title: "Combat Prowess Unlocked!",
             description: "Your body becomes tougher. You gain +2 maximum HP.",
           });
@@ -130,7 +130,7 @@ export function AdvancementModal({ isOpen, onClose, character, onUpdateCharacter
         updatedCharacter.progression.combatProwessUnlocked.expert = true;
         updatedCharacter.resources.fp.max += 2;
         updatedCharacter.resources.fp.current += 2;
-        toast({
+        toastFn({
           title: "Combat Prowess Mastery!",
           description: "Your stamina becomes legendary. You gain +2 maximum FP.",
         });
@@ -183,7 +183,7 @@ export function AdvancementModal({ isOpen, onClose, character, onUpdateCharacter
             skill.rank = "Adept";
             const skillData = skills.find(s => s.id === selectedSkills[0]);
             skill.unlockedPerks = skillData?.perks.filter(p => ["Apprentice", "Adept"].includes(p.rank)).map(p => p.name) || [];
-            const result = checkProgressionBenefits(updatedCharacter, selectedSkills[0], "Adept");
+            const result = checkProgressionBenefits(updatedCharacter, selectedSkills[0], "Adept", toast);
             updatedCharacter = result.character;
             setPendingProgressions(result.progressions);
           }
@@ -197,7 +197,7 @@ export function AdvancementModal({ isOpen, onClose, character, onUpdateCharacter
             skill.rank = "Expert";
             const skillData = skills.find(s => s.id === selectedSkills[0]);
             skill.unlockedPerks = skillData?.perks.filter(p => ["Apprentice", "Adept", "Expert"].includes(p.rank)).map(p => p.name) || [];
-            const result = checkProgressionBenefits(updatedCharacter, selectedSkills[0], "Expert");
+            const result = checkProgressionBenefits(updatedCharacter, selectedSkills[0], "Expert", toast);
             updatedCharacter = result.character;
             setPendingProgressions(result.progressions);
           }
@@ -211,7 +211,7 @@ export function AdvancementModal({ isOpen, onClose, character, onUpdateCharacter
             skill.rank = "Master";
             const skillData = skills.find(s => s.id === selectedSkills[0]);
             skill.unlockedPerks = skillData?.perks.map(p => p.name) || [];
-            const result = checkProgressionBenefits(updatedCharacter, selectedSkills[0], "Master");
+            const result = checkProgressionBenefits(updatedCharacter, selectedSkills[0], "Master", toast);
             updatedCharacter = result.character;
             setPendingProgressions(result.progressions);
           }
