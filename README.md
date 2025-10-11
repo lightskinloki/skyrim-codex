@@ -9,44 +9,45 @@ Welcome to the official Character Manager for the Skyrim TTRPG! This web applica
 ## Current Features
 
 *   **Full Character Creator:** A step-by-step guided process to create a new, rules-compliant character.
-*   **Dynamic Character Dashboard:** A real-time view of your character's stats, resources, skills, perks, and abilities.
+*   **Dynamic Character Dashboard:** A real-time view of your character's stats, resources, skills, perks, equipment, and inventory.
+*   **Complete Data Set:** The application is powered by the full, official data for all Races, Standing Stones, Skills (all tiers), Perks, and Spells.
 *   **Character Advancement:** A fully functional "Advancement Mode" for spending AP and unlocking new abilities.
 *   **Data Portability:** A robust import/export system to save and transfer character data as `.json` files.
-*   **Full Gameplay Integration:** A complete suite of interactive tools, including:
-    *   Dynamic management of Gold, Inventory Items, and Equipment.
-    *   In-place editing of Armor DR to track combat damage (Sundering).
-    *   A persistent "Session Notes" feature for tracking temporary changes.
+*   **Gameplay Aids:** Interactive tools for resting, dynamic Gold/Armor DR management, and a persistent "Session Notes" feature.
 
 ---
 
 ## Development Roadmap
 
-This project is being built in phases. We have successfully completed the core functionality and are now moving on to advanced gameplay enhancements.
+This project is being built in phases. We have successfully completed the core functionality and data integration, achieving a stable Version 1.0. The next phase focuses on eliminating all known bugs before proceeding with new feature development.
 
-### **Phase 1: Core Functionality (Complete)**
+### **Phase 1: Core Functionality & Data Integrity (Complete)**
 *   [x] Build the core data structures for all game rules.
 *   [x] Implement the guided Character Creator.
-*   [x] Build the dynamic Character Dashboard.
+*   [x] Build the dynamic Character Dashboard & gameplay aids.
 *   [x] Implement the full Character Advancement system.
-*   [x] Deploy the application to a live, shareable URL.
-*   [x] Implement a "Session Notes" feature.
-*   [x] Implement dynamic Gold, Item, and Equipment management.
-*   [x] Implement a Character Import/Export system.
+*   [x] Implement Data Portability (Import/Export).
+*   [x] Complete all core data entry for skills, perks, and spells.
+*   [x] Deploy a stable Version 1.0 to a live, shareable URL.
 
-### **Phase 2: Advanced Gameplay Logic (Current Priority)**
-*   **[ ] Dynamic Summon Display:** Create a new dashboard panel that appears when a summoning spell is cast, displaying the creature's stat block for easy reference.
-*   **[ ] Active Effects Tracker:** Implement a new dashboard panel to track the duration of temporary effects (e.g., `Berserker Rage`), managed by a single "End Turn" button.
-*   **[ ] Limited-Use Ability Tracker:** Add a simple checkbox system to track the usage of "per combat" and "per adventure" abilities.
-*   **[ ] "Smart Add" with Autocomplete:** Implement the final, deluxe inventory feature that suggests official items as the user types.
+### **Phase 2: Stability & Bug Fixes (Current Priority)**
+*   **[ ] Fix "Punished for Progress" AP Bug:** Refactor the `ap` system into `apCurrent` and `apTotal` to ensure character tier is calculated based on total AP earned, not the current unspent pool.
+*   **[ ] Fix Armor DR Repair Bug:** Correctly implement the `baseDr` logic to prevent armor from being repaired beyond its original value.
+*   **[ ] Fix AP Granting Bug:** Add a "Subtract AP" functionality to the `GrantAPModal` to allow for easy correction of mistakes.
 
-### **Phase 3: Visual & Immersive Upgrades (Future)**
-*   **[ ] Character & Standing Stone Art:** Integrate custom art assets into the Character Creator to enhance the visual experience.
-*   **[ ] Character Portrait Upload:** Add a feature to the main dashboard allowing users to upload a custom image for their character's portrait.
+### **Phase 3: Advanced Gameplay Logic**
+*   **[ ] The "Master's Form" Creator:** Implement the complex UI for designing and saving custom martial techniques.
+*   **[ ] Dynamic Summon Display:** Create a new dashboard panel that displays the stat block of a currently active summoned creature.
+*   **[%] Limited-Use Ability Tracker:** Add a checkbox system for tracking "per combat" and "per adventure" abilities.
 
-### **Phase 4: "Keystone" & Roleplaying Features (Long-Term Goals)**
-*   **[ ] "Ambition" System:** Add a new, optional step to the Character Creator for defining and tracking a long-term character goal.
-*   **[ ] The "Master's Form" Creator:** Implement the final, complex UI for designing and saving custom martial techniques.
-*   **[ ] Complete All Data Entry:** Finalize the full perk and spell lists for all tiers.
+### **Phase 4: Visual & Immersive Upgrades**
+*   **[ ] "Smart Add Equipment" with Autocomplete:** Implement the advanced inventory feature that suggests official items as the user types.
+*   **[%] Character & Standing Stone Art:** Integrate custom art assets into the Character Creator.
+*   **[ ] Character Portrait Upload:** Add a feature to upload a custom character portrait.
+
+### **Phase 5: "Keystone" & Roleplaying Features**
+*   **[ ] "Ambition" System:** Add an optional step in the creator for defining and tracking a long-term character goal.
+*   **[ ] Active Effects Tracker:** Implement the dashboard panel for tracking temporary effect durations, managed by an "End Turn" button.
 
 ---
 
@@ -56,15 +57,15 @@ This section lists any known bugs in the current live version of the application
 
 *   **"Punished for Progress" AP Bug:**
     *   **Description:** A character's "Tier of Play" (which determines Khajiit claw damage) is calculated based on their *unspent* AP pool, not their *total AP earned*.
-    *   **Workaround:** The GM will manually track the correct claw damage based on total AP.
-    *   **Status:** **Awaiting a major architectural refactor.** This is the highest priority fix for the next development cycle.
+    *   **Workaround:** For this session, the GM will manually track the correct claw damage if this specific situation occurs.
+    *   **Status:** **Top priority for Phase 2.**
 
 *   **Armor DR Repair Bug:**
     *   **Description:** Armor that has had its DR reduced to 0 cannot currently be repaired back above 0 using the `+` button.
-    *   **Workaround:** Use the "Edit Equipment" feature (to be implemented) to manually restore the `baseDr`.
-    *   **Status:** Awaiting a fix in the "Smart Add Equipment" feature update.
+    *   **Workaround:** Use the "Edit Equipment" feature (to be implemented) or ask the GM to manually edit the character file.
+    *   **Status:** Slated for a fix in Phase 2.
 
-*   **AP Bug:**
+*   **AP Granting Bug:**
     *   **Description:** The AP value cannot be manually reduced if the add button is hit too many times.
-    *   **Workaround:** The user must bank excess AP and spend it when it would have been earned, with manual tracking.
-    *   **Status:** Awaiting a fix in the AP update.
+    *   **Workaround:** The GM will be careful when granting AP. Any excess will be noted and spent later.
+    *   **Status:** Slated for a fix in Phase 2.
