@@ -43,7 +43,7 @@ const upgradeOptions: UpgradeOption[] = [
   {
     id: "resource-training",
     name: "Resource Training",
-    description: "Permanently increase your maximum HP by 1 or your maximum FP by 1.",
+    description: "Permanently increase your maximum HP by 2 or your maximum FP by 2.",
     cost: 1,
     type: "resource"
   },
