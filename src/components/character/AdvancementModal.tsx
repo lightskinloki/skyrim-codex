@@ -251,6 +251,19 @@ export function AdvancementModal({ isOpen, onClose, character, onUpdateCharacter
       title: "Character Advanced!",
       description: `Successfully purchased ${selectedUpgrade.name}.`,
     });
+
+    // Simple global notification: whenever a Combat skill is promoted to Adept or higher
+    if (["skill-focus", "skill-specialization", "skill-mastery"].includes(selectedUpgrade.id)) {
+      const skillId = selectedSkills[0];
+      const skillType = getSkillType(skillId);
+      const toRank = selectedUpgrade.id === "skill-focus" ? "Adept" : selectedUpgrade.id === "skill-specialization" ? "Expert" : "Master";
+      if (skillType === "Combat" && ["Adept", "Expert", "Master"].includes(toRank)) {
+        toast({
+          title: "Master's Form Unlocked!",
+          description: "You've reached Adept+ in a Combat skill. Check the Player's Guide to design your signature technique.",
+        });
+      }
+    }
   };
 
   const canConfirmUpgrade = () => {
