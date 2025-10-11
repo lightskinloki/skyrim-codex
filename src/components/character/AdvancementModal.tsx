@@ -108,14 +108,21 @@ export function AdvancementModal({ isOpen, onClose, character, onUpdateCharacter
 
     // Combat Prowess benefits
     if (skill.type === "Combat") {
-      if (newRank === "Adept" && !updatedCharacter.progression.combatProwessUnlocked.adept) {
-        updatedCharacter.progression.combatProwessUnlocked.adept = true;
-        updatedCharacter.resources.hp.max += 2;
-        updatedCharacter.resources.hp.current += 2;
+      if (newRank === "Adept") {
         toast({
-          title: "Combat Prowess Unlocked!",
-          description: "Your body becomes tougher. You gain +2 maximum HP.",
+          title: "Master's Form Unlocked!",
+          description: "You have reached Adept tier in a Combat Skill! You can now design your own signature combat technique. See the rulebook for details.",
         });
+        
+        if (!updatedCharacter.progression.combatProwessUnlocked.adept) {
+          updatedCharacter.progression.combatProwessUnlocked.adept = true;
+          updatedCharacter.resources.hp.max += 2;
+          updatedCharacter.resources.hp.current += 2;
+          toast({
+            title: "Combat Prowess Unlocked!",
+            description: "Your body becomes tougher. You gain +2 maximum HP.",
+          });
+        }
       }
       if (newRank === "Expert" && !updatedCharacter.progression.combatProwessUnlocked.expert) {
         updatedCharacter.progression.combatProwessUnlocked.expert = true;
