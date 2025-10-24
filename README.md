@@ -69,3 +69,7 @@ This section lists any known bugs in the current live version of the application
     *   **Description:** The AP value cannot be manually reduced if the add button is hit too many times.
     *   **Workaround:** The GM will be careful when granting AP. Any excess will be noted and spent later.
     *   **Status:** Slated for a fix in Phase 2.
+
+*   **mobile display format:**
+      app doesnt format on iphone systems and android must display in desktop to work
+    
