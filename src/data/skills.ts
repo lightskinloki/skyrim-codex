@@ -16,9 +16,8 @@ export const skills: Skill[] = [
       {
         rank: "Apprentice",
         name: "Fighting Stance",
-        description: "Once per combat, you may spend 1 FP to make an additional attack with your one-handed weapon as a Minor Action.",
-        fpCost: 1,
-        limitation: 'per combat'
+        description: "You may spend 3 FP to make an additional attack with your one-handed weapon as a Minor Action.",
+        fpCost: 3
       },
       {
         rank: "Adept",
@@ -33,8 +32,8 @@ export const skills: Skill[] = [
       {
         rank: "Master",
         name: "Paralyzing Strike",
-        description: "Once per combat, when you hit with a one-handed Power Attack, you can spend 4 FP to perform a paralyzing strike. If the target is a non-boss enemy, they are paralyzed and cannot act on their next turn.",
-        fpCost: 4,
+        description: "Once per combat, when you hit with a one-handed Power Attack, you can spend 9 FP to perform a paralyzing strike. If the target is hit, they are paralyzed and cannot act on their next turn.",
+        fpCost: 9,
         limitation: 'per combat'
       }
     ]
@@ -53,8 +52,8 @@ export const skills: Skill[] = [
       {
         rank: "Apprentice",
         name: "Cleave",
-        description: "When you successfully hit an enemy, you can spend 1 FP to deal 1 damage to another enemy standing directly next to your target.",
-        fpCost: 1
+        description: "When you successfully hit an enemy, you can spend 3 FP to deal half damage to another enemy standing directly next to your target within 5 feet distance.",
+        fpCost: 3
       },
       {
         rank: "Adept",
@@ -64,13 +63,13 @@ export const skills: Skill[] = [
       {
         rank: "Expert",
         name: "Devastating Blow",
-        description: "Your two-handed Power Attacks are unstoppable. They now deal +3 damage instead of +1, and after you make a two-handed Power Attack, you become an anchor on the battlefield; you cannot be staggered or knocked prone until the start of your next turn."
+        description: "Your two-handed Power Attacks are unstoppable. They now deal +3 damage instead of +1, after you make a two-handed Power Attack, you become an anchor on the battlefield; you cannot be staggered or knocked prone until the start of your next turn."
       },
       {
         rank: "Master",
         name: "Sweep",
-        description: "Once per combat, you may spend 4 FP to make a single attack roll against ALL enemies in melee range in front of you.",
-        fpCost: 4,
+        description: "Once per combat, you may spend 9 FP to make a single attack roll against ALL enemies in melee range in front of you.",
+        fpCost: 9,
         limitation: 'per combat'
       }
     ]
@@ -89,26 +88,26 @@ export const skills: Skill[] = [
       {
         rank: "Apprentice",
         name: "Eagle Eye",
-        description: "You can spend 1 FP to aim as a Minor Action. Your next bow attack this turn is made with a +2 bonus to your Agility score for that roll only.",
-        fpCost: 1
+        description: "You can spend 3 FP to aim as a Minor Action. Your next bow attack this turn is made with a +2 bonus to your Agility score for that roll only.",
+        fpCost: 3
       },
       {
         rank: "Adept",
         name: "Power Shot",
-        description: "You can spend 1 FP when you hit with a bow to slow your target, causing them to lose their next Minor Action.",
-        fpCost: 1
+        description: "You can spend 3 FP when you hit with a bow to slow your target, causing them to lose their next Minor Action.",
+        fpCost: 3
       },
       {
         rank: "Expert",
         name: "Quick Shot",
-        description: "You can draw and fire your bow 30% faster. You can now make a Power Shot (spending 1 FP for +1 damage) as a Minor Action.",
-        fpCost: 1
+        description: "You can draw and fire your bow 30% faster. You can now make a Power Shot (spending 3 FP to slow target) as a Minor Action.",
+        fpCost: 3
       },
       {
         rank: "Master",
         name: "Bullseye",
-        description: "Once per combat, you can spend 4 FP to aim for a vital point. On a successful hit, your arrow deals double damage.",
-        fpCost: 4,
+        description: "Once per combat, you can spend 9 FP to aim for a vital point. On a successful hit, your arrow deals double damage.",
+        fpCost: 9,
         limitation: 'per combat'
       }
     ]
@@ -169,20 +168,20 @@ export const skills: Skill[] = [
       {
         rank: "Adept",
         name: "Wind Walker",
-        description: "Your stamina (FP) regenerates faster. Once per combat, you can regain 1 FP as a free action.",
+        description: "Your stamina (FP) regenerates. Once per combat, you can regain 6 FP as a free action.",
         limitation: 'per combat'
       },
       {
         rank: "Expert",
         name: "Agile Defender",
-        description: "You have learned to turn a solid hit into a glancing blow. For 2 FP, when you are hit by a physical attack, you may take only half damage.",
-        fpCost: 2
+        description: "You have learned to turn a solid hit into a glancing blow. For 3 FP, when you are hit by a physical attack, you may take only half damage.",
+        fpCost: 3
       },
       {
         rank: "Master",
         name: "Deft Movement",
-        description: "Once per combat, you can spend 3 FP to effortlessly dodge all incoming physical attacks for one round. You take no damage from melee or ranged attacks until your next turn.",
-        fpCost: 3,
+        description: "Once per combat, you can spend 15 FP to effortlessly dodge all incoming physical attacks for one round. You take no damage from melee or ranged attacks until your next turn.",
+        fpCost: 15,
         limitation: 'per combat'
       }
     ]
@@ -203,8 +202,8 @@ export const skills: Skill[] = [
       {
         rank: "Apprentice",
         name: "Impact",
-        description: "You can cast Apprentice Destruction spells (e.g., Firebolt). When you cast a Destruction spell, you can spend 1 additional FP to slow the target, making them lose their next Minor Action.",
-        fpCost: 1
+        description: "You can cast Apprentice Destruction spells (e.g., Firebolt). When you cast a Destruction spell, you can spend 3 additional FP to slow the target, making them lose their next Minor Action.",
+        fpCost: 3
       },
       {
         rank: "Adept",
@@ -214,7 +213,7 @@ export const skills: Skill[] = [
       {
         rank: "Expert",
         name: "Expert Destruction",
-        description: "You can cast Expert Destruction spells (e.g., Incinerate). The FP cost of all your Destruction spells is reduced by 1."
+        description: "You can cast Expert Destruction spells (e.g., Incinerate). The FP cost of all your Destruction spells is reduced by 2."
       },
       {
         rank: "Master",
@@ -248,7 +247,7 @@ export const skills: Skill[] = [
       {
         rank: "Expert",
         name: "Avoid Death",
-        description: "You can cast Expert Restoration spells. The first time your HP would be reduced to 0 in an adventure, you automatically cast a healing spell on yourself, restoring 5 HP and remaining conscious. This does not cost FP.",
+        description: "You can cast Expert Restoration spells. The first time your HP would be reduced to 0 in an adventure, you automatically cast a healing spell on yourself, Your HP is reset to 5, regardless of how much damage you took. This does not cost FP.",
         limitation: 'per adventure'
       },
       {
@@ -307,7 +306,7 @@ export const skills: Skill[] = [
       {
         rank: "Apprentice",
         name: "Animage",
-        description: "You can cast Apprentice Illusion spells (e.g., Fear, Muffle). Your mind-affecting spells (Fury, Calm, Fear, etc.) now work on animal-type enemies more effectively, with Advantage when casting on an animal."
+        description: "You can cast Apprentice Illusion spells (e.g., Fear, Muffle). Your mind-affecting spells (Fury, Calm, Fear, etc.) now work on animal-type enemies more effectively, Advantage when casting on an animal."
       },
       {
         rank: "Adept",
@@ -370,30 +369,30 @@ export const skills: Skill[] = [
       {
         rank: "Novice",
         name: "Stealth",
-        description: "You can attempt to move silently and remain unseen by making an Agility roll."
+        description: "You can attempt to become Hidden as a Minor Action by making an Agility Roll."
       },
       {
         rank: "Apprentice",
         name: "Silent Roll",
-        description: "As a Minor Action, you can spend 1 FP to move to a new location while making an Agility roll to remain hidden.",
-        fpCost: 1
+        description: "Combat (Reaction): When an enemy detects you, you may use your Reaction and spend 3 FP to immediately move to a new location and make a new Agility Roll. If successful, you remain Hidden. Utility (Vigilant): While you are Hidden, your senses are heightened. You have Advantage on all Guile rolls to spot enemies, traps, or hidden doors. You are the eyes of the party.",
+        fpCost: 3
       },
       {
         rank: "Adept",
         name: "Deadly Aim",
-        description: "Your first attack with a bow or dagger from stealth in a combat automatically deals double damage on a successful hit."
+        description: "Combat (Lethality): Any successful attack made while Hidden is automatically a Critical Success. Note: Per weapon properties, Daggers deal triple (x3) damage on a Sneak Attack Critical. Utility (Light Foot): You do not trigger pressure plates or tripwires while Sneaking. You can safely scout dangerous hallways and disable mechanisms without risk."
       },
       {
         rank: "Expert",
         name: "Shadow Warrior",
-        description: "In dim light or shadow, you can spend 2 FP to automatically succeed on a roll to hide or remain hidden.",
-        fpCost: 2
+        description: "Combat (Vanish): As a Minor Action, you can spend 6 FP to make an Agility Roll to become Hidden, even if you are currently being observed by an enemy. Utility (Ghost Hand): You can interact with the environment without revealing your position. Picking a lock, opening a door, looting a chest, or pulling a lever does not break your Hidden status, provided you do not attack.",
+        fpCost: 6
       },
       {
         rank: "Master",
         name: "Invisibility",
-        description: "Once per combat, you can spend 4 FP to become completely invisible as a Minor Action. You remain invisible for 3 rounds or until you attack or cast a spell.",
-        fpCost: 4,
+        description: "Once per combat (or scene), you can spend 15 FP to become Invisible for 3 rounds. Combat Benefit: You are automatically Hidden even in plain sight. Attacking breaks invisibility. Utility Benefit: While Invisible, you are undetectable by nonmagical sensors or scent. You leave no footprints and make no sound, allowing you to bypass even magical defenses.",
+        fpCost: 15,
         limitation: 'per combat'
       }
     ]
