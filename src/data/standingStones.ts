@@ -47,7 +47,7 @@ export const standingStones: StandingStone[] = [
     archetype: "The Deceiver",
     baseStats: { might: 8, agility: 14, magic: 4, guile: 14 },
     benefitName: "Serpent's Kiss",
-    benefitDescription: "Once per combat, you can use your Major Action to make a special ranged attack. On a successful Guile roll, you spit a venom that paralyzes a target, causing them to lose their next Major Action."
+    benefitDescription: "Once per combat, you can use your Major Action to make a special ranged attack. On a successful Guile roll, you spit a venom that paralyzes a target, causing them to lose their next Major and Minor Action."
   },
   {
     id: "steed",
