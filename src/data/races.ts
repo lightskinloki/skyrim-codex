@@ -30,7 +30,7 @@ export const races: Race[] = [
     name: "Redguard",
     bonus: "agility",
     abilityName: "Adrenaline Rush",
-    abilityDescription: "Once per adventure, you can use this ability as a free action to immediately regain 3 FP.",
+    abilityDescription: "Once per adventure, you can use this ability as a free action to immediately regain 10 FP.",
     image: "redguard.jpg"
   },
   {
