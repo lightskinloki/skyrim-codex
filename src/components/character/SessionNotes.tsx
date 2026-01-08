@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { BookText } from "lucide-react";
+import { characterStorage } from "@/lib/characterStorage";
 
 interface SessionNotesProps {
   characterId: string;
@@ -9,20 +10,26 @@ interface SessionNotesProps {
 
 export function SessionNotes({ characterId }: SessionNotesProps) {
   const [notes, setNotes] = useState<string>("");
-  const storageKey = `skyrimTTRPG_notes_${characterId}`;
 
-  // Load existing notes from localStorage on component mount
+  // Load notes from the character object
   useEffect(() => {
-    const savedNotes = localStorage.getItem(storageKey);
-    if (savedNotes) {
-      setNotes(savedNotes);
+    const character = characterStorage.getCharacter(characterId);
+    if (character?.notes) {
+      setNotes(character.notes);
     }
-  }, [storageKey]);
+  }, [characterId]);
 
-  // Auto-save notes to localStorage whenever notes change
+  // Auto-save notes to the character object
   useEffect(() => {
-    localStorage.setItem(storageKey, notes);
-  }, [notes, storageKey]);
+    const character = characterStorage.getCharacter(characterId);
+    if (character) {
+      const updatedCharacter = {
+        ...character,
+        notes: notes
+      };
+      characterStorage.saveCharacter(updatedCharacter);
+    }
+  }, [notes, characterId]);
 
   const handleNotesChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setNotes(event.target.value);
