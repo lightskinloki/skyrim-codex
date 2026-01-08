@@ -107,6 +107,7 @@ export interface Character {
   };
   usedAbilities?: string[];
   combatMode?: boolean;
+  notes?: string;
 }
 
 export type CharacterTier = 'Novice' | 'Apprentice' | 'Adept' | 'Expert' | 'Master' | 'Legendary';
