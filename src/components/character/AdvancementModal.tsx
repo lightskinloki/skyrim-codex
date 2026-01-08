@@ -291,9 +291,14 @@ export function AdvancementModal({ isOpen, onClose, character, onUpdateCharacter
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span>Character Advancement</span>
-            <Badge variant="outline" className="text-lg">
-              AP: {character.ap}
-            </Badge>
+            <div className="flex gap-2">
+              <Badge variant="outline" className="text-lg">
+                Total: {character.totalAp ?? character.ap}
+              </Badge>
+              <Badge variant="default" className="text-lg">
+                Available: {character.ap}
+              </Badge>
+            </div>
           </DialogTitle>
         </DialogHeader>
 

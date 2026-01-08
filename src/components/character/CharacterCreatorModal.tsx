@@ -105,6 +105,7 @@ export function CharacterCreatorModal({ isOpen, onClose, onCharacterCreated }: C
       id: `character-${Date.now()}`,
       name: creatorState.characterName,
       ap: 0,
+      totalAp: 0,
       race: creatorState.selectedRace,
       standingStone: creatorState.selectedStone,
       stats: finalStats,

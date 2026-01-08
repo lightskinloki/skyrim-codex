@@ -31,6 +31,83 @@ import {
 } from "@/utils/characterCalculations";
 import { useToast } from "@/hooks/use-toast";
 
+// AP Display component with editable Total AP
+interface APDisplayProps {
+  totalAp: number;
+  availableAp: number;
+  onEditTotalAP: (newTotal: number) => void;
+  onGrantAP: () => void;
+}
+
+function APDisplay({ totalAp, availableAp, onEditTotalAP, onGrantAP }: APDisplayProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState(totalAp.toString());
+
+  const handleSave = () => {
+    const parsed = parseInt(editValue);
+    if (!isNaN(parsed) && parsed >= 0) {
+      onEditTotalAP(parsed);
+    }
+    setIsEditing(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') handleSave();
+    if (e.key === 'Escape') {
+      setEditValue(totalAp.toString());
+      setIsEditing(false);
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      {isEditing ? (
+        <div className="flex items-center gap-1">
+          <span className="text-sm text-muted-foreground">Total AP:</span>
+          <Input
+            type="number"
+            min="0"
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onBlur={handleSave}
+            autoFocus
+            className="w-16 h-8 text-center px-1"
+          />
+          <Button size="sm" variant="ghost" onClick={handleSave} className="h-8 w-8 p-0">
+            <Check className="w-4 h-4" />
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => { setEditValue(totalAp.toString()); setIsEditing(false); }} className="h-8 w-8 p-0">
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
+      ) : (
+        <Badge 
+          variant="outline" 
+          className="text-lg px-3 py-1 cursor-pointer hover:bg-muted/50 transition-colors"
+          onClick={() => { setEditValue(totalAp.toString()); setIsEditing(true); }}
+          title="Click to edit Total AP"
+        >
+          Total AP: {totalAp}
+          <Edit2 className="w-3 h-3 ml-1 opacity-50" />
+        </Badge>
+      )}
+      <Badge variant="secondary" className="text-lg px-3 py-1">
+        Available: {availableAp}
+      </Badge>
+      <Button 
+        size="sm" 
+        variant="outline" 
+        onClick={onGrantAP}
+        className="h-8 w-8 p-0"
+        title="Grant AP"
+      >
+        <Plus className="w-4 h-4" />
+      </Button>
+    </div>
+  );
+}
+
 // SessionNotes component - saves directly to character object
 const NOTES_WARNING_LIMIT = 400000; // ~400KB - show warning
 const NOTES_ERROR_LIMIT = 500000;   // ~500KB - block save
@@ -41,6 +118,8 @@ interface SessionNotesProps {
 }
 
 function SessionNotes({ character, onUpdateNotes }: SessionNotesProps) {
+
+
   const notesLength = (character.notes || "").length;
   const isWarning = notesLength > NOTES_WARNING_LIMIT && notesLength <= NOTES_ERROR_LIMIT;
   const isError = notesLength > NOTES_ERROR_LIMIT;
@@ -233,7 +312,17 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
   const handleGrantAP = (amount: number) => {
     const updatedCharacter = {
       ...currentCharacter,
-      ap: currentCharacter.ap + amount
+      ap: currentCharacter.ap + amount,
+      totalAp: (currentCharacter.totalAp ?? currentCharacter.ap) + amount
+    };
+    setCurrentCharacter(updatedCharacter);
+    onUpdateCharacter(updatedCharacter);
+  };
+
+  const handleEditTotalAP = (newTotal: number) => {
+    const updatedCharacter = {
+      ...currentCharacter,
+      totalAp: Math.max(0, newTotal)
     };
     setCurrentCharacter(updatedCharacter);
     onUpdateCharacter(updatedCharacter);
@@ -321,16 +410,17 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
   // Get equipment including Khajiit claws
   const getAllEquipment = (): Equipment[] => {
     const equipment = [...currentCharacter.equipment];
+    const totalAp = currentCharacter.totalAp ?? currentCharacter.ap;
     
     // Add Khajiit claws if character is Khajiit
     if (currentCharacter.race.id === "khajiit") {
-      const clawDamage = getKhajiitClawDamage(currentCharacter.ap);
+      const clawDamage = getKhajiitClawDamage(totalAp);
       equipment.push({
         id: "khajiit-claws",
         name: "Khajiit Claws",
         type: "weapon",
         damage: clawDamage,
-        description: `Natural weapons that scale with character tier. Current tier: ${getCharacterTier(currentCharacter.ap)}`
+        description: `Natural weapons that scale with character tier. Current tier: ${getCharacterTier(totalAp)}`
       });
     }
     
@@ -611,22 +701,15 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
                 Character Sheet
               </h1>
               <Badge variant="secondary" className="text-lg">
-                {getCharacterTier(currentCharacter.ap)} Tier
+                {getCharacterTier(currentCharacter.totalAp ?? currentCharacter.ap)} Tier
               </Badge>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-lg px-3 py-1">
-                AP: {currentCharacter.ap}
-              </Badge>
-              <Button 
-                size="sm" 
-                variant="outline" 
-                onClick={() => setShowGrantAP(true)}
-                className="h-8 w-8 p-0"
-              >
-                <Plus className="w-4 h-4" />
-              </Button>
-            </div>
+            <APDisplay
+              totalAp={currentCharacter.totalAp ?? currentCharacter.ap}
+              availableAp={currentCharacter.ap}
+              onEditTotalAP={handleEditTotalAP}
+              onGrantAP={() => setShowGrantAP(true)}
+            />
           </div>
           
           <div className="flex flex-col gap-3">

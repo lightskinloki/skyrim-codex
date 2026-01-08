@@ -79,6 +79,7 @@ export interface Character {
   id: string;
   name: string;
   ap: number;
+  totalAp: number;
   race: Race;
   standingStone: StandingStone;
   stats: Stats;
