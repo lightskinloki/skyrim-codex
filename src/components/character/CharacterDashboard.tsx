@@ -31,30 +31,15 @@ import {
 } from "@/utils/characterCalculations";
 import { useToast } from "@/hooks/use-toast";
 
-// SessionNotes component defined inline to avoid import issues
+// SessionNotes component - saves directly to character object
 interface SessionNotesProps {
-  characterId: string;
+  character: Character;
+  onUpdateNotes: (notes: string) => void;
 }
 
-function SessionNotes({ characterId }: SessionNotesProps) {
-  const [notes, setNotes] = useState<string>("");
-  const storageKey = `skyrimTTRPG_notes_${characterId}`;
-
-  // Load existing notes from localStorage on component mount
-  useEffect(() => {
-    const savedNotes = localStorage.getItem(storageKey);
-    if (savedNotes) {
-      setNotes(savedNotes);
-    }
-  }, [storageKey]);
-
-  // Auto-save notes to localStorage whenever notes change
-  useEffect(() => {
-    localStorage.setItem(storageKey, notes);
-  }, [notes, storageKey]);
-
+function SessionNotes({ character, onUpdateNotes }: SessionNotesProps) {
   const handleNotesChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setNotes(event.target.value);
+    onUpdateNotes(event.target.value);
   };
 
   return (
@@ -66,14 +51,14 @@ function SessionNotes({ characterId }: SessionNotesProps) {
       
       <div className="space-y-3">
         <Textarea
-          value={notes}
+          value={character.notes || ""}
           onChange={handleNotesChange}
           placeholder="Write your session notes here..."
           className="min-h-[120px] bg-muted border-muted-foreground/20 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-primary resize-none"
         />
         
         <p className="text-xs text-muted-foreground italic">
-          Notes are saved automatically as you type.
+          Notes are saved automatically with your character.
         </p>
       </div>
     </Card>
@@ -473,6 +458,12 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
       setCurrentCharacter(updatedCharacter);
       onUpdateCharacter(updatedCharacter);
     }
+  };
+
+  const handleUpdateNotes = (notes: string) => {
+    const updatedCharacter = { ...currentCharacter, notes };
+    setCurrentCharacter(updatedCharacter);
+    onUpdateCharacter(updatedCharacter);
   };
 
   const handleExportCharacter = () => {
@@ -1007,7 +998,7 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
               </div>
             </Card>
 
-            <SessionNotes characterId={currentCharacter.id} />
+            <SessionNotes character={currentCharacter} onUpdateNotes={handleUpdateNotes} />
           </div>
 
           {/* Right Column - Skills */}
