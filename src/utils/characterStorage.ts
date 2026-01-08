@@ -26,7 +26,7 @@ export const characterStorage = {
   },
 
   // Save a character (add or update)
-  saveCharacter(character: Character): void {
+  saveCharacter(character: Character): { success: boolean; error?: string } {
     try {
       const characters = this.getAllCharacters();
       const existingIndex = characters.findIndex(c => c.id === character.id);
@@ -38,8 +38,14 @@ export const characterStorage = {
       }
       
       localStorage.setItem(STORAGE_KEYS.CHARACTER_LIBRARY, JSON.stringify(characters));
+      return { success: true };
     } catch (error) {
+      if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+        console.error('Storage quota exceeded:', error);
+        return { success: false, error: 'Storage limit reached. Please export your character and reduce notes length.' };
+      }
       console.error('Error saving character:', error);
+      return { success: false, error: 'Failed to save character.' };
     }
   },
 
