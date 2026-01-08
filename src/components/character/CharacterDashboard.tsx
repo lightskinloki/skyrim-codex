@@ -17,7 +17,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Heart, Zap, Sword, Shield, Settings, Plus, UserPlus, Play, RotateCcw, Package, Download, Minus, BookText, Edit2, Trash2, X, Check } from "lucide-react";
+import { Heart, Zap, Sword, Shield, Settings, Plus, UserPlus, Play, RotateCcw, Package, Download, Minus, BookText, Edit2, Trash2, X, Check, ScrollText } from "lucide-react";
 import { officialEquipment } from "@/data/equipment";
 import { 
   calculateMaxHP, 
@@ -32,20 +32,34 @@ import {
 import { useToast } from "@/hooks/use-toast";
 
 // SessionNotes component - saves directly to character object
+const NOTES_WARNING_LIMIT = 400000; // ~400KB - show warning
+const NOTES_ERROR_LIMIT = 500000;   // ~500KB - block save
+
 interface SessionNotesProps {
   character: Character;
   onUpdateNotes: (notes: string) => void;
 }
 
 function SessionNotes({ character, onUpdateNotes }: SessionNotesProps) {
+  const notesLength = (character.notes || "").length;
+  const isWarning = notesLength > NOTES_WARNING_LIMIT && notesLength <= NOTES_ERROR_LIMIT;
+  const isError = notesLength > NOTES_ERROR_LIMIT;
+
   const handleNotesChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    onUpdateNotes(event.target.value);
+    const newNotes = event.target.value;
+    // Block saving if over limit - but allow deletion
+    if (newNotes.length > NOTES_ERROR_LIMIT && newNotes.length > notesLength) {
+      return;
+    }
+    onUpdateNotes(newNotes);
   };
 
+  const formatNumber = (num: number) => num.toLocaleString();
+
   return (
-    <Card className="p-6 bg-card-secondary">
-      <h3 className="font-cinzel font-semibold text-primary mb-4 flex items-center">
-        <BookText className="w-5 h-5 mr-2" />
+    <Card className="p-4 bg-card border-border">
+      <h3 className="font-cinzel text-lg font-bold text-primary mb-3 flex items-center gap-2">
+        <ScrollText className="w-5 h-5" />
         Session Notes
       </h3>
       
@@ -54,12 +68,35 @@ function SessionNotes({ character, onUpdateNotes }: SessionNotesProps) {
           value={character.notes || ""}
           onChange={handleNotesChange}
           placeholder="Write your session notes here..."
-          className="min-h-[120px] bg-muted border-muted-foreground/20 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-primary resize-none"
+          className={`min-h-[120px] bg-muted border-muted-foreground/20 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-primary resize-none ${
+            isError ? 'border-destructive' : isWarning ? 'border-yellow-500' : ''
+          }`}
         />
         
-        <p className="text-xs text-muted-foreground italic">
-          Notes are saved automatically with your character.
-        </p>
+        {isError && (
+          <div className="p-3 bg-destructive/10 border border-destructive rounded-md">
+            <p className="text-sm text-destructive font-medium">
+              Session notes are too long and cannot be saved. Please copy your notes to a separate document (Google Docs, text file, etc.) and clear some space here.
+            </p>
+          </div>
+        )}
+        
+        {isWarning && !isError && (
+          <div className="p-3 bg-yellow-500/10 border border-yellow-500 rounded-md">
+            <p className="text-sm text-yellow-600 dark:text-yellow-400 font-medium">
+              Notes are getting long. Consider exporting your character or copying notes to a separate document.
+            </p>
+          </div>
+        )}
+        
+        <div className="flex justify-between items-center">
+          <p className="text-xs text-muted-foreground italic">
+            Notes are saved automatically with your character.
+          </p>
+          <p className={`text-xs ${isError ? 'text-destructive' : isWarning ? 'text-yellow-600 dark:text-yellow-400' : 'text-muted-foreground'}`}>
+            {formatNumber(notesLength)} / {formatNumber(NOTES_ERROR_LIMIT)} characters
+          </p>
+        </div>
       </div>
     </Card>
   );

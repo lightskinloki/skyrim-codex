@@ -1,20 +1,29 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { CharacterDashboard } from "@/components/character/CharacterDashboard";
 import { WelcomeScreen } from "@/components/character/WelcomeScreen";
 import { LoadCharacterModal } from "@/components/character/LoadCharacterModal";
 import { Character } from "@/types/character";
 import { characterStorage } from "@/utils/characterStorage";
-import { sampleCharacter } from "@/data/sampleCharacter";
+import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
   const [currentCharacter, setCurrentCharacter] = useState<Character | null>(null);
   const [showWelcome, setShowWelcome] = useState(true);
   const [showLoadModal, setShowLoadModal] = useState(false);
+  const { toast } = useToast();
 
   // Always start with welcome screen - no auto-loading
 
   const handleCreateNewCharacter = (newCharacter: Character) => {
-    characterStorage.saveCharacter(newCharacter);
+    const result = characterStorage.saveCharacter(newCharacter);
+    if (!result.success) {
+      toast({
+        title: "Save Failed",
+        description: result.error,
+        variant: "destructive",
+      });
+      return;
+    }
     setCurrentCharacter(newCharacter);
     setShowWelcome(false);
   };
@@ -38,7 +47,15 @@ const Index = () => {
   };
 
   const handleUpdateCharacter = (updatedCharacter: Character) => {
-    characterStorage.saveCharacter(updatedCharacter);
+    const result = characterStorage.saveCharacter(updatedCharacter);
+    if (!result.success) {
+      toast({
+        title: "Save Failed",
+        description: result.error,
+        variant: "destructive",
+      });
+      return;
+    }
     setCurrentCharacter(updatedCharacter);
   };
 
