@@ -48,6 +48,7 @@ export const sampleCharacter: Character = {
   id: "sample-1",
   name: "Bjorn Ironshield",
   ap: 0,
+  totalAp: 0,
   race: nordRace,
   standingStone: warriorStone,
   stats: finalStats,
