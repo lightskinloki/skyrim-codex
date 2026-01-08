@@ -2,17 +2,18 @@ import { useState } from "react";
 import { CharacterDashboard } from "@/components/character/CharacterDashboard";
 import { WelcomeScreen } from "@/components/character/WelcomeScreen";
 import { LoadCharacterModal } from "@/components/character/LoadCharacterModal";
+import { ModeSelector } from "@/components/ModeSelector";
+import { GMDashboard } from "@/components/gm/GMDashboard";
 import { Character } from "@/types/character";
 import { characterStorage } from "@/utils/characterStorage";
 import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
+  const [appMode, setAppMode] = useState<'select' | 'player' | 'gm'>('select');
   const [currentCharacter, setCurrentCharacter] = useState<Character | null>(null);
   const [showWelcome, setShowWelcome] = useState(true);
   const [showLoadModal, setShowLoadModal] = useState(false);
   const { toast } = useToast();
-
-  // Always start with welcome screen - no auto-loading
 
   const handleCreateNewCharacter = (newCharacter: Character) => {
     const result = characterStorage.saveCharacter(newCharacter);
