@@ -1,7 +1,11 @@
 import { useEffect, useRef } from "react";
 import { CombatantCard } from "./CombatantCard";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { CombatState } from "@/types/combat";
 import { combatManager } from "@/lib/combatManager";
+import { Swords, Crown, Skull } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface GMCombatTrackerProps {
   combatState: CombatState;
@@ -18,25 +22,64 @@ export function GMCombatTracker({ combatState, onUpdateState }: GMCombatTrackerP
     }
   }, [combatState.currentTurnCombatantId, combatState.active]);
 
-  // Get combatants in initiative order
-  const sortedCombatants = combatState.active && combatState.turnOrder.length > 0
-    ? combatState.turnOrder
-        .map(id => combatState.combatants.find(c => c.id === id))
-        .filter(Boolean)
-    : [...combatState.combatants].sort((a, b) => {
-        // Sort by initiative if available, otherwise by name
-        if (a.initiative !== null && b.initiative !== null) {
-          const initDiff = b.initiative - a.initiative;
-          if (initDiff !== 0) return initDiff;
-          return b.stats.agility - a.stats.agility;
-        }
-        return a.name.localeCompare(b.name);
-      });
+  // Separate players/allies from enemies
+  const playersAndAllies = combatState.combatants.filter(c => c.type !== 'enemy');
+  const enemies = combatState.combatants.filter(c => c.type === 'enemy');
+  const livingEnemies = enemies.filter(e => !e.isDead);
+  const deadEnemies = enemies.filter(e => e.isDead);
 
-  // Add dead combatants at the end if they're not in turnOrder
-  const deadCombatants = combatState.combatants.filter(
-    c => c.isDead && !combatState.turnOrder.includes(c.id)
-  );
+  // Get enemy initiative (they share one)
+  const enemyInitiative = enemies.length > 0 ? (enemies[0].initiative ?? null) : null;
+  const lowestEnemyAgility = enemies.length > 0 
+    ? Math.min(...enemies.map(e => e.stats.agility))
+    : 0;
+
+  // Sort players/allies by initiative (ascending - lowest first)
+  const sortedPlayersAndAllies = [...playersAndAllies].sort((a, b) => {
+    const initA = a.initiative ?? 999;
+    const initB = b.initiative ?? 999;
+    if (initA !== initB) return initA - initB;
+    return a.stats.agility - b.stats.agility;
+  });
+
+  // Build display order
+  type DisplayItem = 
+    | { type: 'combatant'; combatant: typeof combatState.combatants[0] }
+    | { type: 'gm_turn' };
+
+  const displayOrder: DisplayItem[] = [];
+  let gmTurnInserted = false;
+
+  for (const player of sortedPlayersAndAllies) {
+    if (player.isDead) continue; // Skip dead players in active order
+
+    const playerInit = player.initiative ?? 999;
+    const playerAgility = player.stats.agility;
+    const enemyInit = enemyInitiative ?? 999;
+
+    // Check if GM turn should come before this player
+    if (!gmTurnInserted && enemies.length > 0) {
+      if (enemyInit < playerInit) {
+        displayOrder.push({ type: 'gm_turn' });
+        gmTurnInserted = true;
+      } else if (enemyInit === playerInit && lowestEnemyAgility < playerAgility) {
+        displayOrder.push({ type: 'gm_turn' });
+        gmTurnInserted = true;
+      }
+    }
+
+    displayOrder.push({ type: 'combatant', combatant: player });
+  }
+
+  // Add GM turn at the end if not inserted yet
+  if (!gmTurnInserted && enemies.length > 0) {
+    displayOrder.push({ type: 'gm_turn' });
+  }
+
+  // Add dead players at the end
+  const deadPlayers = playersAndAllies.filter(c => c.isDead);
+
+  const isGMTurn = combatState.currentTurnCombatantId === 'GM_TURN';
 
   const handleHPChange = (combatantId: string, delta: number) => {
     onUpdateState(prev => {
@@ -127,10 +170,88 @@ export function GMCombatTracker({ combatState, onUpdateState }: GMCombatTrackerP
 
   return (
     <div className="space-y-3">
-      {sortedCombatants.map((combatant) => {
-        if (!combatant) return null;
+      {displayOrder.map((item, index) => {
+        if (item.type === 'gm_turn') {
+          return (
+            <div 
+              key="gm_turn" 
+              ref={isGMTurn ? activeCardRef : undefined}
+            >
+              <Card 
+                className={cn(
+                  "border-2 border-red-500/50 bg-red-950/10 overflow-hidden",
+                  isGMTurn && "ring-2 ring-amber-500 ring-offset-2 ring-offset-background shadow-lg shadow-amber-500/20"
+                )}
+              >
+                {/* GM Turn Header */}
+                <div className="bg-red-500/20 px-4 py-3 flex items-center gap-3 border-b border-red-500/30">
+                  <Swords className="h-5 w-5 text-red-400" />
+                  <span className="font-bold text-red-400 text-lg">GM Turn</span>
+                  <Badge variant="outline" className="border-red-500 text-red-400">
+                    {livingEnemies.length} active / {enemies.length} total
+                  </Badge>
+                  {enemyInitiative !== null && (
+                    <span className="text-sm text-red-300/70 ml-auto">
+                      Initiative: {enemyInitiative}
+                    </span>
+                  )}
+                </div>
+
+                {/* Enemy Cards */}
+                <div className="p-3 space-y-3">
+                  {livingEnemies.map((enemy) => (
+                    <CombatantCard
+                      key={enemy.id}
+                      combatant={enemy}
+                      isCurrentTurn={isGMTurn}
+                      onHPChange={(delta) => handleHPChange(enemy.id, delta)}
+                      onFPChange={(delta) => handleFPChange(enemy.id, delta)}
+                      onDRChange={(delta) => handleDRChange(enemy.id, delta)}
+                      onStatusRemove={(effectId) => handleStatusRemove(enemy.id, effectId)}
+                      onActionToggle={(action) => handleActionToggle(enemy.id, action)}
+                      onDuplicate={() => handleDuplicate(enemy.id)}
+                      onRemove={() => handleRemove(enemy.id)}
+                    />
+                  ))}
+
+                  {/* Dead enemies */}
+                  {deadEnemies.length > 0 && (
+                    <div className="border-t border-red-500/20 pt-3 mt-3">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                        <Skull className="h-4 w-4" />
+                        <span>Fallen Enemies</span>
+                      </div>
+                      {deadEnemies.map((enemy) => (
+                        <CombatantCard
+                          key={enemy.id}
+                          combatant={enemy}
+                          isCurrentTurn={false}
+                          onHPChange={(delta) => handleHPChange(enemy.id, delta)}
+                          onFPChange={(delta) => handleFPChange(enemy.id, delta)}
+                          onDRChange={(delta) => handleDRChange(enemy.id, delta)}
+                          onStatusRemove={(effectId) => handleStatusRemove(enemy.id, effectId)}
+                          onActionToggle={(action) => handleActionToggle(enemy.id, action)}
+                          onDuplicate={() => handleDuplicate(enemy.id)}
+                          onRemove={() => handleRemove(enemy.id)}
+                        />
+                      ))}
+                    </div>
+                  )}
+
+                  {enemies.length === 0 && (
+                    <p className="text-muted-foreground text-center py-4">
+                      No enemies in combat
+                    </p>
+                  )}
+                </div>
+              </Card>
+            </div>
+          );
+        }
+
+        const combatant = item.combatant;
         const isCurrentTurn = combatant.id === combatState.currentTurnCombatantId;
-        
+
         return (
           <div 
             key={combatant.id} 
@@ -151,22 +272,30 @@ export function GMCombatTracker({ combatState, onUpdateState }: GMCombatTrackerP
         );
       })}
       
-      {/* Show dead combatants that aren't in turn order */}
-      {deadCombatants.map((combatant) => (
-        <div key={combatant.id}>
-          <CombatantCard
-            combatant={combatant}
-            isCurrentTurn={false}
-            onHPChange={(delta) => handleHPChange(combatant.id, delta)}
-            onFPChange={(delta) => handleFPChange(combatant.id, delta)}
-            onDRChange={(delta) => handleDRChange(combatant.id, delta)}
-            onStatusRemove={(effectId) => handleStatusRemove(combatant.id, effectId)}
-            onActionToggle={(action) => handleActionToggle(combatant.id, action)}
-            onDuplicate={() => handleDuplicate(combatant.id)}
-            onRemove={() => handleRemove(combatant.id)}
-          />
+      {/* Show dead players/allies at the end */}
+      {deadPlayers.length > 0 && (
+        <div className="border-t pt-3 mt-3">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+            <Skull className="h-4 w-4" />
+            <span>Fallen Allies</span>
+          </div>
+          {deadPlayers.map((combatant) => (
+            <div key={combatant.id} className="mt-2">
+              <CombatantCard
+                combatant={combatant}
+                isCurrentTurn={false}
+                onHPChange={(delta) => handleHPChange(combatant.id, delta)}
+                onFPChange={(delta) => handleFPChange(combatant.id, delta)}
+                onDRChange={(delta) => handleDRChange(combatant.id, delta)}
+                onStatusRemove={(effectId) => handleStatusRemove(combatant.id, effectId)}
+                onActionToggle={(action) => handleActionToggle(combatant.id, action)}
+                onDuplicate={() => handleDuplicate(combatant.id)}
+                onRemove={() => handleRemove(combatant.id)}
+              />
+            </div>
+          ))}
         </div>
-      ))}
+      )}
     </div>
   );
 }
