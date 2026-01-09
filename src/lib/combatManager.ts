@@ -95,31 +95,37 @@ export function createCombatantFromCharacter(character: Character): Combatant {
   };
 }
 
-export function createCustomCombatant(
-  name: string,
-  type: 'player' | 'enemy' | 'ally',
-  hp: number,
-  fp: number,
-  dr: number,
-  stats: { might: number; agility: number; magic: number; guile: number },
-  isBoss: boolean = false
-): Combatant {
+export interface CustomCombatantOptions {
+  name: string;
+  type: 'player' | 'enemy' | 'ally';
+  hp: number;
+  fp?: number;
+  dr: number;
+  stats: { might: number; agility: number; magic: number; guile: number };
+  isBoss?: boolean;
+  attacks?: { name: string; damage: number; stat: string; properties?: string }[];
+  abilities?: string[];
+}
+
+export function createCustomCombatant(options: CustomCombatantOptions): Combatant {
   return {
     id: crypto.randomUUID(),
-    name,
-    type,
-    hp: { current: hp, max: hp },
-    fp: { current: fp, max: fp },
-    dr,
-    baseDr: dr,
-    stats,
+    name: options.name,
+    type: options.type,
+    hp: { current: options.hp, max: options.hp },
+    fp: { current: options.fp || 0, max: options.fp || 0 },
+    dr: options.dr,
+    baseDr: options.dr,
+    stats: options.stats,
     initiative: null,
     statusEffects: [],
     isDead: false,
     majorActionUsed: false,
     minorActionUsed: false,
     reactionUsed: false,
-    isBoss,
+    isBoss: options.isBoss || false,
+    attacks: options.attacks,
+    abilities: options.abilities,
   };
 }
 
@@ -843,19 +849,59 @@ export function isCurrentTurn(state: CombatState, combatantId: string): boolean 
   return state.currentTurnCombatantId === combatantId;
 }
 
-export function formatLogForExport(log: CombatLogEntry[]): string {
+export function formatLogForExport(state: CombatState): string {
   let output = '=== COMBAT LOG ===\n\n';
   let currentRound = 0;
   
-  for (const entry of log) {
+  for (const entry of state.log) {
     if (entry.round !== currentRound) {
       currentRound = entry.round;
       output += `\n--- Round ${currentRound} ---\n`;
     }
     
-    const time = entry.timestamp.toLocaleTimeString();
+    const time = new Date(entry.timestamp).toLocaleTimeString();
     output += `[${time}] ${entry.description}\n`;
   }
   
   return output;
 }
+
+// Export as object for convenient imports
+export const combatManager = {
+  initializeCombat,
+  createSnapshot,
+  saveToHistory,
+  undo,
+  createCombatantFromEnemy,
+  createCombatantFromCharacter,
+  createCustomCombatant,
+  addCombatant,
+  removeCombatant,
+  updateCombatant,
+  rollAllInitiative,
+  rollEnemyInitiative,
+  setInitiative,
+  sortByInitiative,
+  startCombat,
+  nextTurn,
+  resetActions,
+  endCombat,
+  applyDamage,
+  applyRawDamage,
+  applyHealing,
+  applyFPDamage,
+  applyFPRestore,
+  sunderArmor,
+  addStatusEffect,
+  removeStatusEffect,
+  removeAllStatusEffects,
+  applyStartOfTurnEffects,
+  tickStatusEffects,
+  addLogEntry,
+  clearLog,
+  formatLogForExport,
+  getCombatantById,
+  getAliveCombatants,
+  getCombatantsByType,
+  isCurrentTurn,
+};
