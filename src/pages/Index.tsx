@@ -60,6 +60,17 @@ const Index = () => {
     setCurrentCharacter(updatedCharacter);
   };
 
+  // 1. Mode selection screen
+  if (appMode === 'select') {
+    return <ModeSelector onSelectMode={setAppMode} />;
+  }
+
+  // 2. GM Mode
+  if (appMode === 'gm') {
+    return <GMDashboard onExit={() => setAppMode('select')} />;
+  }
+
+  // 3. Player Mode - Welcome screen
   if (showWelcome) {
     return (
       <>
@@ -78,6 +89,7 @@ const Index = () => {
     );
   }
 
+  // 4. Player Mode - Character dashboard
   if (!currentCharacter) {
     return <div>Loading...</div>;
   }
