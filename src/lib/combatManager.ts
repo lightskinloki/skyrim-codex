@@ -227,14 +227,14 @@ export function setInitiative(state: CombatState, combatantId: string, value: nu
 }
 
 export function sortByInitiative(state: CombatState): CombatState {
-  // Sort by initiative DESC, then by agility DESC (tiebreaker)
+  // Sort by initiative ASC (lowest roll goes first), then by agility ASC (tiebreaker - lower agility goes first)
   const sorted = [...state.combatants]
     .filter(c => !c.isDead)
     .sort((a, b) => {
-      const initDiff = (b.initiative || 0) - (a.initiative || 0);
+      const initDiff = (a.initiative || 0) - (b.initiative || 0);
       if (initDiff !== 0) return initDiff;
-      // Tiebreaker: higher agility goes first
-      return b.stats.agility - a.stats.agility;
+      // Tiebreaker: lower agility goes first
+      return a.stats.agility - b.stats.agility;
     });
   
   return {
