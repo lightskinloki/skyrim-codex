@@ -199,9 +199,13 @@ export function rollAllInitiative(state: CombatState): CombatState {
 
 export function rollEnemyInitiative(state: CombatState): CombatState {
   const newState = saveToHistory(state);
+  
+  // Roll once for ALL enemies - they share the same initiative
+  const enemyInitiativeRoll = rollD20();
+  
   const updatedCombatants = newState.combatants.map(c => ({
     ...c,
-    initiative: c.type === 'enemy' ? rollD20() : c.initiative,
+    initiative: c.type === 'enemy' ? enemyInitiativeRoll : c.initiative,
   }));
   
   let updatedState = {
@@ -213,7 +217,7 @@ export function rollEnemyInitiative(state: CombatState): CombatState {
     round: state.round,
     type: 'roll',
     actor: 'System',
-    description: 'Initiative rolled for enemies',
+    description: `Initiative rolled for enemies: ${enemyInitiativeRoll}`,
   });
 }
 
