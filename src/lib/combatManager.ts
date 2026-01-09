@@ -231,19 +231,57 @@ export function setInitiative(state: CombatState, combatantId: string, value: nu
 }
 
 export function sortByInitiative(state: CombatState): CombatState {
-  // Sort by initiative ASC (lowest roll goes first), then by agility ASC (tiebreaker - lower agility goes first)
-  const sorted = [...state.combatants]
-    .filter(c => !c.isDead)
-    .sort((a, b) => {
-      const initDiff = (a.initiative || 0) - (b.initiative || 0);
-      if (initDiff !== 0) return initDiff;
-      // Tiebreaker: lower agility goes first
-      return a.stats.agility - b.stats.agility;
-    });
+  // Separate players/allies from enemies
+  const playersAndAllies = state.combatants.filter(c => !c.isDead && c.type !== 'enemy');
+  const enemies = state.combatants.filter(c => !c.isDead && c.type === 'enemy');
+  
+  // Sort players/allies by initiative ASC (lowest roll goes first), then by agility ASC (tiebreaker)
+  const sortedPlayers = [...playersAndAllies].sort((a, b) => {
+    const initDiff = (a.initiative || 0) - (b.initiative || 0);
+    if (initDiff !== 0) return initDiff;
+    return a.stats.agility - b.stats.agility;
+  });
+  
+  // Get the enemy initiative (they all share the same one)
+  const enemyInitiative = enemies.length > 0 ? (enemies[0].initiative || 0) : Infinity;
+  
+  // Find lowest enemy agility for tiebreaker
+  const lowestEnemyAgility = enemies.length > 0 
+    ? Math.min(...enemies.map(e => e.stats.agility))
+    : Infinity;
+  
+  // Build the turn order: insert "GM_TURN" marker where enemies go based on their shared initiative
+  const turnOrder: string[] = [];
+  let enemyTurnInserted = false;
+  
+  for (const player of sortedPlayers) {
+    const playerInit = player.initiative || 0;
+    const playerAgility = player.stats.agility;
+    
+    // Check if enemy turn should come before this player
+    if (!enemyTurnInserted && enemies.length > 0) {
+      if (enemyInitiative < playerInit) {
+        // Enemy initiative is lower (goes first)
+        turnOrder.push('GM_TURN');
+        enemyTurnInserted = true;
+      } else if (enemyInitiative === playerInit && lowestEnemyAgility < playerAgility) {
+        // Same initiative, but enemy has lower agility (goes first)
+        turnOrder.push('GM_TURN');
+        enemyTurnInserted = true;
+      }
+    }
+    
+    turnOrder.push(player.id);
+  }
+  
+  // If enemy turn wasn't inserted yet (enemies go last), add it at the end
+  if (!enemyTurnInserted && enemies.length > 0) {
+    turnOrder.push('GM_TURN');
+  }
   
   return {
     ...state,
-    turnOrder: sorted.map(c => c.id),
+    turnOrder,
   };
 }
 
@@ -251,14 +289,14 @@ export function sortByInitiative(state: CombatState): CombatState {
 
 export function startCombat(state: CombatState): CombatState {
   const sortedState = sortByInitiative(state);
-  const firstCombatantId = sortedState.turnOrder[0] || null;
+  const firstTurnId = sortedState.turnOrder[0] || null;
   
   let newState = saveToHistory({
     ...sortedState,
     active: true,
     round: 1,
     currentTurnIndex: 0,
-    currentTurnCombatantId: firstCombatantId,
+    currentTurnCombatantId: firstTurnId,
   });
   
   // Log combat start
@@ -269,50 +307,74 @@ export function startCombat(state: CombatState): CombatState {
     description: 'Combat has begun!',
   });
   
-  // Apply start-of-turn effects for first combatant
-  if (firstCombatantId) {
-    newState = resetActions(newState, firstCombatantId);
-    newState = applyStartOfTurnEffects(newState, firstCombatantId);
-    
-    const combatant = newState.combatants.find(c => c.id === firstCombatantId);
-    if (combatant) {
+  // Apply start-of-turn effects for first turn
+  if (firstTurnId) {
+    if (firstTurnId === 'GM_TURN') {
+      // GM turn - reset actions for all enemies
+      const enemies = newState.combatants.filter(c => c.type === 'enemy' && !c.isDead);
+      for (const enemy of enemies) {
+        newState = resetActions(newState, enemy.id);
+        newState = applyStartOfTurnEffects(newState, enemy.id);
+      }
       newState = addLogEntry(newState, {
         round: 1,
         type: 'turn',
-        actor: combatant.name,
-        description: `${combatant.name}'s turn begins`,
+        actor: 'GM',
+        description: `GM's turn begins (all enemies act)`,
       });
+    } else {
+      newState = resetActions(newState, firstTurnId);
+      newState = applyStartOfTurnEffects(newState, firstTurnId);
+      
+      const combatant = newState.combatants.find(c => c.id === firstTurnId);
+      if (combatant) {
+        newState = addLogEntry(newState, {
+          round: 1,
+          type: 'turn',
+          actor: combatant.name,
+          description: `${combatant.name}'s turn begins`,
+        });
+      }
     }
   }
   
   return newState;
 }
 
-function findNextAliveCombatant(state: CombatState, startIndex: number): { index: number; newRound: boolean } {
+function findNextValidTurn(state: CombatState, startIndex: number): { index: number; newRound: boolean } {
   let index = startIndex;
   let newRound = false;
-  const totalCombatants = state.turnOrder.length;
+  const totalTurns = state.turnOrder.length;
   
-  if (totalCombatants === 0) return { index: -1, newRound: false };
+  if (totalTurns === 0) return { index: -1, newRound: false };
   
-  // Try to find next alive combatant, wrapping around if needed
-  for (let i = 0; i < totalCombatants; i++) {
-    if (index >= totalCombatants) {
+  // Try to find next valid turn entry, wrapping around if needed
+  for (let i = 0; i < totalTurns; i++) {
+    if (index >= totalTurns) {
       index = 0;
       newRound = true;
     }
     
-    const combatantId = state.turnOrder[index];
-    const combatant = state.combatants.find(c => c.id === combatantId);
+    const turnId = state.turnOrder[index];
     
-    if (combatant && !combatant.isDead) {
-      return { index, newRound };
+    // GM_TURN is always valid if there are living enemies
+    if (turnId === 'GM_TURN') {
+      const hasLivingEnemies = state.combatants.some(c => c.type === 'enemy' && !c.isDead);
+      if (hasLivingEnemies) {
+        return { index, newRound };
+      }
+    } else {
+      // Regular combatant - check if alive
+      const combatant = state.combatants.find(c => c.id === turnId);
+      if (combatant && !combatant.isDead) {
+        return { index, newRound };
+      }
     }
     
     index++;
   }
   
-  // All combatants are dead
+  // No valid turns left
   return { index: -1, newRound: false };
 }
 
@@ -322,25 +384,33 @@ export function nextTurn(state: CombatState): CombatState {
   // Tick status effects at end of current turn
   let newState = state;
   if (state.currentTurnCombatantId) {
-    newState = tickStatusEffects(newState, state.currentTurnCombatantId);
+    if (state.currentTurnCombatantId === 'GM_TURN') {
+      // Tick effects for all enemies
+      const enemies = newState.combatants.filter(c => c.type === 'enemy' && !c.isDead);
+      for (const enemy of enemies) {
+        newState = tickStatusEffects(newState, enemy.id);
+      }
+    } else {
+      newState = tickStatusEffects(newState, state.currentTurnCombatantId);
+    }
   }
   
-  // Find next alive combatant
-  const { index: newIndex, newRound } = findNextAliveCombatant(newState, state.currentTurnIndex + 1);
+  // Find next valid turn
+  const { index: newIndex, newRound } = findNextValidTurn(newState, state.currentTurnIndex + 1);
   
   if (newIndex === -1) {
-    // No alive combatants, end combat
+    // No valid turns left, end combat
     return endCombat(newState);
   }
   
   const newRoundNum = newRound ? state.round + 1 : state.round;
-  const newCombatantId = newState.turnOrder[newIndex];
+  const newTurnId = newState.turnOrder[newIndex];
   
   newState = saveToHistory({
     ...newState,
     round: newRoundNum,
     currentTurnIndex: newIndex,
-    currentTurnCombatantId: newCombatantId,
+    currentTurnCombatantId: newTurnId,
   });
   
   // Log new round if applicable
@@ -353,19 +423,34 @@ export function nextTurn(state: CombatState): CombatState {
     });
   }
   
-  // Reset actions and apply start-of-turn effects for new combatant
-  if (newCombatantId) {
-    newState = resetActions(newState, newCombatantId);
-    newState = applyStartOfTurnEffects(newState, newCombatantId);
-    
-    const combatant = newState.combatants.find(c => c.id === newCombatantId);
-    if (combatant) {
+  // Reset actions and apply start-of-turn effects
+  if (newTurnId) {
+    if (newTurnId === 'GM_TURN') {
+      // GM turn - reset actions for all enemies
+      const enemies = newState.combatants.filter(c => c.type === 'enemy' && !c.isDead);
+      for (const enemy of enemies) {
+        newState = resetActions(newState, enemy.id);
+        newState = applyStartOfTurnEffects(newState, enemy.id);
+      }
       newState = addLogEntry(newState, {
         round: newRoundNum,
         type: 'turn',
-        actor: combatant.name,
-        description: `${combatant.name}'s turn begins`,
+        actor: 'GM',
+        description: `GM's turn begins (all enemies act)`,
       });
+    } else {
+      newState = resetActions(newState, newTurnId);
+      newState = applyStartOfTurnEffects(newState, newTurnId);
+      
+      const combatant = newState.combatants.find(c => c.id === newTurnId);
+      if (combatant) {
+        newState = addLogEntry(newState, {
+          round: newRoundNum,
+          type: 'turn',
+          actor: combatant.name,
+          description: `${combatant.name}'s turn begins`,
+        });
+      }
     }
   }
   
@@ -373,6 +458,9 @@ export function nextTurn(state: CombatState): CombatState {
 }
 
 export function resetActions(state: CombatState, combatantId: string): CombatState {
+  // Skip if it's a special marker
+  if (combatantId === 'GM_TURN') return state;
+  
   return {
     ...state,
     combatants: state.combatants.map(c =>
