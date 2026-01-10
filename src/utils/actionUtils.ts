@@ -113,7 +113,7 @@ export function getBonusActions(character: Character): BonusActionAbility[] {
       name: 'Adrenaline Rush',
       source: 'Warrior Stone',
       fpCost: 0,
-      description: 'After taking damage, gain 1 FP.',
+      description: 'After taking damage, gain 3 FP.',
       limitation: 'per combat',
     });
   }
@@ -149,25 +149,13 @@ export function getValidMajorActions(character: Character): MajorActionOption[] 
   const actions: MajorActionOption[] = [];
   
   // Standard actions available to everyone
-  actions.push({
-    id: 'dash',
-    name: 'Dash',
-    type: 'standard',
-    description: 'Move up to double your normal movement speed.',
-  });
   
+  // Tactical Withdrawal
   actions.push({
-    id: 'disengage',
-    name: 'Disengage',
+    id: 'tactical-withdrawal',
+    name: 'Tactical Withdrawal',
     type: 'standard',
-    description: 'Your movement does not provoke opportunity attacks this turn.',
-  });
-  
-  actions.push({
-    id: 'help',
-    name: 'Help',
-    type: 'standard',
-    description: 'Give an ally advantage on their next roll.',
+    description: 'Roll Might (Shove), Agility (Slip), or Guile (Feint) to escape melee without taking a hit.',
   });
   
   // Add equipped weapon attacks
@@ -188,8 +176,8 @@ export function getValidMajorActions(character: Character): MajorActionOption[] 
         name: `Power Attack (${equip.name})`,
         type: 'attack',
         fpCost: 3,
-        damage: equip.damage + 1, // Base power attack bonus
-        description: `Spend 3 FP to deal +1 damage with ${equip.name}.`,
+        damage: equip.damage + 2, // Base power attack bonus
+        description: `Spend 3 FP to deal +2 damage with ${equip.name}.`,
         source: equip.name,
       });
     }
@@ -301,6 +289,20 @@ export function getValidMinorActions(character: Character): MinorActionOption[] 
       name: `Drink ${safeName}`,
       type: 'item',
       description: `Consume one ${safeName} from your inventory.`,
+    });
+  }
+
+  // POISONS (Rulebook: "Applying a poison is a Minor Action")
+  const poisons = character.inventory.items.filter(item => 
+    item.name?.toLowerCase().includes('poison') && item.quantity > 0
+  );
+  for (const poison of poisons) {
+    const safeName = poison.name || 'Unknown Poison';
+    actions.push({
+      id: `apply-${safeName.toLowerCase().replace(/\s+/g, '-')}`,
+      name: `Apply ${safeName}`,
+      type: 'item',
+      description: `Coat weapon with poison.`,
     });
   }
   
