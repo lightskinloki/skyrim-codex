@@ -195,6 +195,8 @@ export function getValidMajorActions(character: Character): MajorActionOption[] 
         description: `Spend 3 FP. Deal +${powerAttackBonus} Damage.`,
         source: equip.name,
       });
+     }
+  }
   
   // Add Khajiit claws if applicable
   if (character.race.id === 'khajiit') {
