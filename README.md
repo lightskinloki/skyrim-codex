@@ -61,11 +61,14 @@ This project is being built in phases. We have successfully completed the core f
 *   **[ ] Active Effects Tracker:** Implement the dashboard panel for tracking temporary effect durations, managed by an "End Turn" button.
 
 ### Phase 6: Networked Combat Tracker (Planned for Next Hiatus)
-- [ ] **PeerJS Integration:** Connect the existing `CombatManager` state to a PeerJS data stream.
-- [x] **Player Combat Portal:** (UI Complete) The full-screen overlay is built. Next step: Wire "End Turn" button to broadcast state to GM.
-- [x] **GM Tactical Table:** (UI Complete) The high-density tracker is built. Next step: Wire "Sunder" and "Damage" actions to broadcast to Player Portals.
-- [ ] **Combat State Synchronization:** Ensure `combatState` object is identical on all connected clients.
-- [ ] **Connection Recovery:** Robust handling for mobile devices waking from sleep (auto-reconnect to room).
+- [ ] **Mode Selection System:** Add Player/GM mode selector at app startup.
+- [ ] **PeerJS Networking Foundation:** Implement peer-to-peer networking for real-time combat synchronization.
+- [ ] **GM Combat Tracker Integration:** Wire up the new `TacticalTable` component to replace the legacy card list in the GM Dashboard.
+- [ ] **Player Combat View Integration:** Wire up the `PlayerCombatPortal` modal to trigger correctly from the "Combat Mode" switch.
+- [ ] **Combat State Synchronization:** Real-time sync of HP, FP, status effects, and turn order between GM and all players.
+- [ ] **Enemy Library:** Pre-made enemy templates (Bandits, Draugr, Dragons, etc.) with official stats.
+- [ ] **Combat Log System:** Shared combat history viewable by GM and all players.
+- [ ] **Status Effect Automation:** Auto-tick durations, auto-apply bleeding damage, and visual status badges.
 
 **Note:** The networked combat tracker will be a major update deployed during the next campaign hiatus to avoid disrupting active gameplay. It will be built as an additive feature that does not modify existing character management functionality.
 
