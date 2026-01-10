@@ -116,7 +116,7 @@ export function PlayerCombatPortal({
   };
   
   // Calculate effective DR
-  const baseDR = calculateTotalDR(character);
+  const baseDR = calculateTotalDR(character.equipment, character.standingStone);
   const effectiveDR = Math.max(0, baseDR - sunderModifier);
   
   // Add manual slot
