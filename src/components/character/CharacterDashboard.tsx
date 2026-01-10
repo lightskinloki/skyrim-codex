@@ -10,6 +10,7 @@ import { AdvancementModal } from "./AdvancementModal";
 import { GrantAPModal } from "./GrantAPModal";
 import { EquipmentModal } from "./EquipmentModal";
 import { AbilityTracker } from "./AbilityTracker";
+import { PlayerCombatPortal } from "@/components/combat/player/PlayerCombatPortal";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -1189,6 +1190,17 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
         />
         
         <GoldModal />
+
+        {currentCharacter.combatMode && (
+          <PlayerCombatPortal
+            character={currentCharacter}
+            onUpdateCharacter={handleUpdateCharacter}
+            onClose={() => handleCombatModeToggle(false)}
+            onMinimize={() => { /* Logic to minimize can go here later */ }}
+          />
+        )}
+        {/* --------------------------- */}
+
       </div>
     </div>
   );
