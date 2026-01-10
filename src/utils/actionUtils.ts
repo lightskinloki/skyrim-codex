@@ -211,7 +211,7 @@ export function getValidMajorActions(character: Character): MajorActionOption[] 
   const knownSpells = getKnownSpells(character);
   for (const spell of knownSpells) {
     actions.push({
-      id: `spell-${spell.name.toLowerCase().replace(/\s+/g, '-')}`,
+      id: `spell-${(spell.name || 'unknown').toLowerCase().replace(/\s+/g, '-')}`,
       name: spell.name,
       type: 'spell',
       fpCost: spell.fpCost,
@@ -288,16 +288,19 @@ export function getValidMinorActions(character: Character): MinorActionOption[] 
     });
   }
   
-  // Drink potion from inventory
+ // Drink potion from inventory
   const potions = character.inventory.items.filter(item => 
-    item.name.toLowerCase().includes('potion') && item.quantity > 0
+    // FIXED: Added safe check (item.name?)
+    item.name?.toLowerCase().includes('potion') && item.quantity > 0
   );
   for (const potion of potions) {
+    // FIXED: Added fallback for ID generation
+    const safeName = potion.name || 'unknown-potion';
     actions.push({
-      id: `drink-${potion.name.toLowerCase().replace(/\s+/g, '-')}`,
-      name: `Drink ${potion.name}`,
+      id: `drink-${safeName.toLowerCase().replace(/\s+/g, '-')}`,
+      name: `Drink ${safeName}`,
       type: 'item',
-      description: `Consume one ${potion.name} from your inventory.`,
+      description: `Consume one ${safeName} from your inventory.`,
     });
   }
   
