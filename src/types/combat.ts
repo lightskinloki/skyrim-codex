@@ -32,6 +32,16 @@ export interface CombatantAttack {
   properties?: string;
 }
 
+// Action tracking for turn management
+export interface CombatActions {
+  majorUsed: boolean;
+  minorUsed: boolean;
+  bonusCount: number;      // How many bonus actions available (from perks)
+  bonusUsed: number;       // How many bonus actions used this turn
+  reactionUsed: boolean;
+  freeActionsUsed: number; // Manual override free actions used
+}
+
 export interface Combatant {
   id: string;
   name: string;
@@ -42,6 +52,7 @@ export interface Combatant {
   fp: { current: number; max: number };
   dr: number;
   baseDr: number;        // Original DR (for Sunder tracking)
+  sunderCount: number;   // Track manual sunder applied to this combatant
   
   // Stats (for rolls and tiebreakers)
   stats: {
@@ -56,7 +67,10 @@ export interface Combatant {
   statusEffects: StatusEffectInstance[];
   isDead: boolean;       // HP <= 0, skipped in turn order
   
-  // Action tracking (reset at START of turn)
+  // Action tracking (new flexible system)
+  actions: CombatActions;
+  
+  // Legacy action tracking (for backwards compatibility)
   majorActionUsed: boolean;
   minorActionUsed: boolean;
   reactionUsed: boolean;
