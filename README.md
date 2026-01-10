@@ -30,6 +30,11 @@ This project is being built in phases. We have successfully completed the core f
 *   [x] Complete all core data entry for skills, perks, and spells.
 *   [x] Deploy a stable Version 1.0 to a live, shareable URL.
 
+### Technical Debt & Refactoring
+- [ ] **Combatant Type Migration:** Fully migrate all `createCombatant` functions to use the new `actions` object (Major/Minor/Bonus slots) and `sunderCount`.
+- [ ] **Hardcoded Rules Extraction:** Move hardcoded rules (like "Power Attack = +2 Dmg") out of UI components and into a `rules.ts` config file for easier balancing updates.
+- [ ] **Mobile Layout Polish:** Ensure the new `PlayerCombatPortal` action stack scrolls correctly on small screens without hiding the "End Turn" button.
+
 ### **Phase 2: Stability & Bug Fixes (Current Priority)**
 *   [x] **Fix "Punished for Progress" AP Bug:** Refactored the `ap` system into `apCurrent` and `apTotal` to ensure character tier is calculated based on total AP earned, not the current unspent pool.
 *   [x] **Fix Session Notes Export Bug:** Session notes now properly save to the character object and are included in exports.
@@ -37,10 +42,14 @@ This project is being built in phases. We have successfully completed the core f
 *   **[ ] Fix AP Granting Bug:** Add a "Subtract AP" functionality to the `GrantAPModal` to allow for easy correction of mistakes.
 *   **[ ] Mobile Display Format:** Fix formatting issues on iPhone systems and improve Android mobile display.
 
-### **Phase 3: Advanced Gameplay Logic**
-*   **[ ] The "Master's Form" Creator:** Implement the complex UI for designing and saving custom martial techniques.
-*   **[ ] Dynamic Summon Display:** Create a new dashboard panel that displays the stat block of a currently active summoned creature.
-*   **[%] Limited-Use Ability Tracker:** Add a checkbox system for tracking "per combat" and "per adventure" abilities.
+### Phase 3: Advanced Gameplay Logic & GM Tools (Next Priority)
+- [ ] **Smart Encounter Parser (No-AI):** Implement a Regex-based text parser (`src/utils/textParser.ts`) that allows GMs to paste stat blocks from PDFs/Text and automatically convert them into playable Enemy Combatants.
+    - *Logic:* Detects `HP: XX`, `Stats: XX/XX/XX/XX`, and `Attacks:` patterns.
+- [ ] **The "Omni-Compendium":** A slide-out sidebar for the GM Dashboard that aggregates Spells, Items, Perks, and Rules into a single searchable reference tool.
+- [ ] **Contextual Loot Generator:** A tool linked to the Encounter Builder that generates theme-appropriate rewards (Gold/Items) based on Enemy Tier (Novice-Master) and Category (Humanoid/Beast/Undead).
+- [ ] **The "Master's Form" Creator:** Implement the UI for designing custom martial techniques (cost/effect trade-off system).
+- [ ] **Dynamic Summon Display:** Dashboard panel displaying stat blocks for active summoned creatures.
+- [%] **Limited-Use Ability Tracker:** Add checkbox system for tracking "per combat" abilities (Partially complete in Player Portal).
 
 ### **Phase 4: Visual & Immersive Upgrades**
 *   **[ ] "Smart Add Equipment" with Autocomplete:** Implement the advanced inventory feature that suggests official items as the user types.
@@ -51,15 +60,12 @@ This project is being built in phases. We have successfully completed the core f
 *   **[ ] "Ambition" System:** Add an optional step in the creator for defining and tracking a long-term character goal.
 *   **[ ] Active Effects Tracker:** Implement the dashboard panel for tracking temporary effect durations, managed by an "End Turn" button.
 
-### **Phase 6: Networked Combat Tracker (Planned for Next Hiatus)**
-*   **[ ] Mode Selection System:** Add Player/GM mode selector at app startup.
-*   **[ ] PeerJS Networking Foundation:** Implement peer-to-peer networking for real-time combat synchronization.
-*   **[ ] GM Combat Tracker:** Build GM dashboard with encounter management, enemy tracking, and combat controls.
-*   **[ ] Player Combat View:** Create player-facing combat interface with turn indicators and status tracking.
-*   **[ ] Combat State Synchronization:** Real-time sync of HP, FP, status effects, and turn order between GM and all players.
-*   **[ ] Enemy Library:** Pre-made enemy templates (Bandits, Draugr, Dragons, etc.) with official stats.
-*   **[ ] Combat Log System:** Shared combat history viewable by GM and all players.
-*   **[ ] Status Effect Automation:** Auto-tick durations, auto-apply bleeding damage, and visual status badges.
+### Phase 6: Networked Combat Tracker (Planned for Next Hiatus)
+- [ ] **PeerJS Integration:** Connect the existing `CombatManager` state to a PeerJS data stream.
+- [x] **Player Combat Portal:** (UI Complete) The full-screen overlay is built. Next step: Wire "End Turn" button to broadcast state to GM.
+- [x] **GM Tactical Table:** (UI Complete) The high-density tracker is built. Next step: Wire "Sunder" and "Damage" actions to broadcast to Player Portals.
+- [ ] **Combat State Synchronization:** Ensure `combatState` object is identical on all connected clients.
+- [ ] **Connection Recovery:** Robust handling for mobile devices waking from sleep (auto-reconnect to room).
 
 **Note:** The networked combat tracker will be a major update deployed during the next campaign hiatus to avoid disrupting active gameplay. It will be built as an additive feature that does not modify existing character management functionality.
 
