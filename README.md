@@ -2,7 +2,7 @@
 
 Welcome to the official Character Manager for the Skyrim TTRPG! This web application is designed to be a comprehensive, digital character sheet that automates character creation, tracks progression, and serves as an active gameplay aid for our custom tabletop role-playing game.
 
-**This tool is in active development. Test it here!** [https://resilient-kashata-c15b4e.netlify.app/](https://resilient-kashata-c15b4e.netlify.app/)
+**This tool is in active development. Test it here!** [Skyrim Codex Live](https://skyrim-codex.frankbrown8810.workers.dev/)
 
 ---
 
