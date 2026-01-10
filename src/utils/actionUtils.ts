@@ -169,19 +169,32 @@ export function getValidMajorActions(character: Character): MajorActionOption[] 
         description: equip.description || `Attack with ${equip.name} for ${equip.damage} damage.`,
         source: equip.name,
       });
+
+      // Power Attack Logic
+      let powerAttackBonus = 2; // Default rule: +2 Damage
       
-      // Power Attack option
+      // Check for Savage Strike Perk (One-Handed Adept)
+      const oneHanded = character.skills.find(s => s.skillId === 'one-handed');
+      const isTwoHanded = equip.name.toLowerCase().includes('great') || 
+                          equip.name.toLowerCase().includes('hammer') || 
+                          equip.name.toLowerCase().includes('battleaxe') ||
+                          equip.name.toLowerCase().includes('bow') || 
+                          equip.name.toLowerCase().includes('crossbow');
+
+      // If One-Handed Adept AND using a One-Handed weapon
+      if (oneHanded && getRankValue(oneHanded.rank) >= 3 && !isTwoHanded) {
+         powerAttackBonus = 3; // +2 Base + 1 Perk Bonus
+      }
+
       actions.push({
         id: `power-attack-${equip.id}`,
         name: `Power Attack (${equip.name})`,
         type: 'attack',
         fpCost: 3,
-        damage: equip.damage + 2, // Base power attack bonus
-        description: `Spend 3 FP to deal +2 damage with ${equip.name}.`,
+        damage: equip.damage + powerAttackBonus,
+        description: `Spend 3 FP. Deal +${powerAttackBonus} Damage.`,
         source: equip.name,
       });
-    }
-  }
   
   // Add Khajiit claws if applicable
   if (character.race.id === 'khajiit') {
