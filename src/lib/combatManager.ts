@@ -120,10 +120,21 @@ export function createCustomCombatant(options: CustomCombatantOptions): Combatan
     fp: { current: options.fp || 0, max: options.fp || 0 },
     dr: options.dr,
     baseDr: options.dr,
+    sunderCount: 0, // FIXED: Added this missing field
     stats: options.stats,
     initiative: null,
     statusEffects: [],
     isDead: false,
+    // FIXED: Added the new comprehensive actions object
+    actions: { 
+      majorUsed: false, 
+      minorUsed: false, 
+      bonusCount: 0, 
+      bonusUsed: 0, 
+      reactionUsed: false, 
+      freeActionsUsed: 0 
+    },
+    // Keep legacy fields for safety (backward compatibility)
     majorActionUsed: false,
     minorActionUsed: false,
     reactionUsed: false,
