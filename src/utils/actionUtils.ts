@@ -37,16 +37,24 @@ export interface MinorActionOption {
 }
 
 /**
+ * Convert rank string to numeric value for comparison
+ */
+function getRankValue(rank: string): number {
+  const ranks: Record<string, number> = {
+    'Novice': 1,
+    'Apprentice': 2,
+    'Adept': 3,
+    'Expert': 4,
+    'Master': 5,
+  };
+  return ranks[rank] || 0;
+}
+
+/**
  * Get all available bonus actions for a character based on their skills/perks
  */
 export function getBonusActions(character: Character): BonusActionAbility[] {
   const bonusActions: BonusActionAbility[] = [];
-  
-  // Helper to get rank value
-  const getRankValue = (rank: string): number => {
-    const ranks: Record<string, number> = { 'Novice': 1, 'Apprentice': 2, 'Adept': 3, 'Expert': 4, 'Master': 5 };
-    return ranks[rank] || 0;
-  };
 
   // Light Armor: Wind Walker (Adept) - Regain FP (Free Action)
   for (const charSkill of character.skills) {
@@ -251,11 +259,9 @@ export function getValidMinorActions(character: Character): MinorActionOption[] 
   
  // Drink potion from inventory
   const potions = character.inventory.items.filter(item => 
-    // FIXED: Added safe check (item.name?)
     item.name?.toLowerCase().includes('potion') && item.quantity > 0
   );
   for (const potion of potions) {
-    // FIXED: Added fallback for ID generation
     const safeName = potion.name || 'unknown-potion';
     actions.push({
       id: `drink-${safeName.toLowerCase().replace(/\s+/g, '-')}`,
@@ -333,12 +339,6 @@ export function getValidMinorActions(character: Character): MinorActionOption[] 
 
   // --- SKILL PERKS (Minor Actions) ---
 
-  // Helper to get rank (re-defined here for scope)
-  const getRankValue = (rank: string): number => {
-    const ranks: Record<string, number> = { 'Novice': 1, 'Apprentice': 2, 'Adept': 3, 'Expert': 4, 'Master': 5 };
-    return ranks[rank] || 0;
-  };
-
   // One-Handed: Fighting Stance (Apprentice)
   const oneHanded = character.skills.find(s => s.skillId === 'one-handed');
   if (oneHanded && getRankValue(oneHanded.rank) >= 2) {
@@ -406,20 +406,6 @@ export function getKnownSpells(character: Character): Spell[] {
   }
   
   return knownSpells;
-}
-
-/**
- * Convert rank string to numeric value for comparison
- */
-function getRankValue(rank: string): number {
-  const ranks: Record<string, number> = {
-    'Novice': 1,
-    'Apprentice': 2,
-    'Adept': 3,
-    'Expert': 4,
-    'Master': 5,
-  };
-  return ranks[rank] || 0;
 }
 
 /**
