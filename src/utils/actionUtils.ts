@@ -29,10 +29,11 @@ export interface MajorActionOption {
 export interface MinorActionOption {
   id: string;
   name: string;
-  type: 'movement' | 'defensive' | 'item' | 'ability';
+  type: 'movement' | 'defensive' | 'item' | 'ability' | 'attack';
   fpCost?: number;
   description: string;
   requiresShield?: boolean;
+  source?: string;
 }
 
 /**
@@ -41,67 +42,22 @@ export interface MinorActionOption {
 export function getBonusActions(character: Character): BonusActionAbility[] {
   const bonusActions: BonusActionAbility[] = [];
   
-  // Check each skill for bonus action perks
+  // Helper to get rank value
+  const getRankValue = (rank: string): number => {
+    const ranks: Record<string, number> = { 'Novice': 1, 'Apprentice': 2, 'Adept': 3, 'Expert': 4, 'Master': 5 };
+    return ranks[rank] || 0;
+  };
+
+  // Light Armor: Wind Walker (Adept) - Regain FP (Free Action)
   for (const charSkill of character.skills) {
-    const skillDef = allSkills.find(s => s.id === charSkill.skillId);
-    if (!skillDef) continue;
-    
-    // One-Handed: Fighting Stance (Apprentice) - extra attack as Minor Action
-    if (charSkill.skillId === 'one-handed' && getRankValue(charSkill.rank) >= getRankValue('Apprentice')) {
-      // Check for Dual Flurry (Expert) - reduces cost to 0
-      const hasDualFlurry = getRankValue(charSkill.rank) >= getRankValue('Expert');
-      bonusActions.push({
-        id: 'fighting-stance',
-        name: 'Fighting Stance',
-        source: `One-Handed (${charSkill.rank})`,
-        fpCost: hasDualFlurry ? 0 : 3,
-        description: 'Make an additional attack with your one-handed weapon as a Minor Action.',
-      });
-    }
-    
-    // Archery: Quick Shot (Expert) - Power Shot as Minor Action  
-    if (charSkill.skillId === 'archery' && getRankValue(charSkill.rank) >= getRankValue('Expert')) {
-      bonusActions.push({
-        id: 'quick-shot',
-        name: 'Quick Shot',
-        source: `Archery (${charSkill.rank})`,
-        fpCost: 3,
-        description: 'Make a Power Shot as a Minor Action, slowing the target.',
-      });
-    }
-    
-    // Light Armor: Wind Walker (Adept) - regain FP
-    if (charSkill.skillId === 'light-armor' && getRankValue(charSkill.rank) >= getRankValue('Adept')) {
+    if (charSkill.skillId === 'light-armor' && getRankValue(charSkill.rank) >= 3) {
       bonusActions.push({
         id: 'wind-walker',
         name: 'Wind Walker',
-        source: `Light Armor (${charSkill.rank})`,
+        source: `Light Armor`,
         fpCost: 0,
         description: 'Regain 6 FP as a free action.',
         limitation: 'per combat',
-      });
-    }
-    
-    // Heavy Armor: Tower of Strength (Adept) - resist stagger
-    if (charSkill.skillId === 'heavy-armor' && getRankValue(charSkill.rank) >= getRankValue('Adept')) {
-      bonusActions.push({
-        id: 'tower-of-strength',
-        name: 'Tower of Strength',
-        source: `Heavy Armor (${charSkill.rank})`,
-        fpCost: 0,
-        description: 'Automatically resist being staggered or knocked down.',
-        limitation: 'per combat',
-      });
-    }
-    
-    // Sneak: Shadow Warrior (Expert) - vanish while observed
-    if (charSkill.skillId === 'sneak' && getRankValue(charSkill.rank) >= getRankValue('Expert')) {
-      bonusActions.push({
-        id: 'shadow-warrior-vanish',
-        name: 'Shadow Warrior',
-        source: `Sneak (${charSkill.rank})`,
-        fpCost: 6,
-        description: 'Become Hidden even while being observed.',
       });
     }
   }
@@ -109,33 +65,35 @@ export function getBonusActions(character: Character): BonusActionAbility[] {
   // Standing Stone bonus actions
   if (character.standingStone.id === 'warrior') {
     bonusActions.push({
-      id: 'adrenaline-rush',
-      name: 'Adrenaline Rush',
-      source: 'Warrior Stone',
+      id: 'fighters-rush',
+      name: "Fighter's Rush",
+      source: 'The Warrior',
       fpCost: 0,
-      description: 'After taking damage, gain 3 FP.',
+      description: 'Once per combat, after taking damage, gain 3 FP.',
       limitation: 'per combat',
     });
   }
   
+  // Thief Stone: Fleet Footed (Explicitly says "Does not use Minor Action")
   if (character.standingStone.id === 'thief') {
     bonusActions.push({
       id: 'fleet-footed',
       name: 'Fleet Footed',
-      source: 'Thief Stone',
-      fpCost: 1,
-      description: 'Impose disadvantage on one enemy attacking you this round (no Minor Action needed).',
+      source: 'The Thief',
+      fpCost: 1, 
+      description: 'Impose disadvantage on one enemy attacking you.',
     });
   }
-  
-  if (character.standingStone.id === 'serpent') {
+
+  // Redguard: Adrenaline Rush (Free Action)
+  if (character.race.id === 'redguard') {
     bonusActions.push({
-      id: 'serpent-kiss',
-      name: "Serpent's Kiss",
-      source: 'Serpent Stone',
+      id: 'adrenaline-rush',
+      name: 'Adrenaline Rush',
+      source: 'Redguard',
       fpCost: 0,
-      description: 'Spit venom to paralyze a target (uses Major Action).',
-      limitation: 'per combat',
+      description: 'Immediately regain 10 FP.',
+      limitation: 'per adventure',
     });
   }
   
@@ -371,6 +329,53 @@ export function getValidMinorActions(character: Character): MinorActionOption[] 
         description: 'Create a master\'s ward granting DR 8 against spells until your next turn.',
       });
     }
+  }
+
+  // --- SKILL PERKS (Minor Actions) ---
+
+  // Helper to get rank (re-defined here for scope)
+  const getRankValue = (rank: string): number => {
+    const ranks: Record<string, number> = { 'Novice': 1, 'Apprentice': 2, 'Adept': 3, 'Expert': 4, 'Master': 5 };
+    return ranks[rank] || 0;
+  };
+
+  // One-Handed: Fighting Stance (Apprentice)
+  const oneHanded = character.skills.find(s => s.skillId === 'one-handed');
+  if (oneHanded && getRankValue(oneHanded.rank) >= 2) {
+    const hasDualFlurry = getRankValue(oneHanded.rank) >= 4; // Expert
+    actions.push({
+      id: 'fighting-stance',
+      name: 'Fighting Stance',
+      type: 'attack',
+      source: `One-Handed`,
+      fpCost: hasDualFlurry ? 0 : 3,
+      description: 'Make an additional attack with your one-handed weapon.',
+    });
+  }
+
+  // Archery: Quick Shot (Expert)
+  const archery = character.skills.find(s => s.skillId === 'archery');
+  if (archery && getRankValue(archery.rank) >= 4) {
+    actions.push({
+      id: 'quick-shot',
+      name: 'Quick Shot',
+      type: 'attack',
+      source: `Archery`,
+      fpCost: 3,
+      description: 'Make a Power Shot (Slow target) as a Minor Action.',
+    });
+  }
+
+  // Sneak: Shadow Warrior (Expert) - Vanish
+  if (sneakSkill && getRankValue(sneakSkill.rank) >= 4) {
+    actions.push({
+      id: 'shadow-warrior',
+      name: 'Shadow Warrior',
+      type: 'defensive',
+      source: `Sneak`,
+      fpCost: 6,
+      description: 'Become Hidden even while being observed.',
+    });
   }
   
   return actions;
