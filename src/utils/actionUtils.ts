@@ -20,17 +20,19 @@ export interface MajorActionOption {
   name: string;
   type: 'attack' | 'spell' | 'ability' | 'standard';
   fpCost?: number;
+  hpCost?: number;
   damage?: number;
   description: string;
   source?: string;
 }
 
-// Minor action option  
+// Minor action option
 export interface MinorActionOption {
   id: string;
   name: string;
   type: 'movement' | 'defensive' | 'item' | 'ability' | 'attack';
   fpCost?: number;
+  hpCost?: number;
   description: string;
   requiresShield?: boolean;
   source?: string;
@@ -214,6 +216,21 @@ export function getValidMajorActions(character: Character): MajorActionOption[] 
     }
   }
   
+  // Append saved custom major abilities
+  for (const ability of character.customAbilities ?? []) {
+    if (ability.slotType === 'major') {
+      actions.push({
+        id: `custom-${ability.id}`,
+        name: ability.name,
+        type: 'ability',
+        fpCost: ability.fpCost,
+        hpCost: ability.hpCost,
+        description: ability.description ?? '',
+        source: 'Custom',
+      });
+    }
+  }
+
   return actions;
 }
 
@@ -378,6 +395,21 @@ export function getValidMinorActions(character: Character): MinorActionOption[] 
     });
   }
   
+  // Append saved custom minor abilities
+  for (const ability of character.customAbilities ?? []) {
+    if (ability.slotType === 'minor') {
+      actions.push({
+        id: `custom-${ability.id}`,
+        name: ability.name,
+        type: 'ability',
+        fpCost: ability.fpCost,
+        hpCost: ability.hpCost,
+        description: ability.description ?? '',
+        source: 'Custom',
+      });
+    }
+  }
+
   return actions;
 }
 
@@ -386,25 +418,30 @@ export function getValidMinorActions(character: Character): MinorActionOption[] 
  */
 export function getKnownSpells(character: Character): Spell[] {
   const knownSpells: Spell[] = [];
-  
+
   const magicSkills = ['destruction', 'restoration', 'alteration', 'illusion', 'conjuration'];
-  
+
   for (const skillId of magicSkills) {
-    const charSkill = character.skills.find(s => s.skillId === skillId);
-    if (!charSkill) continue;
-    
-    const maxTier = charSkill.rank;
     const schoolName = skillId.charAt(0).toUpperCase() + skillId.slice(1);
-    
-    // Get all spells from this school up to the character's rank
-    const schoolSpells = allSpells.filter(spell => 
-      spell.school === schoolName && 
-      getRankValue(spell.tier) <= getRankValue(maxTier)
+    const charSkill = character.skills.find(s => s.skillId === skillId);
+
+    // Every character automatically knows all Novice spells from every school
+    const noviceSpells = allSpells.filter(spell =>
+      spell.school === schoolName && spell.tier === 'Novice'
     );
-    
-    knownSpells.push(...schoolSpells);
+    knownSpells.push(...noviceSpells);
+
+    // Add Apprentice+ spells only if the character has invested in this school
+    if (charSkill && getRankValue(charSkill.rank) > 1) {
+      const higherTierSpells = allSpells.filter(spell =>
+        spell.school === schoolName &&
+        getRankValue(spell.tier) > 1 &&
+        getRankValue(spell.tier) <= getRankValue(charSkill.rank)
+      );
+      knownSpells.push(...higherTierSpells);
+    }
   }
-  
+
   return knownSpells;
 }
 

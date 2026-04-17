@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Character, Equipment } from "@/types/character";
+import { useState, useEffect, useRef } from "react";
+import { Character, Equipment, CustomAbility, Enchantment } from "@/types/character";
 import { CharacterCard } from "./CharacterCard";
 import { StatBlock } from "./StatBlock";
 import { ResourceBar } from "./ResourceBar";
@@ -18,7 +18,9 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Heart, Zap, Sword, Shield, Settings, Plus, UserPlus, Play, RotateCcw, Package, Download, Minus, BookText, Edit2, Trash2, X, Check, ScrollText } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { ToastAction } from "@/components/ui/toast";
+import { Heart, Zap, Sword, Shield, Settings, Plus, UserPlus, Play, RotateCcw, Package, Download, Minus, BookText, Edit2, Trash2, X, Check, ScrollText, Sparkles, AlertTriangle, LogOut } from "lucide-react";
 import { officialEquipment } from "@/data/equipment";
 import { 
   calculateMaxHP, 
@@ -182,13 +184,142 @@ function SessionNotes({ character, onUpdateNotes }: SessionNotesProps) {
   );
 }
 
+// ── Custom Ability Manager ──────────────────────────────────────────────────
+
+interface CustomAbilityManagerProps {
+  character: Character;
+  onUpdateCharacter: (character: Character) => void;
+}
+
+function CustomAbilityManager({ character, onUpdateCharacter }: CustomAbilityManagerProps) {
+  const [isAdding, setIsAdding] = useState(false);
+  const [form, setForm] = useState<{
+    name: string; slotType: 'major' | 'minor'; fpCost: string; hpCost: string; description: string;
+  }>({ name: '', slotType: 'major', fpCost: '', hpCost: '', description: '' });
+
+  const abilities = character.customAbilities ?? [];
+
+  const resetForm = () => setForm({ name: '', slotType: 'major', fpCost: '', hpCost: '', description: '' });
+
+  const handleSave = () => {
+    if (!form.name.trim()) return;
+    const newAbility: CustomAbility = {
+      id: `${Date.now()}`,
+      name: form.name.trim(),
+      slotType: form.slotType,
+      ...(form.fpCost && { fpCost: Math.max(0, parseInt(form.fpCost)) }),
+      ...(form.hpCost && { hpCost: Math.max(0, parseInt(form.hpCost)) }),
+      ...(form.description.trim() && { description: form.description.trim() }),
+    };
+    onUpdateCharacter({ ...character, customAbilities: [...abilities, newAbility] });
+    resetForm();
+    setIsAdding(false);
+  };
+
+  const handleDelete = (id: string) => {
+    onUpdateCharacter({ ...character, customAbilities: abilities.filter(a => a.id !== id) });
+  };
+
+  return (
+    <Card className="p-4 bg-card-secondary">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="font-cinzel font-semibold text-primary flex items-center gap-2">
+          <Zap className="w-4 h-4" /> Custom Abilities
+        </h3>
+        {!isAdding && (
+          <Button size="sm" variant="outline" onClick={() => setIsAdding(true)} className="h-7 text-xs">
+            <Plus className="w-3 h-3 mr-1" /> Add
+          </Button>
+        )}
+      </div>
+
+      {/* Existing abilities list */}
+      {abilities.length === 0 && !isAdding && (
+        <p className="text-sm text-muted-foreground italic">No custom abilities saved. Add one to have it appear in the Combat Portal.</p>
+      )}
+      <div className="space-y-2 mb-3">
+        {abilities.map(ability => (
+          <div key={ability.id} className="flex items-start justify-between gap-2 rounded-md border border-border px-3 py-2 bg-muted/20">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-medium text-sm">{ability.name}</span>
+                <Badge variant="outline" className={`text-xs ${ability.slotType === 'major' ? 'text-amber-400 border-amber-400/50' : 'text-blue-400 border-blue-400/50'}`}>
+                  {ability.slotType === 'major' ? 'Major' : 'Minor'}
+                </Badge>
+                {ability.fpCost != null && ability.fpCost > 0 && (
+                  <Badge variant="secondary" className="text-xs">{ability.fpCost} FP</Badge>
+                )}
+                {ability.hpCost != null && ability.hpCost > 0 && (
+                  <Badge variant="destructive" className="text-xs">{ability.hpCost} HP</Badge>
+                )}
+              </div>
+              {ability.description && (
+                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{ability.description}</p>
+              )}
+            </div>
+            <Button size="sm" variant="ghost" onClick={() => handleDelete(ability.id)} className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive flex-shrink-0">
+              <Trash2 className="w-3.5 h-3.5" />
+            </Button>
+          </div>
+        ))}
+      </div>
+
+      {/* Inline add form */}
+      {isAdding && (
+        <div className="border border-border rounded-md p-3 space-y-3 bg-muted/10">
+          <Input
+            placeholder="Ability name (required)"
+            value={form.name}
+            onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+            autoFocus
+          />
+          {/* Slot type toggle */}
+          <div className="flex gap-2">
+            <Button size="sm" variant={form.slotType === 'major' ? 'default' : 'outline'}
+              onClick={() => setForm(f => ({ ...f, slotType: 'major' }))} className="flex-1 text-xs h-8">
+              Major Action
+            </Button>
+            <Button size="sm" variant={form.slotType === 'minor' ? 'default' : 'outline'}
+              onClick={() => setForm(f => ({ ...f, slotType: 'minor' }))} className="flex-1 text-xs h-8">
+              Minor Action
+            </Button>
+          </div>
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <label className="text-xs text-muted-foreground mb-1 block">FP Cost (optional)</label>
+              <Input type="number" min={0} placeholder="0" value={form.fpCost}
+                onChange={e => setForm(f => ({ ...f, fpCost: e.target.value }))} className="h-8" />
+            </div>
+            <div className="flex-1">
+              <label className="text-xs text-muted-foreground mb-1 block">HP Cost (optional)</label>
+              <Input type="number" min={0} placeholder="0" value={form.hpCost}
+                onChange={e => setForm(f => ({ ...f, hpCost: e.target.value }))} className="h-8" />
+            </div>
+          </div>
+          <Input placeholder="Description (optional)" value={form.description}
+            onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
+          <div className="flex gap-2 justify-end">
+            <Button size="sm" variant="outline" onClick={() => { resetForm(); setIsAdding(false); }}>
+              <X className="w-3 h-3 mr-1" /> Cancel
+            </Button>
+            <Button size="sm" onClick={handleSave} disabled={!form.name.trim()}>
+              <Check className="w-3 h-3 mr-1" /> Save
+            </Button>
+          </div>
+        </div>
+      )}
+    </Card>
+  );
+}
+
 interface CharacterDashboardProps {
   character: Character;
   onUpdateCharacter: (character: Character) => void;
   onCreateNewCharacter: () => void;
+  onEndSession: () => void;
 }
 
-export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCharacter }: CharacterDashboardProps) {
+export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCharacter, onEndSession }: CharacterDashboardProps) {
   const [currentCharacter, setCurrentCharacter] = useState<Character>(character);
   const [showAdvancement, setShowAdvancement] = useState(false);
   const [showGrantAP, setShowGrantAP] = useState(false);
@@ -213,14 +344,34 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
   // Equipment management state
   const [addingEquipment, setAddingEquipment] = useState(false);
   const [editingEquipmentId, setEditingEquipmentId] = useState<string | null>(null);
-  const [equipmentForm, setEquipmentForm] = useState({ name: '', type: 'weapon' as 'weapon' | 'armor' | 'shield', damage: '', dr: '', description: '' });
+  const EMPTY_EQUIP_FORM = { name: '', type: 'weapon' as 'weapon' | 'armor' | 'shield', damage: '', dr: '', description: '', enchantName: '', enchantDescription: '', enchantMaxCharges: '', enchantChargeCost: '1', enchantActionSlot: 'bonus' as 'bonus' | 'free' };
+  const [equipmentForm, setEquipmentForm] = useState(EMPTY_EQUIP_FORM);
   const [equipmentSuggestions, setEquipmentSuggestions] = useState<typeof officialEquipment>([]);
   
   // Item management state
   const [addingItem, setAddingItem] = useState(false);
   const [newItemName, setNewItemName] = useState('');
-  
+
+  // Exit warning dialog state
+  const [showExitWarning, setShowExitWarning] = useState(false);
+
+  // Session export tracking
+  const [hasExportedThisSession, setHasExportedThisSession] = useState(false);
+  const [showEndSession, setShowEndSession] = useState(false);
+  const apBeforeAdvancement = useRef(0);
+
   const { toast } = useToast();
+
+  // Last-resort safety net: browser's generic "Leave site?" dialog.
+  // The End Session button + milestone toasts are the primary save workflow.
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, []);
 
   const handleResourceAdjust = (type: 'hp' | 'fp', amount: number) => {
     const updatedCharacter = {
@@ -263,17 +414,21 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
   const handleDrAdjust = (equipmentId: string, amount: number) => {
     const updatedEquipment = currentCharacter.equipment.map(item => {
       if (item.id === equipmentId && item.dr !== undefined) {
-        // Ensure baseDr exists, defaulting to current dr if not present
-        const baseDr = (item as any).baseDr ?? item.dr;
+        // Stamp baseDr the first time DR is reduced so we remember the original value.
+        // If baseDr is already set, use it. If unknown and we're increasing, leave it
+        // undefined (no upper clamp) — handles legacy saves where DR was already 0.
+        const baseDr = item.baseDr ?? (amount < 0 ? item.dr : undefined);
         const newDr = item.dr + amount;
-        
-        // Apply constraints: cannot be less than 0 or greater than baseDr
-        const constrainedDr = Math.max(0, Math.min(baseDr, newDr));
-        
+
+        // Clamp: never below 0; never above baseDr if baseDr is known
+        const constrainedDr = baseDr !== undefined
+          ? Math.max(0, Math.min(baseDr, newDr))
+          : Math.max(0, newDr);
+
         return {
           ...item,
           dr: constrainedDr,
-          baseDr: baseDr // Ensure baseDr is preserved
+          ...(baseDr !== undefined && { baseDr }),
         };
       }
       return item;
@@ -308,16 +463,22 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
       title: `${type === 'short' ? 'Short' : 'Long'} Rest Complete`,
       description: `Resources restored${type === 'long' ? ' and per-adventure abilities reset' : ''}.`,
     });
+    if (type === 'long') {
+      showExportReminder('End of Adventure?', 'Long rests are a great time to export your character.');
+    }
   };
 
   const handleGrantAP = (amount: number) => {
     const updatedCharacter = {
       ...currentCharacter,
-      ap: currentCharacter.ap + amount,
-      totalAp: (currentCharacter.totalAp ?? currentCharacter.ap) + amount
+      ap: Math.max(0, currentCharacter.ap + amount),
+      totalAp: Math.max(0, (currentCharacter.totalAp ?? currentCharacter.ap) + amount)
     };
     setCurrentCharacter(updatedCharacter);
     onUpdateCharacter(updatedCharacter);
+    if (amount > 0) {
+      showExportReminder('AP Gained!', 'Save your progress before you go.');
+    }
   };
 
   const handleEditTotalAP = (newTotal: number) => {
@@ -455,25 +616,36 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
   
   const handleAddEquipment = () => {
     if (!equipmentForm.name) return;
-    
+
+    const maxCh = parseInt(equipmentForm.enchantMaxCharges) || 1;
     const newEquipment: Equipment = {
       id: `custom-${Date.now()}`,
       name: equipmentForm.name,
       type: equipmentForm.type,
       ...(equipmentForm.damage && { damage: parseInt(equipmentForm.damage) }),
       ...(equipmentForm.dr && { dr: parseInt(equipmentForm.dr), baseDr: parseInt(equipmentForm.dr) }),
-      ...(equipmentForm.description && { description: equipmentForm.description })
+      ...(equipmentForm.description && { description: equipmentForm.description }),
+      ...(equipmentForm.enchantName && {
+        enchantment: {
+          name: equipmentForm.enchantName,
+          description: equipmentForm.enchantDescription,
+          charges: maxCh,
+          maxCharges: maxCh,
+          chargeCost: parseInt(equipmentForm.enchantChargeCost) || 1,
+          actionSlot: equipmentForm.enchantActionSlot,
+        }
+      }),
     };
-    
+
     const updatedCharacter = {
       ...currentCharacter,
       equipment: [...currentCharacter.equipment, newEquipment]
     };
-    
+
     setCurrentCharacter(updatedCharacter);
     onUpdateCharacter(updatedCharacter);
     setAddingEquipment(false);
-    setEquipmentForm({ name: '', type: 'weapon', damage: '', dr: '', description: '' });
+    setEquipmentForm(EMPTY_EQUIP_FORM);
     setEquipmentSuggestions([]);
   };
   
@@ -484,11 +656,33 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
       type: item.type,
       damage: item.damage?.toString() || '',
       dr: item.dr?.toString() || '',
-      description: item.description || ''
+      description: item.description || '',
+      enchantName: item.enchantment?.name || '',
+      enchantDescription: item.enchantment?.description || '',
+      enchantMaxCharges: item.enchantment?.maxCharges?.toString() || '',
+      enchantChargeCost: item.enchantment?.chargeCost?.toString() || '1',
+      enchantActionSlot: item.enchantment?.actionSlot || 'bonus',
     });
   };
   
   const handleSaveEquipment = (itemId: string) => {
+    const enchantment: Enchantment | undefined = equipmentForm.enchantName
+      ? {
+          name: equipmentForm.enchantName,
+          description: equipmentForm.enchantDescription,
+          maxCharges: parseInt(equipmentForm.enchantMaxCharges) || 1,
+          charges: (() => {
+            // preserve current charges if max didn't change; otherwise reset to new max
+            const existing = currentCharacter.equipment.find(e => e.id === itemId)?.enchantment;
+            const newMax = parseInt(equipmentForm.enchantMaxCharges) || 1;
+            if (existing && existing.maxCharges === newMax) return existing.charges;
+            return newMax;
+          })(),
+          chargeCost: parseInt(equipmentForm.enchantChargeCost) || 1,
+          actionSlot: equipmentForm.enchantActionSlot,
+        }
+      : undefined;
+
     const updatedEquipment = currentCharacter.equipment.map(item => {
       if (item.id === itemId) {
         return {
@@ -496,22 +690,23 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
           name: equipmentForm.name,
           type: equipmentForm.type,
           ...(equipmentForm.damage && { damage: parseInt(equipmentForm.damage) }),
-          ...(equipmentForm.dr && { dr: parseInt(equipmentForm.dr), baseDr: (item as any).baseDr || parseInt(equipmentForm.dr) }),
-          ...(equipmentForm.description && { description: equipmentForm.description })
+          ...(equipmentForm.dr && { dr: parseInt(equipmentForm.dr), baseDr: item.baseDr ?? parseInt(equipmentForm.dr) }),
+          ...(equipmentForm.description && { description: equipmentForm.description }),
+          enchantment,
         };
       }
       return item;
     });
-    
+
     const updatedCharacter = {
       ...currentCharacter,
       equipment: updatedEquipment
     };
-    
+
     setCurrentCharacter(updatedCharacter);
     onUpdateCharacter(updatedCharacter);
     setEditingEquipmentId(null);
-    setEquipmentForm({ name: '', type: 'weapon', damage: '', dr: '', description: '' });
+    setEquipmentForm(EMPTY_EQUIP_FORM);
   };
   
   const handleDeleteEquipment = (itemId: string) => {
@@ -519,11 +714,37 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
       ...currentCharacter,
       equipment: currentCharacter.equipment.filter(item => item.id !== itemId)
     };
-    
+
     setCurrentCharacter(updatedCharacter);
     onUpdateCharacter(updatedCharacter);
   };
-  
+
+  const handleEnchantmentChargeAdjust = (equipmentId: string, amount: number) => {
+    const updatedEquipment = currentCharacter.equipment.map(item => {
+      if (item.id === equipmentId && item.enchantment) {
+        const newCharges = Math.max(0, Math.min(item.enchantment.maxCharges, item.enchantment.charges + amount));
+        return { ...item, enchantment: { ...item.enchantment, charges: newCharges } };
+      }
+      return item;
+    });
+    const updatedCharacter = { ...currentCharacter, equipment: updatedEquipment };
+    setCurrentCharacter(updatedCharacter);
+    onUpdateCharacter(updatedCharacter);
+  };
+
+  const handleEnchantmentRecharge = (equipmentId: string) => {
+    const updatedEquipment = currentCharacter.equipment.map(item => {
+      if (item.id === equipmentId && item.enchantment) {
+        return { ...item, enchantment: { ...item.enchantment, charges: item.enchantment.maxCharges } };
+      }
+      return item;
+    });
+    const updatedCharacter = { ...currentCharacter, equipment: updatedEquipment };
+    setCurrentCharacter(updatedCharacter);
+    onUpdateCharacter(updatedCharacter);
+    toast({ title: 'Recharged', description: 'Enchantment charges restored.' });
+  };
+
   // Item Management Functions
   const handleAddItem = () => {
     if (!newItemName.trim()) return;
@@ -608,6 +829,7 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
       
+      setHasExportedThisSession(true);
       toast({
         title: "Character Exported!",
         description: `${currentCharacter.name}.json has been downloaded.`,
@@ -620,6 +842,20 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
         variant: "destructive"
       });
     }
+  };
+
+  // Non-blocking export reminder toast — only fires if not yet exported this session
+  const showExportReminder = (title: string, description: string) => {
+    if (hasExportedThisSession) return;
+    toast({
+      title,
+      description,
+      action: (
+        <ToastAction altText="Export Now" onClick={handleExportCharacter}>
+          Export Now
+        </ToastAction>
+      ),
+    });
   };
 
   // Gold Modal Component
@@ -715,11 +951,14 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
           
           <div className="flex flex-col gap-3">
             <div className="flex gap-3">
-              <Button onClick={onCreateNewCharacter} variant="secondary">
+              <Button onClick={() => setShowExitWarning(true)} variant="secondary">
                 <UserPlus className="w-4 h-4 mr-2" />
                 Create New Character
               </Button>
-              <Button onClick={() => setShowAdvancement(true)} variant="default">
+              <Button onClick={() => {
+                apBeforeAdvancement.current = currentCharacter.ap;
+                setShowAdvancement(true);
+              }} variant="default">
                 <Settings className="w-4 h-4 mr-2" />
                 Advance Character
               </Button>
@@ -730,6 +969,22 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
               <Button onClick={handleExportCharacter} variant="outline">
                 <Download className="w-4 h-4 mr-2" />
                 Export Character
+              </Button>
+              <Badge
+                variant="outline"
+                className={hasExportedThisSession
+                  ? 'text-green-400 border-green-400/50 cursor-default'
+                  : 'text-amber-400 border-amber-400/50 animate-pulse cursor-default'}
+              >
+                {hasExportedThisSession ? '✓ Exported' : '⚠ Not Exported'}
+              </Badge>
+              <Button
+                onClick={() => setShowEndSession(true)}
+                variant="outline"
+                className="border-amber-500/50 text-amber-400 hover:bg-amber-500/10"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                End Session
               </Button>
             </div>
             
@@ -854,13 +1109,65 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
                               onChange={(e) => setEquipmentForm({ ...equipmentForm, description: e.target.value })}
                               placeholder="Description"
                             />
+                            {/* Enchantment section */}
+                            <div className="border-t pt-2 space-y-2">
+                              <p className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                                <Sparkles className="w-3 h-3 text-purple-400" /> Enchantment (optional)
+                              </p>
+                              <Input
+                                value={equipmentForm.enchantName}
+                                onChange={(e) => setEquipmentForm({ ...equipmentForm, enchantName: e.target.value })}
+                                placeholder="Enchantment name (leave blank for none)"
+                              />
+                              {equipmentForm.enchantName && (
+                                <>
+                                  <Input
+                                    value={equipmentForm.enchantDescription}
+                                    onChange={(e) => setEquipmentForm({ ...equipmentForm, enchantDescription: e.target.value })}
+                                    placeholder="Effect description"
+                                  />
+                                  <div className="flex gap-2">
+                                    <Input
+                                      type="number"
+                                      min="1"
+                                      value={equipmentForm.enchantMaxCharges}
+                                      onChange={(e) => setEquipmentForm({ ...equipmentForm, enchantMaxCharges: e.target.value })}
+                                      placeholder="Max charges"
+                                    />
+                                    <Input
+                                      type="number"
+                                      min="1"
+                                      value={equipmentForm.enchantChargeCost}
+                                      onChange={(e) => setEquipmentForm({ ...equipmentForm, enchantChargeCost: e.target.value })}
+                                      placeholder="Cost/use"
+                                    />
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => setEquipmentForm({ ...equipmentForm, enchantActionSlot: 'bonus' })}
+                                      className={`flex-1 text-xs py-1 rounded border transition-colors ${equipmentForm.enchantActionSlot === 'bonus' ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:bg-accent'}`}
+                                    >
+                                      Bonus Action
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setEquipmentForm({ ...equipmentForm, enchantActionSlot: 'free' })}
+                                      className={`flex-1 text-xs py-1 rounded border transition-colors ${equipmentForm.enchantActionSlot === 'free' ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:bg-accent'}`}
+                                    >
+                                      Free Action
+                                    </button>
+                                  </div>
+                                </>
+                              )}
+                            </div>
                             <div className="flex gap-2">
                               <Button size="sm" onClick={() => handleSaveEquipment(item.id)} className="flex-1">
                                 <Check className="w-4 h-4 mr-1" /> Save
                               </Button>
                               <Button size="sm" variant="outline" onClick={() => {
                                 setEditingEquipmentId(null);
-                                setEquipmentForm({ name: '', type: 'weapon', damage: '', dr: '', description: '' });
+                                setEquipmentForm(EMPTY_EQUIP_FORM);
                               }} className="flex-1">
                                 <X className="w-4 h-4 mr-1" /> Cancel
                               </Button>
@@ -870,68 +1177,124 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
                       }
                       
                       return (
-                        <div key={item.id || index} className="flex items-center justify-between p-3 bg-muted rounded">
-                          <div className="flex-1">
-                            <p className="font-medium">{item.name}</p>
-                            <p className="text-sm text-muted-foreground capitalize">{item.type}</p>
-                            {item.description && (
-                              <p className="text-xs text-muted-foreground mt-1">{item.description}</p>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="text-right">
-                              {item.damage && (
-                                <p className="text-sm font-bold text-destructive">
-                                  {item.damage} DMG
-                                </p>
+                        <div key={item.id || index} className="p-3 bg-muted rounded">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium">{item.name}</p>
+                              <p className="text-sm text-muted-foreground capitalize">{item.type}</p>
+                              {item.description && (
+                                <p className="text-xs text-muted-foreground mt-1">{item.description}</p>
                               )}
-                              {item.dr && (
-                                <div className="flex items-center gap-1">
-                                  <Button 
-                                    size="sm" 
-                                    variant="outline" 
-                                    onClick={() => handleDrAdjust(item.id, -1)}
-                                    className="h-6 w-6 p-0"
-                                    disabled={item.dr <= 0}
-                                  >
-                                    <Minus className="w-3 h-3" />
-                                  </Button>
-                                  <p className="text-sm font-bold text-primary min-w-[3rem] text-center">
-                                    {item.dr} DR
+                            </div>
+                            <div className="flex items-center gap-2 ml-2">
+                              <div className="text-right">
+                                {item.damage && (
+                                  <p className="text-sm font-bold text-destructive">
+                                    {item.damage} DMG
                                   </p>
-                                  <Button 
-                                    size="sm" 
-                                    variant="outline" 
-                                    onClick={() => handleDrAdjust(item.id, 1)}
-                                    className="h-6 w-6 p-0"
-                                    disabled={item.dr >= ((item as any).baseDr ?? item.dr)}
+                                )}
+                                {item.dr && (
+                                  <div className="flex items-center gap-1">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => handleDrAdjust(item.id, -1)}
+                                      className="h-6 w-6 p-0"
+                                      disabled={item.dr <= 0}
+                                    >
+                                      <Minus className="w-3 h-3" />
+                                    </Button>
+                                    <p className="text-sm font-bold text-primary min-w-[3rem] text-center">
+                                      {item.dr} DR
+                                    </p>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => handleDrAdjust(item.id, 1)}
+                                      className="h-6 w-6 p-0"
+                                      disabled={item.baseDr !== undefined && item.dr >= item.baseDr}
+                                    >
+                                      <Plus className="w-3 h-3" />
+                                    </Button>
+                                  </div>
+                                )}
+                              </div>
+                              {!isKhajiitClaws && (
+                                <div className="flex gap-1">
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => handleEditEquipment(item)}
+                                    className="h-8 w-8 p-0"
                                   >
-                                    <Plus className="w-3 h-3" />
+                                    <Edit2 className="w-4 h-4" />
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => handleDeleteEquipment(item.id)}
+                                    className="h-8 w-8 p-0 text-destructive"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
                                   </Button>
                                 </div>
                               )}
                             </div>
-                            {!isKhajiitClaws && (
-                              <div className="flex gap-1">
-                                <Button 
-                                  size="sm" 
-                                  variant="ghost" 
-                                  onClick={() => handleEditEquipment(item)}
-                                  className="h-8 w-8 p-0"
-                                >
-                                  <Edit2 className="w-4 h-4" />
-                                </Button>
-                                <Button 
-                                  size="sm" 
-                                  variant="ghost" 
-                                  onClick={() => handleDeleteEquipment(item.id)}
-                                  className="h-8 w-8 p-0 text-destructive"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            )}
                           </div>
+                          {/* Enchantment display row */}
+                          {item.enchantment && (
+                            <div className="mt-2 pt-2 border-t border-border/50">
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-semibold text-purple-400 flex items-center gap-1">
+                                    <Sparkles className="w-3 h-3" />
+                                    {item.enchantment.name}
+                                    <Badge variant="outline" className="ml-1 text-[10px] py-0 h-4 border-purple-400/50 text-purple-400">
+                                      {item.enchantment.actionSlot === 'bonus' ? 'Bonus' : 'Free'}
+                                    </Badge>
+                                  </p>
+                                  {item.enchantment.description && (
+                                    <p className="text-xs text-muted-foreground mt-0.5 leading-tight">{item.enchantment.description}</p>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-1 shrink-0">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleEnchantmentChargeAdjust(item.id, -item.enchantment!.chargeCost)}
+                                    className="h-6 w-6 p-0"
+                                    disabled={item.enchantment.charges <= 0}
+                                    title={`Use (costs ${item.enchantment.chargeCost} charge${item.enchantment.chargeCost !== 1 ? 's' : ''})`}
+                                  >
+                                    <Minus className="w-3 h-3" />
+                                  </Button>
+                                  <span className="text-xs font-mono min-w-[2.5rem] text-center tabular-nums">
+                                    {item.enchantment.charges}/{item.enchantment.maxCharges}
+                                  </span>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleEnchantmentChargeAdjust(item.id, 1)}
+                                    className="h-6 w-6 p-0"
+                                    disabled={item.enchantment.charges >= item.enchantment.maxCharges}
+                                    title="Add 1 charge"
+                                  >
+                                    <Plus className="w-3 h-3" />
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleEnchantmentRecharge(item.id)}
+                                    className="h-6 px-2 text-xs text-purple-400 border-purple-400/50"
+                                    disabled={item.enchantment.charges >= item.enchantment.maxCharges}
+                                    title="Recharge (soul gem)"
+                                  >
+                                    ↺ Full
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       );
                     })}
@@ -990,13 +1353,65 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
                       onChange={(e) => setEquipmentForm({ ...equipmentForm, description: e.target.value })}
                       placeholder="Description (optional)"
                     />
+                    {/* Enchantment section */}
+                    <div className="border-t pt-2 space-y-2">
+                      <p className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                        <Sparkles className="w-3 h-3 text-purple-400" /> Enchantment (optional)
+                      </p>
+                      <Input
+                        value={equipmentForm.enchantName}
+                        onChange={(e) => setEquipmentForm({ ...equipmentForm, enchantName: e.target.value })}
+                        placeholder="Enchantment name (leave blank for none)"
+                      />
+                      {equipmentForm.enchantName && (
+                        <>
+                          <Input
+                            value={equipmentForm.enchantDescription}
+                            onChange={(e) => setEquipmentForm({ ...equipmentForm, enchantDescription: e.target.value })}
+                            placeholder="Effect description"
+                          />
+                          <div className="flex gap-2">
+                            <Input
+                              type="number"
+                              min="1"
+                              value={equipmentForm.enchantMaxCharges}
+                              onChange={(e) => setEquipmentForm({ ...equipmentForm, enchantMaxCharges: e.target.value })}
+                              placeholder="Max charges"
+                            />
+                            <Input
+                              type="number"
+                              min="1"
+                              value={equipmentForm.enchantChargeCost}
+                              onChange={(e) => setEquipmentForm({ ...equipmentForm, enchantChargeCost: e.target.value })}
+                              placeholder="Cost/use"
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setEquipmentForm({ ...equipmentForm, enchantActionSlot: 'major' })}
+                              className={`flex-1 text-xs py-1 rounded border transition-colors ${equipmentForm.enchantActionSlot === 'major' ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:bg-accent'}`}
+                            >
+                              Major Action
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setEquipmentForm({ ...equipmentForm, enchantActionSlot: 'minor' })}
+                              className={`flex-1 text-xs py-1 rounded border transition-colors ${equipmentForm.enchantActionSlot === 'minor' ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:bg-accent'}`}
+                            >
+                              Minor Action
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
                     <div className="flex gap-2">
                       <Button size="sm" onClick={handleAddEquipment} className="flex-1">
                         <Check className="w-4 h-4 mr-1" /> Add
                       </Button>
                       <Button size="sm" variant="outline" onClick={() => {
                         setAddingEquipment(false);
-                        setEquipmentForm({ name: '', type: 'weapon', damage: '', dr: '', description: '' });
+                        setEquipmentForm(EMPTY_EQUIP_FORM);
                         setEquipmentSuggestions([]);
                       }} className="flex-1">
                         <X className="w-4 h-4 mr-1" /> Cancel
@@ -1130,6 +1545,8 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
 
             <AbilityTracker character={currentCharacter} onUpdateCharacter={handleUpdateCharacter} />
 
+            <CustomAbilityManager character={currentCharacter} onUpdateCharacter={handleUpdateCharacter} />
+
             <Card className="p-6 bg-card-secondary">
               <h3 className="font-cinzel font-semibold text-primary mb-4 flex items-center">
                 <Shield className="w-5 h-5 mr-2" />
@@ -1162,7 +1579,12 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
         
         <AdvancementModal
           isOpen={showAdvancement}
-          onClose={() => setShowAdvancement(false)}
+          onClose={() => {
+            setShowAdvancement(false);
+            if (currentCharacter.ap < apBeforeAdvancement.current) {
+              showExportReminder('Character Advanced!', 'Export to keep your progression safe.');
+            }
+          }}
           character={currentCharacter}
           onUpdateCharacter={handleUpdateCharacter}
         />
@@ -1190,6 +1612,122 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
         />
         
         <GoldModal />
+
+        {/* Exit / new-character warning dialog */}
+        <Dialog open={showExitWarning} onOpenChange={setShowExitWarning}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="font-cinzel text-primary flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-amber-400" />
+                Export Before You Leave?
+              </DialogTitle>
+              <DialogDescription className="pt-2 space-y-2 text-sm text-muted-foreground">
+                <span className="block">
+                  Local browser storage can be wiped by browser updates, clearing cookies, using a private/incognito window, or switching devices.
+                </span>
+                <span className="block font-medium text-foreground">
+                  Exporting saves a <code className="text-xs bg-muted px-1 py-0.5 rounded">.json</code> file you can reload at any time — it's the only safe backup.
+                </span>
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col gap-2 pt-2">
+              <Button
+                onClick={() => {
+                  handleExportCharacter();
+                  setShowExitWarning(false);
+                  onCreateNewCharacter();
+                }}
+                className="w-full"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Export Character &amp; Continue
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  handleExportCharacter();
+                  setShowExitWarning(false);
+                }}
+                className="w-full"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Export Only (Stay Here)
+              </Button>
+              <div className="flex gap-2 pt-1">
+                <Button
+                  variant="ghost"
+                  onClick={() => setShowExitWarning(false)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowExitWarning(false);
+                    onCreateNewCharacter();
+                  }}
+                  className="flex-1 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                >
+                  Leave Without Exporting
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* End Session dialog */}
+        <Dialog open={showEndSession} onOpenChange={setShowEndSession}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="font-cinzel text-primary flex items-center gap-2">
+                <LogOut className="w-5 h-5" />
+                End Session
+              </DialogTitle>
+              <DialogDescription className="pt-2 space-y-2 text-sm text-muted-foreground">
+                <span className="block">
+                  Export your character before leaving — local storage can be cleared at any time.
+                </span>
+                <span className="block font-medium text-foreground">
+                  A <code className="text-xs bg-muted px-1 py-0.5 rounded">.json</code> file is the only safe backup.
+                </span>
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col gap-2 pt-2">
+              <Button
+                onClick={() => { handleExportCharacter(); setShowEndSession(false); onEndSession(); }}
+                className="w-full"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Export &amp; End Session
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => { handleExportCharacter(); setShowEndSession(false); }}
+                className="w-full"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Export Only (Stay Here)
+              </Button>
+              <div className="flex gap-2 pt-1">
+                <Button
+                  variant="ghost"
+                  onClick={() => setShowEndSession(false)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => { setShowEndSession(false); onEndSession(); }}
+                  className="flex-1 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                >
+                  End Without Exporting
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {currentCharacter.combatMode && (
           <PlayerCombatPortal

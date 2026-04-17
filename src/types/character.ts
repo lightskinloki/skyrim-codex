@@ -57,13 +57,24 @@ export interface CharacterSkill {
   unlockedPerks: string[];
 }
 
+export interface Enchantment {
+  name: string;
+  description: string;
+  charges: number;
+  maxCharges: number;
+  chargeCost: number;       // charges spent per use, default 1
+  actionSlot: 'bonus' | 'free';
+}
+
 export interface Equipment {
   id: string;
   name: string;
   type: 'weapon' | 'armor' | 'shield';
   damage?: number;
   dr?: number;
+  baseDr?: number;
   description?: string;
+  enchantment?: Enchantment;
 }
 
 export interface Kit {
@@ -73,6 +84,15 @@ export interface Kit {
   equipment: Equipment[];
   items: Array<{ name: string; quantity: number }>;
   gold: number;
+}
+
+export interface CustomAbility {
+  id: string;
+  name: string;
+  slotType: 'major' | 'minor';
+  fpCost?: number;
+  hpCost?: number;
+  description?: string;
 }
 
 export interface Character {
@@ -109,6 +129,7 @@ export interface Character {
   usedAbilities?: string[];
   combatMode?: boolean;
   notes?: string;
+  customAbilities?: CustomAbility[];
 }
 
 export type CharacterTier = 'Novice' | 'Apprentice' | 'Adept' | 'Expert' | 'Master' | 'Legendary';

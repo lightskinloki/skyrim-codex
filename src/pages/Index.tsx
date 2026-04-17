@@ -47,6 +47,12 @@ const Index = () => {
     setShowWelcome(true);
   };
 
+  const handleEndSession = () => {
+    setCurrentCharacter(null);
+    setShowWelcome(false);
+    setAppMode('select');
+  };
+
   const handleUpdateCharacter = (updatedCharacter: Character) => {
     const result = characterStorage.saveCharacter(updatedCharacter);
     if (!result.success) {
@@ -95,10 +101,11 @@ const Index = () => {
   }
 
   return (
-    <CharacterDashboard 
-      character={currentCharacter} 
+    <CharacterDashboard
+      character={currentCharacter}
       onUpdateCharacter={handleUpdateCharacter}
       onCreateNewCharacter={handleCreateNewFromDashboard}
+      onEndSession={handleEndSession}
     />
   );
 };
