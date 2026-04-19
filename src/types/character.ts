@@ -93,6 +93,7 @@ export interface CustomAbility {
   fpCost?: number;
   hpCost?: number;
   description?: string;
+  limitation?: 'per combat' | 'per adventure';
 }
 
 export interface Character {

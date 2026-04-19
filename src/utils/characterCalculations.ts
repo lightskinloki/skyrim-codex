@@ -189,25 +189,13 @@ export function performShortRest(character: Character): Character {
 }
 
 export function performLongRest(character: Character): Character {
-  const usedAbilities = character.usedAbilities || [];
-  
-  // Reset all 'per adventure' abilities
-  const resetAbilities = usedAbilities.filter(abilityId => {
-    // Keep combat abilities, remove adventure abilities
-    return !abilityId.includes('racial-') && 
-           !abilityId.includes('stone-') &&
-           !abilityId.includes('tower-') &&
-           !abilityId.includes('shadow-') &&
-           !abilityId.includes('ritual-') &&
-           !abilityId.includes('lord-');
-  });
-  
+  // Long rest resets everything — both per-combat and per-adventure abilities
   return {
     ...character,
     resources: {
       hp: { ...character.resources.hp, current: character.resources.hp.max },
       fp: { ...character.resources.fp, current: character.resources.fp.max }
     },
-    usedAbilities: resetAbilities
+    usedAbilities: [],
   };
 }

@@ -32,6 +32,7 @@ import {
   performShortRest,
   performLongRest
 } from "@/utils/characterCalculations";
+import { getPerCombatAbilityIds } from "@/utils/actionUtils";
 import { useToast } from "@/hooks/use-toast";
 
 // AP Display component with editable Total AP
@@ -195,11 +196,12 @@ function CustomAbilityManager({ character, onUpdateCharacter }: CustomAbilityMan
   const [isAdding, setIsAdding] = useState(false);
   const [form, setForm] = useState<{
     name: string; slotType: 'major' | 'minor'; fpCost: string; hpCost: string; description: string;
-  }>({ name: '', slotType: 'major', fpCost: '', hpCost: '', description: '' });
+    limitation: 'none' | 'per combat' | 'per adventure';
+  }>({ name: '', slotType: 'major', fpCost: '', hpCost: '', description: '', limitation: 'none' });
 
   const abilities = character.customAbilities ?? [];
 
-  const resetForm = () => setForm({ name: '', slotType: 'major', fpCost: '', hpCost: '', description: '' });
+  const resetForm = () => setForm({ name: '', slotType: 'major', fpCost: '', hpCost: '', description: '', limitation: 'none' });
 
   const handleSave = () => {
     if (!form.name.trim()) return;
@@ -210,6 +212,7 @@ function CustomAbilityManager({ character, onUpdateCharacter }: CustomAbilityMan
       ...(form.fpCost && { fpCost: Math.max(0, parseInt(form.fpCost)) }),
       ...(form.hpCost && { hpCost: Math.max(0, parseInt(form.hpCost)) }),
       ...(form.description.trim() && { description: form.description.trim() }),
+      ...(form.limitation !== 'none' && { limitation: form.limitation }),
     };
     onUpdateCharacter({ ...character, customAbilities: [...abilities, newAbility] });
     resetForm();
@@ -252,6 +255,12 @@ function CustomAbilityManager({ character, onUpdateCharacter }: CustomAbilityMan
                 {ability.hpCost != null && ability.hpCost > 0 && (
                   <Badge variant="destructive" className="text-xs">{ability.hpCost} HP</Badge>
                 )}
+                {ability.limitation === 'per combat' && (
+                  <Badge variant="outline" className="text-xs text-orange-400 border-orange-400/50">⚔ /combat</Badge>
+                )}
+                {ability.limitation === 'per adventure' && (
+                  <Badge variant="outline" className="text-xs text-purple-400 border-purple-400/50">🗺 /adventure</Badge>
+                )}
               </div>
               {ability.description && (
                 <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{ability.description}</p>
@@ -283,6 +292,24 @@ function CustomAbilityManager({ character, onUpdateCharacter }: CustomAbilityMan
               onClick={() => setForm(f => ({ ...f, slotType: 'minor' }))} className="flex-1 text-xs h-8">
               Minor Action
             </Button>
+          </div>
+          {/* Limitation selector */}
+          <div>
+            <label className="text-xs text-muted-foreground mb-1 block">Use limit (optional)</label>
+            <div className="flex gap-2">
+              <Button size="sm" variant={form.limitation === 'none' ? 'default' : 'outline'}
+                onClick={() => setForm(f => ({ ...f, limitation: 'none' }))} className="flex-1 text-xs h-8">
+                Unlimited
+              </Button>
+              <Button size="sm" variant={form.limitation === 'per combat' ? 'default' : 'outline'}
+                onClick={() => setForm(f => ({ ...f, limitation: 'per combat' }))} className="flex-1 text-xs h-8 text-orange-400 border-orange-400/50">
+                /Combat
+              </Button>
+              <Button size="sm" variant={form.limitation === 'per adventure' ? 'default' : 'outline'}
+                onClick={() => setForm(f => ({ ...f, limitation: 'per adventure' }))} className="flex-1 text-xs h-8 text-purple-400 border-purple-400/50">
+                /Adventure
+              </Button>
+            </div>
           </div>
           <div className="flex gap-2">
             <div className="flex-1">
@@ -518,16 +545,10 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
 
     // If enabling combat mode, reset per-combat abilities
     if (enabled) {
-      const usedAbilities = currentCharacter.usedAbilities || [];
-      const combatAbilities = usedAbilities.filter(abilityId => 
-        abilityId.includes('warrior-') || 
-        abilityId.includes('thief-') ||
-        abilityId.includes('atronach-') ||
-        abilityId.includes('serpent-')
-      );
-      
-      updatedCharacter.usedAbilities = usedAbilities.filter(id => !combatAbilities.includes(id));
-      
+      const perCombatIds = getPerCombatAbilityIds(currentCharacter);
+      updatedCharacter.usedAbilities = (currentCharacter.usedAbilities || [])
+        .filter(id => !perCombatIds.includes(id));
+
       toast({
         title: "Combat Mode Activated",
         description: "Per-combat abilities have been reset.",
@@ -931,64 +952,63 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
     <div className="min-h-screen bg-gradient-dark p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col gap-3 mb-6">
+
+          {/* Row 1: title + tier badge + management buttons all inline */}
+          <div className="flex items-center gap-3 flex-nowrap">
+            <h1 className="text-3xl font-cinzel font-bold text-primary leading-tight flex-shrink-0">
+              Character Sheet
+            </h1>
+            <Badge variant="secondary" className="text-sm flex-shrink-0">
+              {getCharacterTier(currentCharacter.totalAp ?? currentCharacter.ap)} Tier
+            </Badge>
+            <Button size="sm" onClick={() => setShowExitWarning(true)} variant="secondary" className="flex-shrink-0">
+              <UserPlus className="w-3.5 h-3.5 mr-1.5" />
+              New Character
+            </Button>
+            <Button size="sm" onClick={() => {
+              apBeforeAdvancement.current = currentCharacter.ap;
+              setShowAdvancement(true);
+            }} variant="default" className="flex-shrink-0">
+              <Settings className="w-3.5 h-3.5 mr-1.5" />
+              Advance
+            </Button>
+            <Button size="sm" onClick={() => setShowEquipment(true)} variant="outline" className="flex-shrink-0">
+              <Package className="w-3.5 h-3.5 mr-1.5" />
+              Equipment
+            </Button>
+            <Button size="sm" onClick={handleExportCharacter} variant="outline" className="flex-shrink-0">
+              <Download className="w-3.5 h-3.5 mr-1.5" />
+              Export
+            </Button>
+            <Badge
+              variant="outline"
+              className={`text-xs flex-shrink-0 ${hasExportedThisSession
+                ? 'text-green-400 border-green-400/50 cursor-default'
+                : 'text-amber-400 border-amber-400/50 animate-pulse cursor-default'}`}
+            >
+              {hasExportedThisSession ? '✓ Exported' : '⚠ Not Exported'}
+            </Badge>
+            <Button
+              size="sm"
+              onClick={() => setShowEndSession(true)}
+              variant="outline"
+              className="border-amber-500/50 text-amber-400 hover:bg-amber-500/10 flex-shrink-0"
+            >
+              <LogOut className="w-3.5 h-3.5 mr-1.5" />
+              End Session
+            </Button>
+          </div>
+
+          {/* Row 2: AP display + combat controls */}
           <div className="flex items-center gap-4">
-            <div>
-              <h1 className="text-4xl font-cinzel font-bold text-primary mb-2">
-                Character Sheet
-              </h1>
-              <Badge variant="secondary" className="text-lg">
-                {getCharacterTier(currentCharacter.totalAp ?? currentCharacter.ap)} Tier
-              </Badge>
-            </div>
             <APDisplay
               totalAp={currentCharacter.totalAp ?? currentCharacter.ap}
               availableAp={currentCharacter.ap}
               onEditTotalAP={handleEditTotalAP}
               onGrantAP={() => setShowGrantAP(true)}
             />
-          </div>
-          
-          <div className="flex flex-col gap-3">
-            <div className="flex gap-3">
-              <Button onClick={() => setShowExitWarning(true)} variant="secondary">
-                <UserPlus className="w-4 h-4 mr-2" />
-                Create New Character
-              </Button>
-              <Button onClick={() => {
-                apBeforeAdvancement.current = currentCharacter.ap;
-                setShowAdvancement(true);
-              }} variant="default">
-                <Settings className="w-4 h-4 mr-2" />
-                Advance Character
-              </Button>
-              <Button onClick={() => setShowEquipment(true)} variant="outline">
-                <Package className="w-4 h-4 mr-2" />
-                Manage Equipment
-              </Button>
-              <Button onClick={handleExportCharacter} variant="outline">
-                <Download className="w-4 h-4 mr-2" />
-                Export Character
-              </Button>
-              <Badge
-                variant="outline"
-                className={hasExportedThisSession
-                  ? 'text-green-400 border-green-400/50 cursor-default'
-                  : 'text-amber-400 border-amber-400/50 animate-pulse cursor-default'}
-              >
-                {hasExportedThisSession ? '✓ Exported' : '⚠ Not Exported'}
-              </Badge>
-              <Button
-                onClick={() => setShowEndSession(true)}
-                variant="outline"
-                className="border-amber-500/50 text-amber-400 hover:bg-amber-500/10"
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                End Session
-              </Button>
-            </div>
-            
-            <div className="flex gap-3 items-center">
+            <div className="flex items-center gap-2">
               <div className="flex items-center space-x-2">
                 <Switch
                   id="combat-mode"
@@ -999,14 +1019,12 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
                   Combat Mode
                 </Label>
               </div>
-              
               {currentCharacter.combatMode && (
                 <Button size="sm" onClick={handleEndTurn} variant="outline">
-                  <RotateCcw className="w-4 h-4 mr-1" />
+                  <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
                   End Turn
                 </Button>
               )}
-              
               <Button onClick={() => handleRest('short')} variant="outline" size="sm">
                 Short Rest
               </Button>
@@ -1015,6 +1033,7 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
               </Button>
             </div>
           </div>
+
         </div>
 
         {/* Three Column Layout */}

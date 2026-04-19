@@ -12,6 +12,8 @@ export interface BonusActionAbility {
   fpCost: number;
   description: string;
   limitation?: 'per combat' | 'per adventure';
+  /** Matches the ID format used in character.usedAbilities so Portal can persist used state */
+  usedAbilityId?: string;
 }
 
 // Major action option
@@ -24,6 +26,9 @@ export interface MajorActionOption {
   damage?: number;
   description: string;
   source?: string;
+  limitation?: 'per combat' | 'per adventure';
+  /** Matches the ID format used in character.usedAbilities so Portal can persist used state */
+  usedAbilityId?: string;
 }
 
 // Minor action option
@@ -36,6 +41,9 @@ export interface MinorActionOption {
   description: string;
   requiresShield?: boolean;
   source?: string;
+  limitation?: 'per combat' | 'per adventure';
+  /** Matches the ID format used in character.usedAbilities so Portal can persist used state */
+  usedAbilityId?: string;
 }
 
 /**
@@ -68,6 +76,7 @@ export function getBonusActions(character: Character): BonusActionAbility[] {
         fpCost: 0,
         description: 'Regain 6 FP as a free action.',
         limitation: 'per combat',
+        usedAbilityId: 'perk-light-armor-Wind Walker',
       });
     }
   }
@@ -81,6 +90,7 @@ export function getBonusActions(character: Character): BonusActionAbility[] {
       fpCost: 0,
       description: 'Once per combat, after taking damage, gain 3 FP.',
       limitation: 'per combat',
+      usedAbilityId: 'stone-warrior',
     });
   }
   
@@ -104,9 +114,125 @@ export function getBonusActions(character: Character): BonusActionAbility[] {
       fpCost: 0,
       description: 'Immediately regain 10 FP.',
       limitation: 'per adventure',
+      usedAbilityId: 'racial-redguard',
     });
   }
-  
+
+  // Nord: Frost Resistance reaction (per adventure)
+  if (character.race.id === 'nord') {
+    bonusActions.push({
+      id: 'frost-resistance',
+      name: 'Frost Resistance',
+      source: 'Nord',
+      fpCost: 0,
+      description: 'Reaction: when hit by frost damage, halve that attack\'s damage.',
+      limitation: 'per adventure',
+      usedAbilityId: 'racial-nord',
+    });
+  }
+
+  // Breton: Dragonskin reaction (per adventure)
+  if (character.race.id === 'breton') {
+    bonusActions.push({
+      id: 'dragonskin',
+      name: 'Dragonskin',
+      source: 'Breton',
+      fpCost: 0,
+      description: 'Reaction: when a hostile spell hits you, take only half damage.',
+      limitation: 'per adventure',
+      usedAbilityId: 'racial-breton',
+    });
+  }
+
+  // Wood Elf: Command Animal (per adventure)
+  if (character.race.id === 'wood-elf') {
+    bonusActions.push({
+      id: 'command-animal',
+      name: 'Command Animal',
+      source: 'Wood Elf',
+      fpCost: 0,
+      description: 'Make a non-hostile wild animal an ally for one combat encounter.',
+      limitation: 'per adventure',
+      usedAbilityId: 'racial-wood-elf',
+    });
+  }
+
+  // Dark Elf: Ancestor's Wrath (per adventure)
+  if (character.race.id === 'dark-elf') {
+    bonusActions.push({
+      id: 'ancestors-wrath',
+      name: "Ancestor's Wrath",
+      source: 'Dark Elf',
+      fpCost: 0,
+      description: 'Surround yourself with fire for 3 rounds. Enemies that hit you with melee take 1 fire damage + 2 fire at the start of their next turn.',
+      limitation: 'per adventure',
+      usedAbilityId: 'racial-dark-elf',
+    });
+  }
+
+  // Orc: Berserker Rage (per adventure)
+  if (character.race.id === 'orc') {
+    bonusActions.push({
+      id: 'berserker-rage',
+      name: 'Berserker Rage',
+      source: 'Orc',
+      fpCost: 0,
+      description: 'For 3 rounds, all successful melee attacks are automatically Critical Successes.',
+      limitation: 'per adventure',
+      usedAbilityId: 'racial-orc',
+    });
+  }
+
+  // Lord Stone: Knight's Ward re-roll (per adventure, reaction)
+  if (character.standingStone.id === 'lord') {
+    bonusActions.push({
+      id: 'knights-ward',
+      name: "Knight's Ward",
+      source: 'The Lord',
+      fpCost: 0,
+      description: 'Reaction: re-roll a failed roll against a spell.',
+      limitation: 'per adventure',
+      usedAbilityId: 'stone-lord',
+    });
+  }
+
+  // Shadow Stone: Shadow Form (per adventure)
+  if (character.standingStone.id === 'shadow') {
+    bonusActions.push({
+      id: 'shadow-form',
+      name: 'Shadow Form',
+      source: 'The Shadow',
+      fpCost: 0,
+      description: 'Become perfectly invisible for 3 rounds or until you perform a hostile action.',
+      limitation: 'per adventure',
+      usedAbilityId: 'stone-shadow',
+    });
+  }
+
+  // Atronach Stone: Spell Absorption (per combat, reaction)
+  if (character.standingStone.id === 'atronach') {
+    bonusActions.push({
+      id: 'spell-absorption',
+      name: 'Spell Absorption',
+      source: 'The Atronach',
+      fpCost: 0,
+      description: 'Reaction: when targeted by a hostile spell, negate it and regain FP equal to its cost.',
+      limitation: 'per combat',
+      usedAbilityId: 'stone-atronach',
+    });
+  }
+
+  // Steed Stone: Unburdened free move (unlimited, once per turn)
+  if (character.standingStone.id === 'steed') {
+    bonusActions.push({
+      id: 'unburdened-move',
+      name: 'Unburdened (Free Move)',
+      source: 'The Steed',
+      fpCost: 0,
+      description: 'Move without using your Minor Action.',
+    });
+  }
+
   return bonusActions;
 }
 
@@ -216,6 +342,62 @@ export function getValidMajorActions(character: Character): MajorActionOption[] 
     }
   }
   
+  // Racial Major Actions
+
+  // Imperial: Voice of the Emperor (per adventure)
+  if (character.race.id === 'imperial') {
+    actions.push({
+      id: 'racial-imperial',
+      name: 'Voice of the Emperor',
+      type: 'ability',
+      description: 'Force a single humanoid enemy to stop fighting for one round.',
+      source: 'Imperial',
+      limitation: 'per adventure',
+      usedAbilityId: 'racial-imperial',
+    });
+  }
+
+  // Argonian: Histskin (per adventure)
+  if (character.race.id === 'argonian') {
+    actions.push({
+      id: 'racial-argonian',
+      name: 'Histskin',
+      type: 'ability',
+      description: 'Regain 1 HP at the start of each turn for the rest of the encounter.',
+      source: 'Argonian',
+      limitation: 'per adventure',
+      usedAbilityId: 'racial-argonian',
+    });
+  }
+
+  // Stone Major Actions
+
+  // Serpent Stone: Serpent's Kiss (per combat)
+  if (character.standingStone.id === 'serpent') {
+    actions.push({
+      id: 'stone-serpent',
+      name: "Serpent's Kiss",
+      type: 'ability',
+      description: 'Ranged attack: on a successful Guile roll, target loses their next Major and Minor Action.',
+      source: 'The Serpent',
+      limitation: 'per combat',
+      usedAbilityId: 'stone-serpent',
+    });
+  }
+
+  // Ritual Stone: Ritual Power (per adventure)
+  if (character.standingStone.id === 'ritual') {
+    actions.push({
+      id: 'stone-ritual',
+      name: 'Ritual Power',
+      type: 'ability',
+      description: 'Cast an empowered Raise Zombie for 0 FP — auto-succeeds, raises a Ritual Guardian for this encounter.',
+      source: 'The Ritual',
+      limitation: 'per adventure',
+      usedAbilityId: 'stone-ritual',
+    });
+  }
+
   // Append saved custom major abilities
   for (const ability of character.customAbilities ?? []) {
     if (ability.slotType === 'major') {
@@ -227,6 +409,7 @@ export function getValidMajorActions(character: Character): MajorActionOption[] 
         hpCost: ability.hpCost,
         description: ability.description ?? '',
         source: 'Custom',
+        limitation: ability.limitation,
       });
     }
   }
@@ -406,6 +589,7 @@ export function getValidMinorActions(character: Character): MinorActionOption[] 
         hpCost: ability.hpCost,
         description: ability.description ?? '',
         source: 'Custom',
+        limitation: ability.limitation,
       });
     }
   }
@@ -450,12 +634,49 @@ export function getKnownSpells(character: Character): Spell[] {
  */
 export function calculateEquipmentDR(character: Character): number {
   let totalDR = 0;
-  
+
   for (const equip of character.equipment) {
     if ((equip.type === 'armor' || equip.type === 'shield') && equip.dr) {
       totalDR += equip.dr;
     }
   }
-  
+
   return totalDR;
+}
+
+/**
+ * Returns the usedAbilities IDs of all per-combat limited abilities for a character.
+ * Used to reset only per-combat abilities when a new combat begins.
+ */
+export function getPerCombatAbilityIds(character: Character): string[] {
+  const ids: string[] = [];
+
+  // Per-combat standing stone abilities
+  const perCombatStones = ['warrior', 'thief', 'atronach', 'serpent'];
+  if (perCombatStones.includes(character.standingStone.id)) {
+    ids.push(`stone-${character.standingStone.id}`);
+  }
+
+  // Per-combat perk abilities
+  const tierOrder = ['Novice', 'Apprentice', 'Adept', 'Expert', 'Master'];
+  for (const charSkill of character.skills) {
+    const skillData = allSkills.find(s => s.id === charSkill.skillId);
+    if (!skillData) continue;
+    const charTierIndex = tierOrder.indexOf(charSkill.rank);
+    for (const perk of skillData.perks) {
+      const perkTierIndex = tierOrder.indexOf(perk.rank);
+      if (perkTierIndex <= charTierIndex && perk.limitation === 'per combat') {
+        ids.push(`perk-${charSkill.skillId}-${perk.name}`);
+      }
+    }
+  }
+
+  // Per-combat custom abilities
+  for (const ability of character.customAbilities ?? []) {
+    if (ability.limitation === 'per combat') {
+      ids.push(`custom-${ability.id}`);
+    }
+  }
+
+  return ids;
 }

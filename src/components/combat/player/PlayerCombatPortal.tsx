@@ -56,20 +56,23 @@ interface ActionCardProps {
   action: MajorActionOption;
   slotId: string;
   fpCurrent: number;
+  usedAbilityIds?: string[];
   onUse: (slotId: string, action: MajorActionOption) => void;
 }
 
-function ActionCard({ action, slotId, fpCurrent, onUse }: ActionCardProps) {
+function ActionCard({ action, slotId, fpCurrent, usedAbilityIds, onUse }: ActionCardProps) {
   const fpCost = action.fpCost ?? 0;
   const canAfford = fpCost <= fpCurrent;
+  const isUsed = !!(action.limitation && usedAbilityIds?.includes(action.id));
+  const isDisabled = !canAfford || isUsed;
 
   return (
     <Card
       className={cn(
         "p-2.5 cursor-pointer transition-all hover:border-primary/50 hover:bg-accent/30",
-        !canAfford && "opacity-50 cursor-not-allowed"
+        isDisabled && "opacity-50 cursor-not-allowed"
       )}
-      onClick={() => canAfford && onUse(slotId, action)}
+      onClick={() => !isDisabled && onUse(slotId, action)}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
@@ -91,7 +94,12 @@ function ActionCard({ action, slotId, fpCurrent, onUse }: ActionCardProps) {
               {action.damage} dmg
             </Badge>
           )}
-          {!canAfford && <AlertCircle className="h-3.5 w-3.5 text-destructive" />}
+          {isUsed && (
+            <Badge variant="outline" className="text-xs whitespace-nowrap text-muted-foreground">
+              Used
+            </Badge>
+          )}
+          {!canAfford && !isUsed && <AlertCircle className="h-3.5 w-3.5 text-destructive" />}
         </div>
       </div>
     </Card>
@@ -211,13 +219,16 @@ export function PlayerCombatPortal({
     ];
 
     // Add bonus action slots from character perks / standing stone
+    // Pre-mark as used if the ability is already in character.usedAbilities (persisted from prior use)
     const bonusAbilities = getBonusActions(character);
     bonusAbilities.forEach((ability, index) => {
+      const alreadyUsed = !!(ability.usedAbilityId && character.usedAbilities?.includes(ability.usedAbilityId));
       slots.push({
         id: `bonus-${index}`,
         type: 'bonus',
         label: `BONUS: ${ability.name}`,
-        used: false,
+        used: alreadyUsed,
+        actionTaken: alreadyUsed ? ability.name : undefined,
         sourceAbility: ability,
       });
     });
@@ -288,7 +299,7 @@ export function PlayerCombatPortal({
   const handleUseAction = (slotId: string, action: MajorActionOption | MinorActionOption | BonusActionAbility) => {
     const slot = actionSlots.find(s => s.id === slotId);
     if (!slot) return;
-    
+
     // Check FP cost
     const fpCost = 'fpCost' in action ? action.fpCost || 0 : 0;
     if (fpCost > character.resources.fp.current) {
@@ -311,12 +322,45 @@ export function PlayerCombatPortal({
       return;
     }
 
-    // Deduct FP
-    if (fpCost > 0) handleFPChange(-fpCost);
-    // Deduct HP
-    if (hpCost > 0) handleHPChange(-hpCost);
+    // Build a single merged character update so FP/HP deductions and usedAbilities
+    // write all go out in one call — multiple separate onUpdateCharacter calls would
+    // race against each other and the last one would overwrite the others.
+    let updatedCharacter = { ...character };
 
-    // Mark slot as used
+    if (fpCost > 0) {
+      const newFP = Math.max(0, character.resources.fp.current - fpCost);
+      updatedCharacter = {
+        ...updatedCharacter,
+        resources: { ...updatedCharacter.resources, fp: { ...updatedCharacter.resources.fp, current: newFP } },
+      };
+    }
+    if (hpCost > 0) {
+      const newHP = Math.max(0, character.resources.hp.current - hpCost);
+      updatedCharacter = {
+        ...updatedCharacter,
+        resources: { ...updatedCharacter.resources, hp: { ...updatedCharacter.resources.hp, current: newHP } },
+      };
+    }
+
+    // Resolve usedAbilityId for limited abilities
+    const limitation = 'limitation' in action ? action.limitation : undefined;
+    if (limitation) {
+      const usedAbilityId: string | undefined =
+        ('usedAbilityId' in action && (action as { usedAbilityId?: string }).usedAbilityId)
+          ? (action as { usedAbilityId?: string }).usedAbilityId
+          : action.id.startsWith('custom-') ? action.id
+          : undefined;
+      if (usedAbilityId) {
+        const prev = updatedCharacter.usedAbilities ?? [];
+        if (!prev.includes(usedAbilityId)) {
+          updatedCharacter = { ...updatedCharacter, usedAbilities: [...prev, usedAbilityId] };
+        }
+      }
+    }
+
+    onUpdateCharacter(updatedCharacter);
+
+    // Mark slot as used in local state
     setActionSlots(prev => prev.map(s =>
       s.id === slotId
         ? { ...s, used: true, actionTaken: action.name, fpSpent: fpCost, hpSpent: hpCost }
@@ -797,6 +841,7 @@ export function PlayerCombatPortal({
                                           action={action}
                                           slotId={slot.id}
                                           fpCurrent={character.resources.fp.current}
+                                          usedAbilityIds={character.usedAbilities}
                                           onUse={handleUseAction}
                                         />
                                       ))}

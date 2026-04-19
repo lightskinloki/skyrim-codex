@@ -62,6 +62,19 @@ export function AbilityTracker({ character, onUpdateCharacter }: AbilityTrackerP
       });
     });
 
+    // Get custom abilities with limitations
+    (character.customAbilities ?? []).forEach(ability => {
+      if (ability.limitation) {
+        abilities.push({
+          id: `custom-${ability.id}`,
+          name: ability.name,
+          limitation: ability.limitation,
+          source: 'Custom',
+          used: character.usedAbilities?.includes(`custom-${ability.id}`) || false,
+        });
+      }
+    });
+
     return abilities;
   };
 
