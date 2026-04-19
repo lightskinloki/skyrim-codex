@@ -58,7 +58,7 @@ Welcome to the official Character Manager for the Skyrim TTRPG! This web applica
 - [ ] **Dynamic Summon Display:** Dashboard panel showing stat blocks for active summoned creatures.
 - [ ] **Active Effects Tracker:** Dashboard panel for tracking temporary effect durations, managed by the End Turn button.
 - [ ] **"Ambition" System:** Optional step in the creator for defining and tracking a long-term character goal.
-- [ ] **Character Portrait Upload:** Upload a custom character portrait.
+- [ ] **Character Portrait & AI Art Generator:** Full character portrait system with guided AI image generation (see Phase 7 for full spec).
 
 ### **Phase 5: Technical Debt & Polish**
 - [ ] **Mobile Layout Polish:** Fix formatting issues on iPhone / improve Android display; ensure Combat Portal scrolls correctly on small screens.
@@ -75,6 +75,24 @@ Welcome to the official Character Manager for the Skyrim TTRPG! This web applica
 
 **Note:** The networked combat tracker will be a major update deployed during the next campaign hiatus to avoid disrupting active gameplay.
 
+### **Phase 7: Character Portrait & AI Art Generator (Planned)**
+The goal is a cohesive, consistent art style for every character in the campaign — not generic AI output, but portraits that actually look like the character the player imagined.
+
+- [ ] **`characterArt` field on Character type:** Optional `characterArt?: string` URL field — reserved now so existing exports stay compatible when the feature ships.
+- [ ] **Portrait slot on Character Card:** Displays the portrait if present; shows a placeholder with a "Generate Art" button if not. Supports manual URL entry as a fallback for players who have their own image.
+- [ ] **Guided Appearance Form:** A structured input form that collects player-described details the system can't infer automatically:
+  - Build / body type (e.g. "tall and wiry")
+  - Hair (e.g. "long silver braids")
+  - Eyes (e.g. "amber, sharp")
+  - Distinguishing features (e.g. "scar across left cheek, wolf tattoo on neck")
+  - Demeanor / expression (e.g. "cold and calculating")
+  - Additional flavor (e.g. "cloak is worn and travel-stained")
+- [ ] **Auto-Prompt Builder:** Combines form inputs with character sheet data (race, standing stone archetype, equipped weapon/armor type, dominant stat personality hint) into a single structured prompt. A fixed style suffix — `Skyrim TTRPG art style, dramatic fantasy portrait lighting, dark background, highly detailed` — is appended to every prompt to enforce a consistent look across all characters.
+- [ ] **Live Prompt Preview:** The full constructed prompt is shown and editable before generation, so players can see exactly what's being sent and tweak if needed.
+- [ ] **Pollinations.ai Integration:** Free, no-API-key image generation via `https://image.pollinations.ai/prompt/{encoded_prompt}`. Image is returned as a direct URL — no backend required.
+- [ ] **Pixel Art Loading Animation:** A custom pixel art "scribe" gif (a Skyrim-themed figure painting at a canvas) displays while the image generates, replacing the generic spinner. Designed as a reusable loading asset for other slow operations in the app.
+- [ ] **Portrait persists on export:** The generated URL is saved to the character JSON and survives export/import cycles. GM view (Phase 6+) can display all player portraits in the tactical table.
+
 ---
 
 ## Known Bugs & Temporary Issues
@@ -88,7 +106,16 @@ Welcome to the official Character Manager for the Skyrim TTRPG! This web applica
 
 ## Recent Updates
 
-### Version 1.3 (Current)
+### Version 1.4 (Current)
+*   ✅ **Limited-Use Abilities Connected** — Per-combat and per-adventure abilities are now fully tracked end-to-end. Using a racial, stone, perk, or custom limited ability in the Combat Portal writes to `character.usedAbilities` immediately. AbilityTracker reflects the state in real time. Turn reset preserves used-this-combat abilities. Long Rest clears everything.
+*   ✅ **All Racial & Stone Abilities in Combat Portal** — Every race and standing stone ability now surfaces as the correct slot type (bonus action, free action, or Major Action) with the correct limitation tag. Previously only 4 abilities (Warrior, Thief, Light Armor, Redguard) appeared; all 13+ are now present.
+*   ✅ **Custom Ability Limitations** — Custom abilities can now be tagged as `/combat` or `/adventure` in the add form. They appear in AbilityTracker and are enforced in the Portal like any other limited ability.
+*   ✅ **Fixed Per-Combat Reset Bug** — `handleCombatModeToggle` was matching wrong ID patterns and resetting nothing. Now uses `getPerCombatAbilityIds()` for accurate resets.
+*   ✅ **Fixed Long Rest Reset** — `performLongRest` had fragile string matching that missed per-adventure perk abilities. Now correctly clears all `usedAbilities` on a full rest.
+*   ✅ **Fixed Action Update Race Condition** — FP deduction and `usedAbilities` write are now merged into a single `onUpdateCharacter` call, preventing one from overwriting the other.
+*   ✅ **Header Layout** — Compacted to two rows. Combat Mode, Short Rest, and Long Rest moved to the left side inline with the AP display. Management buttons (New Character, Advance, Equipment, Export, End Session) stay as a single row on the right.
+
+### Version 1.3
 *   ✅ **Command Center** — Rebuilt the Player Combat Portal as a 4-column Command Center Dialog. Weapons, Tactics, Magic, and Items are instantly accessible with collapsible magic school dropdowns.
 *   ✅ **Improvise Action** — Full sandbox console inside the Command Center. Adjust any combination of HP, FP, max resources, attributes, AP, and DR in a single action.
 *   ✅ **Custom Abilities** — Create and save named abilities on the character sheet (Major/Minor, FP/HP cost). They appear in the Combat Portal automatically every session.
