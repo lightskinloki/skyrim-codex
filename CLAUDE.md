@@ -166,15 +166,19 @@ onUpdateCharacter({ ...character, usedAbilities: newUsed });
 
 ## Current State
 
-**Last worked on:** Roadmap planning + data patch (v1.4)
+**Last worked on:** Phase 5F — Combat Tracker Improvements
 
 **Recently completed:**
-- Data accuracy patch: all weapon damages, shield DR, summon stat blocks corrected to rulebook values
+- Data accuracy patch (v1.4): all weapon damages, shield DR, summon stat blocks corrected to rulebook values
 - New summons added: Reanimated Corpse, Dread Zombie
 - README rewritten with full GM vision, Design Principles, and complete Phase 5–9 roadmap
-- This CLAUDE.md file created
+- CLAUDE.md created
+- **Phase 5F complete:** Multi-target damage/healing, direct HP input, combatant notes
+  - `applyBulkDamage`, `applyBulkHealing`, `setHP`, `setCombatantNotes` added to combatManager
+  - `CombatantCard` now has: selection checkbox, click-to-edit HP bar, collapsible notes panel
+  - `GMCombatTracker` now has: selectedIds state, sticky bulk action bar, `renderCard` helper
 
-**Current phase:** Phase 4 complete. Starting Phase 5 (GM Campaign Foundation).
+**Current phase:** Phase 5F complete. Next: Phase 5A (Universal Compendium).
 
 ---
 
@@ -182,13 +186,7 @@ onUpdateCharacter({ ...character, usedAbilities: newUsed });
 
 Work through Phase 5 in this order:
 
-### Immediate — Phase 5F: Combat Tracker Improvements
-Smallest scope, existing infrastructure, immediate table value.
-1. **Multi-target damage/healing** — Add checkboxes to combatant cards in GMCombatTracker, a "Deal Damage to Selected" / "Heal Selected" input + button. Essential for AoE spells. Modify `combatManager.ts` to support bulk damage application.
-2. **Direct HP input** — Make HP values clickable to open an inline number input (type exact value, not just ±). Currently requires many clicks for large damage values.
-3. **Combatant notes** — Per-combatant text field in the inspector panel for tracking special conditions.
-
-### After 5F — Phase 5A: Universal Compendium
+### Immediate — Phase 5A: Universal Compendium *(Phase 5F complete ✅)*
 Most impactful GM tool. Build a slide-out panel (Sheet component from shadcn/ui) accessible via Ctrl+K keyboard shortcut from anywhere in the GM Dashboard.
 - Index all data from spells.ts, skills.ts, equipment.ts, enemies.ts, races.ts, standingStones.ts into a flat searchable array
 - Each entry has: name, category, tags, full description/stat block
