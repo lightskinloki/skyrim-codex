@@ -938,6 +938,160 @@ export function clearLog(state: CombatState): CombatState {
   };
 }
 
+// ============ BULK OPERATIONS ============
+
+export function applyBulkDamage(
+  state: CombatState,
+  targetIds: string[],
+  amount: number,
+  source: string
+): CombatState {
+  if (targetIds.length === 0 || amount <= 0) return state;
+
+  // One history snapshot for the whole operation
+  let newState = saveToHistory(state);
+
+  for (const targetId of targetIds) {
+    const target = newState.combatants.find(c => c.id === targetId);
+    if (!target) continue;
+
+    const newHP = Math.max(0, target.hp.current - amount);
+    const wasDead = target.isDead;
+    const isDead = newHP <= 0;
+
+    newState = {
+      ...newState,
+      combatants: newState.combatants.map(c =>
+        c.id === targetId ? { ...c, hp: { ...c.hp, current: newHP }, isDead } : c
+      ),
+    };
+
+    newState = addLogEntry(newState, {
+      round: state.round,
+      type: 'damage',
+      actor: source,
+      target: target.name,
+      description: `${target.name} takes ${amount} damage (AoE)`,
+      value: amount,
+    });
+
+    if (isDead && !wasDead) {
+      newState = addLogEntry(newState, {
+        round: state.round,
+        type: 'death',
+        actor: source,
+        target: target.name,
+        description: `${target.name} has fallen!`,
+      });
+    }
+  }
+
+  return newState;
+}
+
+export function applyBulkHealing(
+  state: CombatState,
+  targetIds: string[],
+  amount: number,
+  source: string
+): CombatState {
+  if (targetIds.length === 0 || amount <= 0) return state;
+
+  let newState = saveToHistory(state);
+
+  for (const targetId of targetIds) {
+    const target = newState.combatants.find(c => c.id === targetId);
+    if (!target) continue;
+
+    const newHP = Math.min(target.hp.max, target.hp.current + amount);
+    const actualHealing = newHP - target.hp.current;
+    const wasRevived = target.isDead && newHP > 0;
+
+    newState = {
+      ...newState,
+      combatants: newState.combatants.map(c =>
+        c.id === targetId ? { ...c, hp: { ...c.hp, current: newHP }, isDead: newHP <= 0 } : c
+      ),
+    };
+
+    if (wasRevived) {
+      newState = addLogEntry(newState, {
+        round: state.round,
+        type: 'heal',
+        actor: source,
+        target: target.name,
+        description: `${target.name} has been revived!`,
+      });
+    }
+
+    newState = addLogEntry(newState, {
+      round: state.round,
+      type: 'heal',
+      actor: source,
+      target: target.name,
+      description: `${target.name} heals ${actualHealing} HP (AoE)`,
+      value: actualHealing,
+    });
+  }
+
+  return newState;
+}
+
+export function setHP(
+  state: CombatState,
+  targetId: string,
+  value: number,
+  source: string
+): CombatState {
+  const target = state.combatants.find(c => c.id === targetId);
+  if (!target) return state;
+
+  const newHP = Math.max(0, Math.min(target.hp.max, value));
+  const wasDead = target.isDead;
+  const isDead = newHP <= 0;
+
+  let newState = saveToHistory({
+    ...state,
+    combatants: state.combatants.map(c =>
+      c.id === targetId ? { ...c, hp: { ...c.hp, current: newHP }, isDead } : c
+    ),
+  });
+
+  newState = addLogEntry(newState, {
+    round: state.round,
+    type: 'damage',
+    actor: source,
+    target: target.name,
+    description: `${target.name}'s HP set to ${newHP}/${target.hp.max}`,
+    value: newHP,
+  });
+
+  if (isDead && !wasDead) {
+    newState = addLogEntry(newState, {
+      round: state.round,
+      type: 'death',
+      actor: source,
+      target: target.name,
+      description: `${target.name} has fallen!`,
+    });
+  }
+
+  return newState;
+}
+
+export function setCombatantNotes(
+  state: CombatState,
+  combatantId: string,
+  notes: string
+): CombatState {
+  return {
+    ...state,
+    combatants: state.combatants.map(c =>
+      c.id === combatantId ? { ...c, notes } : c
+    ),
+  };
+}
+
 // ============ UTILITY ============
 
 export function getCombatantById(state: CombatState, id: string): Combatant | undefined {
@@ -1011,4 +1165,8 @@ export const combatManager = {
   getAliveCombatants,
   getCombatantsByType,
   isCurrentTurn,
+  applyBulkDamage,
+  applyBulkHealing,
+  setHP,
+  setCombatantNotes,
 };

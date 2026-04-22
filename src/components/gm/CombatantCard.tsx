@@ -1,18 +1,22 @@
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { 
-  Heart, 
-  Zap, 
-  Shield, 
-  Crown, 
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Heart,
+  Zap,
+  Shield,
+  Crown,
   Skull,
   Plus,
   Minus,
   X,
   Copy,
-  Trash2
+  Trash2,
+  FileText,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { Combatant, StatusEffectType } from "@/types/combat";
 import { cn } from "@/lib/utils";
@@ -20,13 +24,17 @@ import { cn } from "@/lib/utils";
 interface CombatantCardProps {
   combatant: Combatant;
   isCurrentTurn: boolean;
+  isSelected: boolean;
+  onSelectionToggle: () => void;
   onHPChange: (delta: number) => void;
+  onHPSet: (value: number) => void;
   onFPChange: (delta: number) => void;
   onDRChange: (delta: number) => void;
   onStatusRemove: (effectId: string) => void;
   onActionToggle: (action: 'major' | 'minor' | 'reaction') => void;
   onDuplicate: () => void;
   onRemove: () => void;
+  onNotesChange: (notes: string) => void;
 }
 
 const statusEffectIcons: Record<StatusEffectType, { icon: string; color: string }> = {
@@ -54,16 +62,54 @@ const typeColors = {
 export function CombatantCard({
   combatant,
   isCurrentTurn,
+  isSelected,
+  onSelectionToggle,
   onHPChange,
+  onHPSet,
   onFPChange,
   onDRChange,
   onStatusRemove,
   onActionToggle,
   onDuplicate,
   onRemove,
+  onNotesChange,
 }: CombatantCardProps) {
   const hpPercent = (combatant.hp.current / combatant.hp.max) * 100;
   const fpPercent = combatant.fp.max > 0 ? (combatant.fp.current / combatant.fp.max) * 100 : 0;
+
+  // Direct HP input state
+  const [isEditingHP, setIsEditingHP] = useState(false);
+  const [hpInputValue, setHpInputValue] = useState('');
+  const hpInputRef = useRef<HTMLInputElement>(null);
+
+  // Notes panel state
+  const [showNotes, setShowNotes] = useState(false);
+
+  useEffect(() => {
+    if (isEditingHP && hpInputRef.current) {
+      hpInputRef.current.focus();
+      hpInputRef.current.select();
+    }
+  }, [isEditingHP]);
+
+  const handleHPBarClick = () => {
+    if (combatant.isDead) return;
+    setHpInputValue(String(combatant.hp.current));
+    setIsEditingHP(true);
+  };
+
+  const commitHPEdit = () => {
+    const parsed = parseInt(hpInputValue, 10);
+    if (!isNaN(parsed)) {
+      onHPSet(parsed);
+    }
+    setIsEditingHP(false);
+  };
+
+  const handleHPKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') commitHPEdit();
+    if (e.key === 'Escape') setIsEditingHP(false);
+  };
 
   return (
     <div
@@ -72,17 +118,25 @@ export function CombatantCard({
         typeColors[combatant.type],
         combatant.isDead && "opacity-50 grayscale",
         isCurrentTurn && "ring-2 ring-amber-500 ring-offset-2 ring-offset-background shadow-lg shadow-amber-500/20",
-        !combatant.isDead && !isCurrentTurn && "bg-card hover:bg-accent/50"
+        isSelected && !isCurrentTurn && "ring-2 ring-primary ring-offset-1 ring-offset-background",
+        !combatant.isDead && !isCurrentTurn && !isSelected && "bg-card hover:bg-accent/50"
       )}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
+          {/* Multi-select checkbox */}
+          <Checkbox
+            checked={isSelected}
+            onCheckedChange={onSelectionToggle}
+            className="h-4 w-4 shrink-0"
+            aria-label={`Select ${combatant.name}`}
+          />
           {combatant.isDead && <Skull className="h-4 w-4 text-muted-foreground" />}
           {combatant.isBoss && <Crown className="h-4 w-4 text-amber-500" />}
           <span className="font-semibold">{combatant.name}</span>
-          <Badge 
-            variant="outline" 
+          <Badge
+            variant="outline"
             className={cn(
               "text-xs",
               combatant.type === 'player' && "border-blue-500 text-blue-500",
@@ -105,21 +159,42 @@ export function CombatantCard({
 
       {/* Resources */}
       <div className="space-y-2 mb-3">
-        {/* HP Bar */}
+        {/* HP Bar — click to type exact value */}
         <div className="flex items-center gap-2">
           <Heart className="h-4 w-4 text-red-500 flex-shrink-0" />
-          <div className="flex-1 h-5 bg-muted rounded-full overflow-hidden relative">
-            <div 
-              className={cn(
-                "h-full transition-all",
-                hpPercent > 50 ? "bg-green-500" : hpPercent > 25 ? "bg-yellow-500" : "bg-red-500"
-              )}
-              style={{ width: `${Math.max(0, hpPercent)}%` }}
-            />
-            <span className="absolute inset-0 flex items-center justify-center text-xs font-medium text-foreground">
-              {combatant.hp.current}/{combatant.hp.max}
-            </span>
-          </div>
+          {isEditingHP ? (
+            <div className="flex-1 flex items-center gap-1">
+              <input
+                ref={hpInputRef}
+                type="number"
+                value={hpInputValue}
+                onChange={e => setHpInputValue(e.target.value)}
+                onBlur={commitHPEdit}
+                onKeyDown={handleHPKeyDown}
+                min={0}
+                max={combatant.hp.max}
+                className="flex-1 h-5 rounded bg-background border border-primary px-1 text-xs font-medium text-center focus:outline-none"
+              />
+              <span className="text-xs text-muted-foreground">/{combatant.hp.max}</span>
+            </div>
+          ) : (
+            <div
+              className="flex-1 h-5 bg-muted rounded-full overflow-hidden relative cursor-text"
+              title="Click to set exact HP"
+              onClick={handleHPBarClick}
+            >
+              <div
+                className={cn(
+                  "h-full transition-all",
+                  hpPercent > 50 ? "bg-green-500" : hpPercent > 25 ? "bg-yellow-500" : "bg-red-500"
+                )}
+                style={{ width: `${Math.max(0, hpPercent)}%` }}
+              />
+              <span className="absolute inset-0 flex items-center justify-center text-xs font-medium text-foreground select-none">
+                {combatant.hp.current}/{combatant.hp.max}
+              </span>
+            </div>
+          )}
           <div className="flex gap-1">
             <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => onHPChange(-1)}>
               <Minus className="h-3 w-3" />
@@ -135,7 +210,7 @@ export function CombatantCard({
           <div className="flex items-center gap-2">
             <Zap className="h-4 w-4 text-blue-500 flex-shrink-0" />
             <div className="flex-1 h-5 bg-muted rounded-full overflow-hidden relative">
-              <div 
+              <div
                 className="h-full bg-blue-500 transition-all"
                 style={{ width: `${Math.max(0, fpPercent)}%` }}
               />
@@ -163,9 +238,9 @@ export function CombatantCard({
               <span className="text-muted-foreground"> (base: {combatant.baseDr})</span>
             )}
           </span>
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             className="h-6 text-xs ml-auto"
             onClick={() => onDRChange(-1)}
             disabled={combatant.dr <= 0}
@@ -201,7 +276,7 @@ export function CombatantCard({
       {/* Action Tracking */}
       <div className="flex items-center gap-4 text-sm">
         <label className="flex items-center gap-1.5 cursor-pointer">
-          <Checkbox 
+          <Checkbox
             checked={combatant.majorActionUsed}
             onCheckedChange={() => onActionToggle('major')}
           />
@@ -210,7 +285,7 @@ export function CombatantCard({
           </span>
         </label>
         <label className="flex items-center gap-1.5 cursor-pointer">
-          <Checkbox 
+          <Checkbox
             checked={combatant.minorActionUsed}
             onCheckedChange={() => onActionToggle('minor')}
           />
@@ -219,7 +294,7 @@ export function CombatantCard({
           </span>
         </label>
         <label className="flex items-center gap-1.5 cursor-pointer">
-          <Checkbox 
+          <Checkbox
             checked={combatant.reactionUsed}
             onCheckedChange={() => onActionToggle('reaction')}
           />
@@ -235,6 +310,34 @@ export function CombatantCard({
           Initiative: {combatant.initiative} | AGI: {combatant.stats.agility}
         </div>
       )}
+
+      {/* Combatant Notes */}
+      <div className="mt-2 border-t border-border/40 pt-2">
+        <button
+          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          onClick={() => setShowNotes(!showNotes)}
+        >
+          <FileText className="h-3 w-3" />
+          <span>
+            {combatant.notes ? 'Notes' : 'Add Notes'}
+          </span>
+          {combatant.notes && !showNotes && (
+            <span className="text-primary">•</span>
+          )}
+          {showNotes
+            ? <ChevronUp className="h-3 w-3 ml-1" />
+            : <ChevronDown className="h-3 w-3 ml-1" />
+          }
+        </button>
+        {showNotes && (
+          <Textarea
+            className="mt-1.5 text-xs min-h-[60px] resize-none"
+            value={combatant.notes || ''}
+            onChange={e => onNotesChange(e.target.value)}
+            placeholder="GM notes for this combatant..."
+          />
+        )}
+      </div>
     </div>
   );
 }
