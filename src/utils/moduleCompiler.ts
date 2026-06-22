@@ -267,3 +267,60 @@ export function lintModule(scenes: SceneNode[]): string[] {
   });
   return warnings;
 }
+
+/* ------------------------------------------------------------------ *
+ * Dual-format export: SceneNodes → human-readable session-sheet
+ * markdown. This is the fallback the GM can read/run with the app
+ * closed, and it re-imports through compileModule (round-trip).
+ * ------------------------------------------------------------------ */
+
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+export function moduleToMarkdown(module: CampaignModule): string {
+  const titleById = new Map(module.scenes.map((s) => [s.id, s.title]));
+  const lines: string[] = [];
+
+  module.scenes.forEach((s, i) => {
+    lines.push(`# ${i + 1}  ${s.title}`);
+    if (s.subtitle) lines.push(`SUBTITLE: ${s.subtitle}`);
+    lines.push('');
+
+    if (s.readAloud.length) {
+      lines.push('>> READ ALOUD');
+      s.readAloud.forEach((p, j) => { lines.push(p); if (j < s.readAloud.length - 1) lines.push(''); });
+      lines.push('');
+    }
+    if (s.gmNotes.length) { s.gmNotes.forEach((n) => lines.push(`GM: ${n}`)); lines.push(''); }
+    if (s.bullets.length) { s.bullets.forEach((b) => lines.push(`- ${b}`)); lines.push(''); }
+
+    if (s.checks.length) {
+      s.checks.forEach((c) => {
+        const statTxt = c.stat && c.stat !== 'none' ? ` ${cap(c.stat)}` : '';
+        const pen = c.penalty !== 0 ? ` (${c.penalty > 0 ? '+' : ''}${c.penalty})` : '';
+        lines.push(`- **${c.difficulty}${statTxt}${pen}**${c.label ? ` — ${c.label}` : ''}`);
+      });
+      lines.push('');
+    }
+    if (s.npcs.length) {
+      s.npcs.forEach((npc) => {
+        lines.push(npc.line ? `**${npc.name.toUpperCase()}:** "${npc.line}"` : `**${npc.name.toUpperCase()}:**`);
+        npc.reactions?.forEach((r) => lines.push(`REACTION (${npc.name}): ${r.response}`));
+      });
+      lines.push('');
+    }
+    s.findables.forEach((f) => {
+      lines.push(`FIND -- ${f.name}`);
+      if (f.description) f.description.split('\n').forEach((d) => lines.push(`- ${d}`));
+      if (f.readAloud) { lines.push(`>> HANDOUT -- ${f.name}`); lines.push(f.readAloud); }
+      lines.push('');
+    });
+    if (s.enemies.length) { lines.push(`ENEMIES: ${s.enemies.join(', ')}`); lines.push(''); }
+    s.exits.forEach((ex) => {
+      const tgt = ex.targetSceneId ? titleById.get(ex.targetSceneId) : ex.branchLabel;
+      lines.push(`EXIT -> ${ex.description}${tgt ? ` -> ${tgt}` : ''}`);
+    });
+    lines.push('');
+  });
+
+  return lines.join('\n').replace(/\n{3,}/g, '\n\n').trim() + '\n';
+}
