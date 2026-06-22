@@ -45,7 +45,13 @@ All AI features use small models that run entirely inside the browser via WebGPU
 - **Equipment Enchantments:** Attach charge-based active enchantments to any equipment item. Charges track and deplete on use; recharge with soul gems.
 - **Limited-Use Ability Tracking:** Per-combat and per-adventure abilities (racial, stone, perk, custom) are tracked end-to-end from the Combat Portal through to the AbilityTracker. Turn resets preserve used-this-combat state. Long Rest clears everything.
 - **Session Exit Workflow:** Canonical End Session button with export prompt, persistent export status badge, and non-blocking export reminders at Long Rest and AP milestones.
-- **GM Mode:** Combat tracker with initiative management, status effect applicator, enemy templates, custom enemy creation, and full combat log with undo.
+- **GM Campaign Suite:** GM Mode is a five-pillar workspace, not just combat:
+  - **Campaign Hub** — editable campaign, clocks, party overview, import/export, and a **visual lore web** (force-directed graph).
+  - **The Forge** — author adventure modules in markdown using the session-sheet vocabulary; one-click compile to structured scenes with a preflight linter.
+  - **Live Play** — a scene timeline with a 3-column runsheet (read-aloud / NPCs / checks · findables · enemies · exits) and **Deploy Encounter** straight into combat.
+  - **Combat** — initiative management, status effect applicator, enemy templates, custom enemies, and a full combat log with undo.
+  - **Universal Compendium** — Ctrl+K search across every enemy, spell, item, skill, race, stone, and campaign entity.
+- **The Self-Building Lore Web:** Entities and relationships render as an interactive, theme-styled graph (drag-to-pin curation, type filtering, co-occurrence + unauthored "loose thread" layers, one-click edge authoring). It builds from any mounted notes folder.
 
 ---
 
@@ -88,11 +94,20 @@ All AI features use small models that run entirely inside the browser via WebGPU
 
 ---
 
-### Phase 5: GM Campaign Foundation *(Next Priority)*
+### Phase 5: GM Campaign Suite *(In Progress)*
 
 **Vision:** Transform the GM mode from a combat tracker into a full campaign co-pilot. Every tool here is non-AI, works completely offline, and is excellent as a standalone product. This is the foundation that the optional AI layer (Phase 6) is built on top of.
 
-#### 5A — Universal Compendium
+**Delivered so far (v1.5 — the GM Campaign Suite shell):**
+- ✅ **Campaign Hub** — editable campaign, clocks, party overview, import/export, and a **visual lore web** (force-directed graph).
+- ✅ **The Forge** — markdown → structured scenes via the session-sheet vocabulary; preflight linter; harvests `@web:` edges into the graph.
+- ✅ **Live Play** — scene timeline + 3-column runsheet + **Deploy Encounter** into the combat tracker.
+- ✅ **Universal Compendium** — Ctrl+K search across all rules content and campaign nodes (5A, below).
+- ✅ **The self-building lore web** — interactive graph; co-occurrence and unauthored "loose threads" surfaced, adopted in one click. Builds from any mounted folder (generic scan + registry discovery), using the campaign's own entities as the registry once they exist.
+
+The detailed specs below (5A–5F) remain the targets; the items above are the first vertical slices. **5G (below) is the next priority** — the onboarding front door that lets non-coders fill the web with no JSON.
+
+#### 5A — Universal Compendium ✅ Core shipped
 The single most important GM tool. A slide-out reference panel accessible from anywhere in the GM Dashboard with a single keystroke.
 
 - [ ] Searchable index of all game content: spells, perks, enemies, items, races, standing stones, status effects, action economy rules, condition definitions
@@ -140,6 +155,16 @@ Structured tools for capturing what happens during a session.
 - [ ] **Direct HP input:** Click a combatant's HP to type an exact value, not just increment/decrement
 - [ ] **Save to library:** Promote any enemy currently in combat to the permanent GM library with one click
 - [ ] **Combatant notes:** Per-combatant text field for tracking special conditions, lair actions, or narrative state
+
+#### 5G — Entity Acquisition & Onboarding *(Next Priority — the product front door)*
+
+The Suite currently leans on a hand-authored `registry.json`/`annotations.json` to seed the lore web — a coder's artifact. This phase makes the web fill itself with **no JSON and no coding**, so a non-technical GM gets a rich campaign graph on day one. (Full design: `docs/GM-CAMPAIGN-SUITE.md` §12.)
+
+- [ ] **In-app node editor** — create/edit entities (name, type, tags, aliases) as easily as a character; **drag-to-connect** on the graph for edges. The app stops needing any file.
+- [ ] **Folder import + Entity Review studio** — point at an existing notes folder (Obsidian / Markdown / Notion export) and auto-propose entities from conventions GMs already use: folder-as-type, file-as-entity, frontmatter, `#tags`, and `[[wikilinks]]` (every wikilink is an edge). Review / accept / merge / retype in bulk — the visual replacement for editing JSON.
+- [ ] **Export** `registry.json`/`annotations.json` — the structured files become an *output*, not a prerequisite (round-trips power users).
+- [ ] **Proper-noun extraction + dedupe** for unstructured prose (candidates → review, never auto-added).
+- [ ] All of the above is **non-AI and offline**; local-AI extraction arrives in Phase 6 as an optional accelerator.
 
 ---
 
@@ -220,7 +245,16 @@ The goal is a cohesive, consistent art style for every character in the campaign
 
 ## Recent Updates
 
-### Version 1.4 (Current)
+### Version 1.5 (Current) — GM Campaign Suite
+- ✅ **GM Mode is now a campaign workspace** — five pillars: Campaign Hub, The Forge (module builder), Live Play (scene runner), Combat, and the Universal Compendium (Ctrl+K search across all content and campaign nodes).
+- ✅ **Visual lore web** — a force-directed, theme-styled graph of entities and relationships, with drag-to-pin curation, type legend/filtering, co-occurrence and candidate ("loose thread") layers, and one-click edge authoring. Display controls and folder management live in the graph's Controls panel.
+- ✅ **Self-building connections** — a faithful in-browser port of the lore-web builder: scans a mounted notes folder, maps entities, and surfaces unauthored connections to adopt. Generic ingestion works with any folder layout (folder scan + registry discovery) and uses the campaign's own entities as the registry once they exist.
+- ✅ **The Forge** — markdown → structured scenes using the session-sheet vocabulary (`>> READ ALOUD`, `GM:`, `EXIT ->`, `**Hard Guile (-4)**`, `@web:`), with a preflight linter and automatic edge harvesting.
+- ✅ **Live Play + Deploy Encounter** — step a module's timeline; a scene's enemies load straight into the combat tracker.
+- ✅ **Local & private** — campaigns persist in-browser with import/export, mirroring character storage. Nothing leaves the device.
+- ⏭️ **Next:** the onboarding front door (Phase 5G) so non-coders get a full web with no JSON.
+
+### Version 1.4
 - ✅ **Data Accuracy Patch** — All weapon damage values corrected to match current rulebook tiers. Shield bracing DR values corrected. Summon stat blocks corrected (Familiar, Zombie, Revenant, Atronachs, Dremora Lord). Missing summons added (Reanimated Corpse, Dread Zombie). Clothing descriptions corrected.
 - ✅ **Limited-Use Abilities Connected** — Per-combat and per-adventure abilities tracked end-to-end. Using a racial, stone, perk, or custom limited ability in the Combat Portal writes to `character.usedAbilities` immediately. AbilityTracker reflects state in real time. Turn reset preserves used-this-combat abilities. Long Rest clears everything.
 - ✅ **All Racial & Stone Abilities in Combat Portal** — Every race and standing stone ability now surfaces as the correct slot type with the correct limitation tag.
