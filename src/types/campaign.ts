@@ -104,11 +104,14 @@ export interface AnnotationsFile {
 
 export type SceneType = 'set-piece' | 'character' | 'social' | 'combat' | 'interlude';
 
-// Difficulty ladder (from the session-sheet format): the GM sets a DIFFICULTY,
-// never a fixed target number. Very Easy +4 / Easy +2 / Standard 0 / Hard -4 /
-// Very Hard -6 / Nearly Impossible -8.
+// THE unified difficulty ladder (July 2026 rules consolidation): the GM sets a
+// DIFFICULTY, never a fixed target number. Very Easy +4 / Easy +2 / Standard 0 /
+// Hard -4 / Very Hard -6 / Nearly Impossible -8 / Impossible -14 / Mythic -20.
+// Mythic (-20) is the HARD CEILING for task difficulty; only the Contest
+// Level-Gap Penalty (will-vs-will power gaps) may exceed it.
 export type Difficulty =
-  | 'Very Easy' | 'Easy' | 'Standard' | 'Hard' | 'Very Hard' | 'Nearly Impossible';
+  | 'Very Easy' | 'Easy' | 'Standard' | 'Hard' | 'Very Hard' | 'Nearly Impossible'
+  | 'Impossible' | 'Mythic';
 
 export const DIFFICULTY_PENALTY: Record<Difficulty, number> = {
   'Very Easy': 4,
@@ -117,6 +120,8 @@ export const DIFFICULTY_PENALTY: Record<Difficulty, number> = {
   'Hard': -4,
   'Very Hard': -6,
   'Nearly Impossible': -8,
+  'Impossible': -14,
+  'Mythic': -20,
 };
 
 export type CheckStat = 'might' | 'agility' | 'magic' | 'guile' | 'none';

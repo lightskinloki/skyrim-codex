@@ -371,7 +371,7 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
   // Equipment management state
   const [addingEquipment, setAddingEquipment] = useState(false);
   const [editingEquipmentId, setEditingEquipmentId] = useState<string | null>(null);
-  const EMPTY_EQUIP_FORM = { name: '', type: 'weapon' as 'weapon' | 'armor' | 'shield', damage: '', dr: '', description: '', enchantName: '', enchantDescription: '', enchantMaxCharges: '', enchantChargeCost: '1', enchantActionSlot: 'bonus' as 'bonus' | 'free' };
+  const EMPTY_EQUIP_FORM = { name: '', type: 'weapon' as 'weapon' | 'armor' | 'shield', damage: '', dr: '', description: '', enchantName: '', enchantDescription: '', enchantMaxCharges: '', enchantChargeCost: '1', enchantActionSlot: 'free' as 'major' | 'minor' | 'free' };
   const [equipmentForm, setEquipmentForm] = useState(EMPTY_EQUIP_FORM);
   const [equipmentSuggestions, setEquipmentSuggestions] = useState<typeof officialEquipment>([]);
   
@@ -626,6 +626,7 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
   
   const handleSelectSuggestion = (item: typeof officialEquipment[0]) => {
     setEquipmentForm({
+      ...EMPTY_EQUIP_FORM,
       name: item.name,
       type: item.type === 'clothing' ? 'armor' : item.type,
       damage: item.damage?.toString() || '',
@@ -682,7 +683,8 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
       enchantDescription: item.enchantment?.description || '',
       enchantMaxCharges: item.enchantment?.maxCharges?.toString() || '',
       enchantChargeCost: item.enchantment?.chargeCost?.toString() || '1',
-      enchantActionSlot: item.enchantment?.actionSlot || 'bonus',
+      // Legacy 'bonus' (old saves) maps to 'minor' — FROGS has no bonus actions.
+      enchantActionSlot: (item.enchantment?.actionSlot === 'bonus' ? 'minor' : item.enchantment?.actionSlot) || 'free',
     });
   };
   
@@ -1164,10 +1166,17 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
                                   <div className="flex gap-2">
                                     <button
                                       type="button"
-                                      onClick={() => setEquipmentForm({ ...equipmentForm, enchantActionSlot: 'bonus' })}
-                                      className={`flex-1 text-xs py-1 rounded border transition-colors ${equipmentForm.enchantActionSlot === 'bonus' ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:bg-accent'}`}
+                                      onClick={() => setEquipmentForm({ ...equipmentForm, enchantActionSlot: 'major' })}
+                                      className={`flex-1 text-xs py-1 rounded border transition-colors ${equipmentForm.enchantActionSlot === 'major' ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:bg-accent'}`}
                                     >
-                                      Bonus Action
+                                      Major Action
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setEquipmentForm({ ...equipmentForm, enchantActionSlot: 'minor' })}
+                                      className={`flex-1 text-xs py-1 rounded border transition-colors ${equipmentForm.enchantActionSlot === 'minor' ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:bg-accent'}`}
+                                    >
+                                      Minor Action
                                     </button>
                                     <button
                                       type="button"
@@ -1419,6 +1428,13 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
                               className={`flex-1 text-xs py-1 rounded border transition-colors ${equipmentForm.enchantActionSlot === 'minor' ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:bg-accent'}`}
                             >
                               Minor Action
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setEquipmentForm({ ...equipmentForm, enchantActionSlot: 'free' })}
+                              className={`flex-1 text-xs py-1 rounded border transition-colors ${equipmentForm.enchantActionSlot === 'free' ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:bg-accent'}`}
+                            >
+                              Free Action
                             </button>
                           </div>
                         </>

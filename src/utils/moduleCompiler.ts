@@ -38,7 +38,7 @@ export interface CompileResult {
 }
 
 const DIFFICULTIES: Difficulty[] = [
-  'Very Easy', 'Very Hard', 'Nearly Impossible', 'Easy', 'Standard', 'Hard',
+  'Very Easy', 'Very Hard', 'Nearly Impossible', 'Impossible', 'Mythic', 'Easy', 'Standard', 'Hard',
 ];
 // longest-first alternation so "Very Hard" wins over "Hard"
 const CHECK_RE = new RegExp(
@@ -53,7 +53,7 @@ const REACTION_RE = /^REACTION\s*\(([^)]+)\):\s*(.+)$/i;
 
 function canonDifficulty(raw: string): Difficulty {
   const lower = raw.toLowerCase();
-  for (const d of ['Very Easy', 'Very Hard', 'Nearly Impossible', 'Easy', 'Standard', 'Hard'] as Difficulty[]) {
+  for (const d of ['Very Easy', 'Very Hard', 'Nearly Impossible', 'Impossible', 'Mythic', 'Easy', 'Standard', 'Hard'] as Difficulty[]) {
     if (d.toLowerCase() === lower) return d;
   }
   return 'Standard';

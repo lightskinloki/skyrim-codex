@@ -81,7 +81,8 @@ export function calculateMaxFP(
   }
   
   // Standard calculation for all other stones
-  let maxFP = Math.floor(finalStats.agility / 2) + Math.floor(finalStats.magic / 2);
+  // Players guide: FP = (AGILITY + MAGIC) / 2 — "Add first, then divide. Round down."
+  let maxFP = Math.floor((finalStats.agility + finalStats.magic) / 2);
   
   // High Elf racial bonus
   if (race.id === "high-elf") {

@@ -1,4 +1,16 @@
 // Enemy templates for Skyrim TTRPG GM Dashboard
+//
+// CALIBRATED July 2026 against the consolidated rules (GM Guide/Reference tables:
+// SCALED MONSTER STATISTICS). Every template is snapped to a Tier/TL slot from that
+// table — the slot is noted on each entry as [Tier TL#]. HP values carry the
+// Legendary-scaling multipliers (Minions x2 / Elites x2.5 / Bosses x3) BAKED IN,
+// exactly like the master table. Named weapons use Gear-list damages; cast spells
+// use Spell List damages. The GM scales freely from these baselines.
+// Canonical tier bands: Novice 0-3 AP / Apprentice 3-6 / Adept 6-9 / Expert 9-15 /
+// Master 15-25 / Mythic 25+ (Mythic entries are FLOORS — minimums, never targets).
+//
+// SUMMONS are deliberately NOT table-calibrated: they are player assets balanced
+// against Conjuration spell tiers, not enemies.
 
 export type EnemyCategory = 'humanoid' | 'beast' | 'undead' | 'daedra' | 'dragon' | 'construct' | 'summon';
 
@@ -19,393 +31,395 @@ export const enemyTemplates: EnemyTemplate[] = [
   // Basic Humanoids
   {
     id: 'bandit',
-    name: 'Bandit',
+    name: 'Bandit', // [Novice TL1]
     category: 'humanoid',
-    hp: 8,
-    dr: 1,
-    stats: { might: 12, agility: 10, magic: 4, guile: 10 },
-    attacks: [{ name: 'Iron Sword', damage: 2, stat: 'might', properties: 'Finesse' }],
+    hp: 20,
+    dr: 2,
+    stats: { might: 14, agility: 12, magic: 8, guile: 10 },
+    attacks: [{ name: 'Iron Sword', damage: 4, stat: 'might', properties: 'Finesse' }],
   },
   {
     id: 'bandit_chief',
-    name: 'Bandit Chief',
+    name: 'Bandit Chief', // [Novice TL2 Elite]
     category: 'humanoid',
-    hp: 15,
-    fp: 6,
+    hp: 63,
+    fp: 10,
     dr: 3,
-    stats: { might: 14, agility: 12, magic: 4, guile: 12 },
-    attacks: [{ name: 'Steel Greatsword', damage: 5, stat: 'might', properties: 'Finesse' }],
-    abilities: ['Power Attack (+3 damage for 3 FP)'],
+    stats: { might: 15, agility: 13, magic: 8, guile: 10 },
+    attacks: [{ name: 'Steel Greatsword', damage: 9, stat: 'might', properties: 'Finesse' }],
+    abilities: ['Power Attack (+2 damage for 3 FP)'],
     isBoss: true,
   },
   {
     id: 'forsworn',
-    name: 'Forsworn',
+    name: 'Forsworn', // [Novice TL1]
     category: 'humanoid',
-    hp: 10,
-    fp: 6,
-    dr: 1,
-    stats: { might: 10, agility: 12, magic: 10, guile: 8 },
-    attacks: [{ name: 'Forsworn Sword', damage: 2, stat: 'might' }],
-    abilities: ['Can cast Flames (1 FP)'],
+    hp: 20,
+    fp: 8,
+    dr: 2,
+    stats: { might: 12, agility: 14, magic: 10, guile: 8 },
+    attacks: [{ name: 'Forsworn Sword', damage: 5, stat: 'might' }],
+    abilities: ['Can cast Flames (1 FP, 3 fire damage + Burning 1 for 2 turns)'],
   },
   {
     id: 'forsworn_briarheart',
-    name: 'Forsworn Briarheart',
+    name: 'Forsworn Briarheart', // [Apprentice TL2 Elite]
     category: 'humanoid',
-    hp: 18,
-    fp: 12,
-    dr: 2,
-    stats: { might: 12, agility: 14, magic: 14, guile: 10 },
+    hp: 113,
+    fp: 20,
+    dr: 6,
+    stats: { might: 14, agility: 16, magic: 14, guile: 11 },
     attacks: [
-      { name: 'Forsworn Sword', damage: 3, stat: 'might' },
-      { name: 'Firebolt', damage: 3, stat: 'magic', properties: 'Ranged' }
+      { name: 'Forsworn Sword', damage: 12, stat: 'might' },
+      { name: 'Firebolt', damage: 6, stat: 'magic', properties: 'Ranged, Burning 2 for 2 turns' }
     ],
-    abilities: ['Can cast Firebolt (2 FP)', 'Can cast Oakflesh (2 FP)'],
+    abilities: ['Can cast Firebolt (3 FP)', 'Can cast Oakflesh (3 FP, +2 DR)'],
     isBoss: true,
   },
-  
+
   // Undead
   {
     id: 'skeleton',
-    name: 'Skeleton',
+    name: 'Skeleton', // [Novice TL1]
     category: 'undead',
-    hp: 6,
-    dr: 1,
-    stats: { might: 10, agility: 10, magic: 4, guile: 4 },
-    attacks: [{ name: 'Ancient Sword', damage: 2, stat: 'might' }],
+    hp: 20,
+    dr: 2,
+    stats: { might: 14, agility: 12, magic: 8, guile: 10 },
+    attacks: [{ name: 'Ancient Sword', damage: 5, stat: 'might' }],
     abilities: ['Immune to fear', 'Immune to poison'],
   },
   {
     id: 'draugr',
-    name: 'Draugr',
+    name: 'Draugr', // [Apprentice TL1]
     category: 'undead',
-    hp: 10,
-    dr: 2,
-    stats: { might: 14, agility: 8, magic: 6, guile: 6 },
-    attacks: [{ name: 'Ancient Nord Blade', damage: 3, stat: 'might' }],
+    hp: 40,
+    dr: 4,
+    stats: { might: 15, agility: 11, magic: 8, guile: 13 },
+    attacks: [{ name: 'Ancient Nord Blade', damage: 8, stat: 'might' }],
     abilities: ['Immune to fear', 'Immune to mind-affecting spells'],
   },
   {
     id: 'draugr_deathlord',
-    name: 'Draugr Deathlord',
+    name: 'Draugr Deathlord', // [Adept TL2 Elite]
     category: 'undead',
-    hp: 25,
-    fp: 8,
-    dr: 4,
-    stats: { might: 16, agility: 10, magic: 12, guile: 8 },
+    hp: 175,
+    fp: 20,
+    dr: 11,
+    stats: { might: 17, agility: 12, magic: 15, guile: 8 },
     attacks: [
-      { name: 'Ebony Battleaxe', damage: 6, stat: 'might', properties: 'Deep Wounds' },
-      { name: 'Unrelenting Force', damage: 4, stat: 'magic', properties: 'Knockback, costs 3 FP' }
+      { name: 'Ebony Battleaxe', damage: 17, stat: 'might', properties: 'Deep Wounds (Power Attack: 2 Bleed)' },
+      { name: 'Unrelenting Force', damage: 10, stat: 'magic', properties: 'Knockback, costs 5 FP' }
     ],
     abilities: ['Immune to fear', 'Shout: Unrelenting Force', 'Shout: Disarm'],
     isBoss: true,
   },
   {
     id: 'vampire',
-    name: 'Vampire',
+    name: 'Vampire', // [Apprentice TL2 Elite]
     category: 'undead',
-    hp: 18,
-    fp: 12,
-    dr: 3,
-    stats: { might: 14, agility: 14, magic: 14, guile: 14 },
-    attacks: [{ name: 'Drain Life', damage: 4, stat: 'magic', properties: 'Heals vampire for damage dealt' }],
+    hp: 113,
+    fp: 20,
+    dr: 6,
+    stats: { might: 14, agility: 16, magic: 14, guile: 11 },
+    attacks: [{ name: 'Drain Life', damage: 12, stat: 'magic', properties: 'Heals vampire for damage dealt' }],
     abilities: ['Lifesteal on melee', 'Vampiric Drain spell', 'Weakness to fire (+2 damage)'],
     isBoss: true,
   },
-  
+
   // Beasts
   {
     id: 'wolf',
-    name: 'Wolf',
+    name: 'Wolf', // [Novice TL1]
     category: 'beast',
-    hp: 6,
-    dr: 0,
-    stats: { might: 10, agility: 14, magic: 4, guile: 8 },
-    attacks: [{ name: 'Bite', damage: 2, stat: 'agility' }],
+    hp: 20,
+    dr: 2,
+    stats: { might: 12, agility: 14, magic: 8, guile: 10 },
+    attacks: [{ name: 'Bite', damage: 5, stat: 'agility' }],
     abilities: ['Pack Tactics: +1 damage if ally adjacent to target'],
   },
   {
     id: 'ice_wolf',
-    name: 'Ice Wolf',
+    name: 'Ice Wolf', // [Novice TL1]
     category: 'beast',
-    hp: 10,
-    dr: 1,
-    stats: { might: 12, agility: 14, magic: 6, guile: 8 },
-    attacks: [{ name: 'Freezing Bite', damage: 3, stat: 'agility', properties: 'May apply Slowed' }],
+    hp: 20,
+    dr: 2,
+    stats: { might: 12, agility: 14, magic: 10, guile: 8 },
+    attacks: [{ name: 'Freezing Bite', damage: 5, stat: 'agility', properties: 'May apply Slowed' }],
     abilities: ['Pack Tactics', 'Frost Resistance'],
   },
   {
     id: 'frostbite_spider',
-    name: 'Frostbite Spider',
+    name: 'Frostbite Spider', // [Novice TL1]
     category: 'beast',
-    hp: 8,
-    dr: 1,
-    stats: { might: 12, agility: 10, magic: 4, guile: 6 },
-    attacks: [{ name: 'Bite', damage: 2, stat: 'might', properties: 'Poison: 1 damage/round for 2 rounds' }],
+    hp: 20,
+    dr: 2,
+    stats: { might: 14, agility: 12, magic: 8, guile: 10 },
+    attacks: [{ name: 'Bite', damage: 5, stat: 'might', properties: 'Poison: 1 damage/round for 2 rounds' }],
     abilities: ['Poison bite', 'Web spit (immobilize)'],
   },
   {
     id: 'giant_frostbite_spider',
-    name: 'Giant Frostbite Spider',
+    name: 'Giant Frostbite Spider', // [Novice TL2 Elite]
     category: 'beast',
-    hp: 20,
-    dr: 2,
-    stats: { might: 16, agility: 8, magic: 4, guile: 6 },
-    attacks: [{ name: 'Venomous Bite', damage: 4, stat: 'might', properties: 'Poison: 2 damage/round for 3 rounds' }],
+    hp: 63,
+    dr: 3,
+    stats: { might: 15, agility: 13, magic: 8, guile: 10 },
+    attacks: [{ name: 'Venomous Bite', damage: 8, stat: 'might', properties: 'Poison: 2 damage/round for 3 rounds' }],
     abilities: ['Strong poison', 'Web spit (immobilize)', 'Can climb walls'],
     isBoss: true,
   },
   {
     id: 'bear',
-    name: 'Bear',
+    name: 'Bear', // [Novice TL2 Elite]
     category: 'beast',
-    hp: 15,
-    dr: 2,
-    stats: { might: 16, agility: 8, magic: 4, guile: 6 },
-    attacks: [{ name: 'Claw', damage: 4, stat: 'might' }],
+    hp: 63,
+    dr: 3,
+    stats: { might: 15, agility: 13, magic: 8, guile: 10 },
+    attacks: [{ name: 'Claw', damage: 8, stat: 'might' }],
     abilities: ['Powerful charge'],
   },
   {
     id: 'sabre_cat',
-    name: 'Sabre Cat',
+    name: 'Sabre Cat', // [Novice TL2 Elite]
     category: 'beast',
-    hp: 12,
-    dr: 1,
-    stats: { might: 14, agility: 16, magic: 4, guile: 8 },
-    attacks: [{ name: 'Pounce', damage: 4, stat: 'agility', properties: 'Can attack twice if first hits' }],
+    hp: 63,
+    dr: 3,
+    stats: { might: 13, agility: 15, magic: 8, guile: 10 },
+    attacks: [{ name: 'Pounce', damage: 8, stat: 'agility', properties: 'Can attack twice if first hits' }],
     abilities: ['Pounce attack', 'Fast movement'],
   },
   {
     id: 'troll',
-    name: 'Troll',
+    name: 'Troll', // [Apprentice TL2 Elite]
     category: 'beast',
-    hp: 25,
-    dr: 2,
-    stats: { might: 16, agility: 8, magic: 4, guile: 6 },
-    attacks: [{ name: 'Claw', damage: 5, stat: 'might' }],
-    abilities: ['Regeneration: Heals 2 HP at start of turn', 'Weakness to fire (stops regen for 1 round)'],
+    hp: 113,
+    dr: 6,
+    stats: { might: 16, agility: 14, magic: 8, guile: 11 },
+    attacks: [{ name: 'Claw', damage: 12, stat: 'might' }],
+    abilities: ['Regeneration: Heals 4 HP at start of turn', 'Weakness to fire (stops regen for 1 round)'],
     isBoss: true,
   },
   {
     id: 'frost_troll',
-    name: 'Frost Troll',
+    name: 'Frost Troll', // [Adept TL2 Elite]
     category: 'beast',
-    hp: 30,
-    dr: 3,
-    stats: { might: 17, agility: 8, magic: 6, guile: 6 },
-    attacks: [{ name: 'Freezing Claw', damage: 6, stat: 'might', properties: 'May apply Slowed' }],
-    abilities: ['Regeneration: Heals 3 HP at start of turn', 'Weakness to fire', 'Frost Resistance'],
+    hp: 175,
+    dr: 11,
+    stats: { might: 17, agility: 15, magic: 8, guile: 12 },
+    attacks: [{ name: 'Freezing Claw', damage: 20, stat: 'might', properties: 'May apply Slowed' }],
+    abilities: ['Regeneration: Heals 6 HP at start of turn', 'Weakness to fire', 'Frost Resistance'],
     isBoss: true,
   },
   {
     id: 'giant',
-    name: 'Giant',
+    name: 'Giant', // [Adept TL2 Elite]
     category: 'beast',
-    hp: 35,
-    dr: 3,
-    stats: { might: 18, agility: 6, magic: 4, guile: 6 },
-    attacks: [{ name: 'Club', damage: 8, stat: 'might', properties: 'Staggering Force' }],
+    hp: 175,
+    dr: 11,
+    stats: { might: 17, agility: 12, magic: 8, guile: 15 },
+    attacks: [{ name: 'Club', damage: 20, stat: 'might', properties: 'Staggering Force' }],
     abilities: ['Massive: Cannot be staggered or knocked prone', 'Ground Slam AoE'],
     isBoss: true,
   },
   {
     id: 'mammoth',
-    name: 'Mammoth',
+    name: 'Mammoth', // [Adept TL2 Elite]
     category: 'beast',
-    hp: 45,
-    dr: 4,
-    stats: { might: 18, agility: 4, magic: 4, guile: 4 },
+    hp: 175,
+    dr: 11,
+    stats: { might: 17, agility: 12, magic: 8, guile: 15 },
     attacks: [
-      { name: 'Tusks', damage: 7, stat: 'might' },
-      { name: 'Stomp', damage: 5, stat: 'might', properties: 'AoE, hits all adjacent' }
+      { name: 'Tusks', damage: 20, stat: 'might' },
+      { name: 'Stomp', damage: 13, stat: 'might', properties: 'AoE, hits all adjacent' }
     ],
     abilities: ['Massive', 'Trample charge'],
     isBoss: true,
   },
-  
+
   // Daedra/Atronachs
   {
     id: 'flame_atronach',
-    name: 'Flame Atronach',
+    name: 'Flame Atronach', // [Apprentice TL1]
     category: 'daedra',
-    hp: 20,
-    dr: 2,
-    stats: { might: 6, agility: 12, magic: 14, guile: 10 },
-    attacks: [{ name: 'Firebolt', damage: 6, stat: 'magic', properties: 'Ranged, may cause Burning' }],
-    abilities: ['Immune to fire', 'Vulnerable to frost (double damage)', 'Explodes on death (2 fire damage to adjacent)'],
+    hp: 40,
+    dr: 4,
+    stats: { might: 8, agility: 13, magic: 15, guile: 11 },
+    attacks: [{ name: 'Firebolt', damage: 8, stat: 'magic', properties: 'Ranged, may cause Burning' }],
+    abilities: ['Immune to fire', 'Vulnerable to frost (double damage)', 'Explodes on death (4 fire damage to adjacent)'],
   },
   {
     id: 'frost_atronach',
-    name: 'Frost Atronach',
+    name: 'Frost Atronach', // [Apprentice TL2 Elite]
     category: 'daedra',
-    hp: 40,
+    hp: 113,
     dr: 6,
-    stats: { might: 16, agility: 6, magic: 12, guile: 10 },
-    attacks: [{ name: 'Slam', damage: 8, stat: 'might', properties: 'Frostbite Slam: target is Slowed' }],
+    stats: { might: 16, agility: 11, magic: 14, guile: 8 },
+    attacks: [{ name: 'Slam', damage: 12, stat: 'might', properties: 'Frostbite Slam: target is Slowed' }],
     abilities: ['Immune to frost', 'Vulnerable to fire (double damage)', 'Frostbite Slam: target is Slowed on hit'],
     isBoss: true,
   },
   {
     id: 'storm_atronach',
-    name: 'Storm Atronach',
+    name: 'Storm Atronach', // [Adept TL2 Elite]
     category: 'daedra',
-    hp: 30,
-    dr: 6,
-    stats: { might: 10, agility: 8, magic: 17, guile: 12 },
-    attacks: [{ name: 'Chain Lightning', damage: 12, stat: 'magic', properties: 'Jumps to 1 additional target, drains 2 FP each' }],
-    abilities: ['Immune to shock', 'Energy Drain: Chain Lightning drains 2 FP from each target hit'],
+    hp: 175,
+    dr: 11,
+    stats: { might: 12, agility: 8, magic: 17, guile: 15 },
+    attacks: [{ name: 'Chain Lightning', damage: 20, stat: 'magic', properties: 'Jumps to 1 additional target, drains 4 FP each' }],
+    abilities: ['Immune to shock', 'Energy Drain: Chain Lightning drains FP from each target hit'],
     isBoss: true,
   },
   {
     id: 'dremora',
-    name: 'Dremora',
+    name: 'Dremora', // [Adept TL2 Elite]
     category: 'daedra',
-    hp: 20,
-    fp: 8,
-    dr: 5,
-    stats: { might: 16, agility: 12, magic: 12, guile: 14 },
-    attacks: [{ name: 'Daedric Greatsword', damage: 7, stat: 'might', properties: 'Finesse, fire damage' }],
-    abilities: ['Fire enchanted weapons', 'Immune to fear', 'Can cast Firebolt'],
+    hp: 175,
+    fp: 20,
+    dr: 11,
+    stats: { might: 17, agility: 12, magic: 15, guile: 8 },
+    attacks: [{ name: 'Daedric Greatsword', damage: 20, stat: 'might', properties: 'Finesse, fire damage' }],
+    abilities: ['Fire enchanted weapons', 'Immune to fear', 'Can cast Firebolt (3 FP, 6 fire damage)'],
     isBoss: true,
   },
-  
+
   // Constructs
   {
     id: 'dwarven_spider',
-    name: 'Dwarven Spider',
+    name: 'Dwarven Spider', // [Novice TL1]
     category: 'construct',
-    hp: 8,
-    dr: 3,
-    stats: { might: 10, agility: 12, magic: 8, guile: 6 },
-    attacks: [{ name: 'Shock Bolt', damage: 2, stat: 'magic', properties: 'Drains 1 FP' }],
+    hp: 20,
+    dr: 2,
+    stats: { might: 10, agility: 14, magic: 12, guile: 8 },
+    attacks: [{ name: 'Shock Bolt', damage: 5, stat: 'magic', properties: 'Drains 2 FP' }],
     abilities: ['Immune to poison', 'Immune to mind-affecting', 'Self-destructs on death'],
   },
   {
     id: 'dwarven_sphere',
-    name: 'Dwarven Sphere',
+    name: 'Dwarven Sphere', // [Apprentice TL1]
     category: 'construct',
-    hp: 15,
+    hp: 40,
     dr: 4,
-    stats: { might: 14, agility: 12, magic: 4, guile: 8 },
+    stats: { might: 15, agility: 13, magic: 8, guile: 11 },
     attacks: [
-      { name: 'Blade', damage: 4, stat: 'might' },
-      { name: 'Crossbow', damage: 3, stat: 'agility' }
+      { name: 'Blade', damage: 8, stat: 'might' },
+      { name: 'Integrated Crossbow', damage: 8, stat: 'agility', properties: 'Piercing Bolt (ignores 1 DR)' }
     ],
     abilities: ['Immune to poison', 'Immune to mind-affecting', 'Resistant to frost'],
   },
   {
     id: 'dwarven_centurion',
-    name: 'Dwarven Centurion',
+    name: 'Dwarven Centurion', // [Adept TL3 BOSS]
     category: 'construct',
-    hp: 40,
-    dr: 8,
-    stats: { might: 18, agility: 6, magic: 8, guile: 6 },
+    hp: 540,
+    dr: 14,
+    stats: { might: 18, agility: 12, magic: 16, guile: 8 },
     attacks: [
-      { name: 'Hammer Arm', damage: 10, stat: 'might', properties: 'Staggering' },
-      { name: 'Steam Breath', damage: 6, stat: 'magic', properties: 'Cone AoE' }
+      { name: 'Hammer Arm', damage: 26, stat: 'might', properties: 'Staggering' },
+      { name: 'Steam Breath', damage: 16, stat: 'magic', properties: 'Cone AoE' }
     ],
-    abilities: ['Immune to poison', 'Immune to mind-affecting', 'Steam attack', 'Massive'],
+    abilities: ['Immune to poison', 'Immune to mind-affecting', 'Steam attack', 'Massive', 'Boss: Villain Actions + Phase Bars (see Reference tables)'],
     isBoss: true,
   },
-  
+
   // Spellcasters
   {
     id: 'necromancer',
-    name: 'Necromancer',
+    name: 'Necromancer', // [Novice TL2 Elite]
     category: 'humanoid',
-    hp: 10,
-    fp: 15,
-    dr: 0,
-    stats: { might: 6, agility: 10, magic: 15, guile: 12 },
+    hp: 63,
+    fp: 20,
+    dr: 3,
+    stats: { might: 8, agility: 10, magic: 15, guile: 13 },
     attacks: [
-      { name: 'Ice Spike', damage: 2, stat: 'magic', properties: 'Ranged, 2 FP drain' },
-      { name: 'Dagger', damage: 2, stat: 'agility' }
+      { name: 'Ice Spike', damage: 4, stat: 'magic', properties: 'Ranged, 2 FP drain (3 FP to cast)' },
+      { name: 'Iron Dagger', damage: 3, stat: 'agility', properties: 'Assassin\'s Blade' }
     ],
-    abilities: ['Raise Zombie (3 FP)', 'Ice Spike (2 FP)', 'Lightning Bolt (2 FP)'],
+    abilities: ['Raise Zombie (3 FP)', 'Ice Spike (3 FP)', 'Lightning Bolt (3 FP)'],
   },
   {
     id: 'hagraven',
-    name: 'Hagraven',
+    name: 'Hagraven', // [Apprentice TL2 Elite]
     category: 'humanoid',
-    hp: 12,
-    fp: 15,
-    dr: 1,
-    stats: { might: 8, agility: 10, magic: 16, guile: 12 },
+    hp: 113,
+    fp: 25,
+    dr: 6,
+    stats: { might: 11, agility: 14, magic: 16, guile: 14 },
     attacks: [
-      { name: 'Claws', damage: 3, stat: 'might' },
-      { name: 'Fireball', damage: 5, stat: 'magic', properties: 'AoE, costs 4 FP' }
+      { name: 'Claws', damage: 12, stat: 'might' },
+      { name: 'Fireball', damage: 9, stat: 'magic', properties: 'AoE (4 splash within 20ft), costs 6 FP' }
     ],
-    abilities: ['Can cast Fireball (4 FP)', 'Can cast Fear (3 FP)', 'Fly short distances'],
+    abilities: ['Can cast Fireball (6 FP)', 'Can cast Fear (3 FP)', 'Fly short distances'],
     isBoss: true,
   },
   {
     id: 'dragon_priest',
-    name: 'Dragon Priest',
+    name: 'Dragon Priest', // [Expert TL3 BOSS]
     category: 'undead',
-    hp: 30,
-    fp: 25,
-    dr: 5,
-    stats: { might: 10, agility: 12, magic: 18, guile: 16 },
+    hp: 900,
+    fp: 60,
+    dr: 22,
+    stats: { might: 13, agility: 17, magic: 19, guile: 17 },
     attacks: [
-      { name: 'Staff Blast', damage: 6, stat: 'magic' },
-      { name: 'Wall of Fire', damage: 3, stat: 'magic', properties: 'AoE zone, 4 FP' }
+      { name: 'Staff Blast', damage: 41, stat: 'magic' },
+      { name: 'Wall of Flames', damage: 8, stat: 'magic', properties: 'AoE zone per turn, 10 FP' }
     ],
-    abilities: ['Levitation', 'Can cast expert-level spells', 'Immune to fear', 'Mask grants special power'],
+    abilities: ['Levitation', 'Can cast Expert-level spells', 'Immune to fear', 'Mask grants special power', 'Boss: Villain Actions + Phase Bars'],
     isBoss: true,
   },
-  
-  // Dragons
+
+  // Dragons (Dragon Kill AP: regular = 2 AP killing blow / 1 AP participants;
+  // elder = 4 AP killing blow / 2 AP participants)
   {
     id: 'dragon',
-    name: 'Dragon',
+    name: 'Dragon', // [Expert TL3 BOSS]
     category: 'dragon',
-    hp: 50,
-    fp: 20,
-    dr: 6,
-    stats: { might: 18, agility: 14, magic: 16, guile: 14 },
+    hp: 900,
+    fp: 40,
+    dr: 22,
+    stats: { might: 19, agility: 15, magic: 17, guile: 13 },
     attacks: [
-      { name: 'Bite', damage: 8, stat: 'might' },
-      { name: 'Tail Sweep', damage: 5, stat: 'might', properties: 'Hits all adjacent enemies' },
-      { name: 'Fire Breath', damage: 10, stat: 'magic', properties: 'Cone AoE, causes Burning 2' }
+      { name: 'Bite', damage: 41, stat: 'might' },
+      { name: 'Tail Sweep', damage: 26, stat: 'might', properties: 'Hits all adjacent enemies' },
+      { name: 'Fire Breath', damage: 41, stat: 'magic', properties: 'Cone AoE, causes Burning 2' }
     ],
-    abilities: ['Flight', 'Immune to fear', 'Fire Breath (recharges on 5-6 on d6)'],
+    abilities: ['Flight', 'Immune to fear', 'Fire Breath', 'Boss: Villain Actions + Phase Bars', 'Kill AP: 2 killing blow / 1 participant'],
     isBoss: true,
   },
   {
     id: 'frost_dragon',
-    name: 'Frost Dragon',
+    name: 'Frost Dragon', // [Expert TL3 BOSS]
     category: 'dragon',
-    hp: 55,
-    fp: 20,
-    dr: 7,
-    stats: { might: 18, agility: 12, magic: 16, guile: 14 },
+    hp: 950,
+    fp: 40,
+    dr: 22,
+    stats: { might: 19, agility: 13, magic: 17, guile: 15 },
     attacks: [
-      { name: 'Bite', damage: 8, stat: 'might' },
-      { name: 'Wing Buffet', damage: 4, stat: 'might', properties: 'Knockback' },
-      { name: 'Frost Breath', damage: 8, stat: 'magic', properties: 'Cone AoE, causes Slowed, FP drain' }
+      { name: 'Bite', damage: 41, stat: 'might' },
+      { name: 'Wing Buffet', damage: 26, stat: 'might', properties: 'Knockback' },
+      { name: 'Frost Breath', damage: 35, stat: 'magic', properties: 'Cone AoE, causes Slowed, FP drain' }
     ],
-    abilities: ['Flight', 'Immune to fear', 'Immune to frost', 'Frost Breath'],
+    abilities: ['Flight', 'Immune to fear', 'Immune to frost', 'Frost Breath', 'Boss: Villain Actions + Phase Bars', 'Kill AP: 2 killing blow / 1 participant'],
     isBoss: true,
   },
   {
     id: 'elder_dragon',
-    name: 'Elder Dragon',
+    name: 'Elder Dragon', // [MYTHIC TL3 — FLOOR values; scale UP to the party, never down]
     category: 'dragon',
-    hp: 75,
-    fp: 30,
-    dr: 8,
-    stats: { might: 18, agility: 14, magic: 18, guile: 16 },
+    hp: 2000,
+    fp: 80,
+    dr: 50,
+    stats: { might: 22, agility: 18, magic: 20, guile: 16 },
     attacks: [
-      { name: 'Bite', damage: 10, stat: 'might' },
-      { name: 'Tail Sweep', damage: 6, stat: 'might', properties: 'Hits all adjacent' },
-      { name: 'Fire Breath', damage: 12, stat: 'magic', properties: 'Cone AoE, causes Burning 3' }
+      { name: 'Bite', damage: 190, stat: 'might' },
+      { name: 'Tail Sweep', damage: 95, stat: 'might', properties: 'Hits all adjacent' },
+      { name: 'Cataclysm Breath', damage: 190, stat: 'magic', properties: 'Cone AoE, Burning 5' }
     ],
-    abilities: ['Flight', 'Immune to fear', 'Fire or Frost Breath', 'Shout: Unrelenting Force'],
+    abilities: ['Flight', 'Immune to fear', 'MYTHIC FLOOR: every stat here is a minimum — GM scales up freely', 'Boss: Villain Actions + Phase Bars', 'Kill AP: 4 killing blow / 2 participants'],
     isBoss: true,
   },
-  
-  // Summons (from Conjuration spells)
+
+  // Summons (from Conjuration spells) — NOT table-calibrated on purpose:
+  // these are player assets balanced against spell tiers, not enemies.
   {
     id: 'familiar',
     name: 'Familiar',
