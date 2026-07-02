@@ -233,15 +233,13 @@ export function PlayerCombatPortal({
       });
     });
 
-    // Add a slot for each equipped enchanted item.
-    // FROGS slots are Major / Minor / Free; legacy 'bonus' (old saves) maps to 'minor'.
+    // Add a slot for each equipped enchanted item
     for (const item of character.equipment) {
       if (item.enchantment) {
-        const slotType = item.enchantment.actionSlot === 'bonus' ? 'minor' : item.enchantment.actionSlot;
         slots.push({
           id: `enchant-${item.id}`,
-          type: slotType,
-          label: `${slotType.toUpperCase()}: ${item.enchantment.name}`,
+          type: item.enchantment.actionSlot,   // 'bonus' or 'free'
+          label: `${item.enchantment.actionSlot === 'bonus' ? 'BONUS' : 'FREE'}: ${item.enchantment.name}`,
           used: false,
           sourceEquipmentId: item.id,
         });

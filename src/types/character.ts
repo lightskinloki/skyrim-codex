@@ -63,10 +63,7 @@ export interface Enchantment {
   charges: number;
   maxCharges: number;
   chargeCost: number;       // charges spent per use, default 1
-  // FROGS action economy: Major / Minor / Free (no "bonus actions" — that is D&D
-  // vocabulary). 'bonus' is kept ONLY as a deprecated legacy value so older saved
-  // characters still load; treat it as 'minor'.
-  actionSlot: 'major' | 'minor' | 'free' | 'bonus';
+  actionSlot: 'bonus' | 'free';
 }
 
 export interface Equipment {
