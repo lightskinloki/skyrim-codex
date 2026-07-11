@@ -1629,9 +1629,9 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
               <X className="w-4 h-4" /> Exit Map
             </Button>
             
-            {/* Fullscreen Iframe - absolutely positioned to ensure exact viewport dimensions */}
+            {/* Fullscreen Iframe (Using cache-busting query parameter to force reload the fresh layout) */}
             <iframe 
-              src="/esbern_map.html?v=3" 
+              src="/esbern_map.html?v=5" 
               className="absolute inset-0 w-full h-full border-0"
             />
           </div>
