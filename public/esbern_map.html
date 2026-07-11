@@ -73,13 +73,14 @@
 
     /* Floating Zoom Controls for parchment feel */
     #zoom-controls {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
+      position: absolute;
+      bottom: 40px;
+      right: 40px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
-      z-index: 99;
+      gap: 8px;
+      z-index: 999999;
+      pointer-events: auto !important;
     }
     
     #zoom-controls button {
@@ -521,15 +522,14 @@
 
         <!-- Group holding active pins -->
         <g id="pins-group"></g>
+        <!-- Floating Zoom Controls nested inside board-wrapper for accurate scaling -->
+        <div id="zoom-controls">
+          <button id="zoom-in" title="Zoom In">+</button>
+          <button id="zoom-out" title="Zoom Out">−</button>
+          <button id="zoom-reset" title="Recenter View">⟲</button>
+        </div>
       </svg>
     </div>
-  </div>
-
-  <!-- Floating Zoom Controls -->
-  <div id="zoom-controls">
-    <button id="zoom-in" title="Zoom In">+</button>
-    <button id="zoom-out" title="Zoom Out">−</button>
-    <button id="zoom-reset" title="Recenter View">⟲</button>
   </div>
 
   <!-- Sidebar Tool Tray (Wooden interface drawer) -->
@@ -1274,31 +1274,40 @@
     });
 
     // Zoom Controls UI buttons
-    document.getElementById('zoom-in').addEventListener('click', () => {
+    document.getElementById('zoom-in').addEventListener('click', (e) => {
+      console.log("zoom-in click event captured");
+      e.stopPropagation();
       const newZoom = Math.min(zoom * 1.25, MAX_ZOOM);
       if (newZoom !== zoom) {
         panX = panX * (newZoom / zoom);
         panY = panY * (newZoom / zoom);
         zoom = newZoom;
         updateMapTransform();
+        console.log("Zoomed in. New zoom level:", zoom);
       }
     });
 
-    document.getElementById('zoom-out').addEventListener('click', () => {
+    document.getElementById('zoom-out').addEventListener('click', (e) => {
+      console.log("zoom-out click event captured");
+      e.stopPropagation();
       const newZoom = Math.max(zoom / 1.25, MIN_ZOOM);
       if (newZoom !== zoom) {
         panX = panX * (newZoom / zoom);
         panY = panY * (newZoom / zoom);
         zoom = newZoom;
         updateMapTransform();
+        console.log("Zoomed out. New zoom level:", zoom);
       }
     });
 
-    document.getElementById('zoom-reset').addEventListener('click', () => {
+    document.getElementById('zoom-reset').addEventListener('click', (e) => {
+      console.log("zoom-reset click event captured");
+      e.stopPropagation();
       panX = 0;
       panY = 0;
       zoom = 1.0;
       updateMapTransform();
+      console.log("Zoom reset. Recenter complete.");
     });
 
     // Init canvases size
