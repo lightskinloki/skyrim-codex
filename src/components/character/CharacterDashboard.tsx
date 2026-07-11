@@ -1620,21 +1620,23 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
       </TabsContent>
 
         <TabsContent value="map" className="mt-0">
-          <div className="fixed inset-0 z-[100] w-screen h-screen bg-[#120a05]">
-            {/* Floating Exit Button */}
-            <Button 
-              onClick={() => setActiveTab("sheet")}
-              className="fixed top-4 right-4 z-[110] bg-[#4a1212] hover:bg-[#631c1c] text-amber-200 border border-amber-600/50 font-cinzel text-xs py-2 px-4 shadow-2xl flex items-center gap-2"
-            >
-              <X className="w-4 h-4" /> Exit Map
-            </Button>
-            
-            {/* Fullscreen Iframe (Using cache-busting query parameter to force reload the fresh layout) */}
-            <iframe 
-              src="/esbern_map.html?v=5" 
-              className="absolute inset-0 w-full h-full border-0"
-            />
-          </div>
+          {activeTab === "map" && (
+            <div className="fixed inset-0 z-[100] w-screen h-screen bg-[#120a05]">
+              {/* Floating Exit Button */}
+              <Button 
+                onClick={() => setActiveTab("sheet")}
+                className="fixed top-4 right-4 z-[110] bg-[#4a1212] hover:bg-[#631c1c] text-amber-200 border border-amber-600/50 font-cinzel text-xs py-2 px-4 shadow-2xl flex items-center gap-2"
+              >
+                <X className="w-4 h-4" /> Exit Map
+              </Button>
+              
+              {/* Fullscreen Iframe (Using cache-busting query parameter to force reload the fresh layout) */}
+              <iframe 
+                src="/esbern_map.html?v=reverted" 
+                className="absolute inset-0 w-full h-full border-0"
+              />
+            </div>
+          )}
         </TabsContent>
       </Tabs>
         
