@@ -1620,20 +1620,20 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
       </TabsContent>
 
         <TabsContent value="map" className="mt-0">
-          <div className="fixed inset-0 z-[100] w-screen h-screen bg-[#111] flex flex-col">
-            {/* Floating Exit Button */}
-            <Button 
+          <div className="fixed inset-0 z-[100] w-screen h-screen bg-[#120a05] flex flex-col">
+            {/* Minimalist In-Universe Exit Button */}
+            <button 
               onClick={() => setActiveTab("sheet")}
-              className="fixed top-4 right-4 z-[110] bg-[#4a1212] hover:bg-[#631c1c] text-amber-200 border border-amber-600/50 font-cinzel text-xs py-2 px-4 shadow-2xl flex items-center gap-2"
+              className="fixed top-6 right-8 z-[110] text-[#e4d3b2]/60 hover:text-[#e4d3b2] hover:scale-110 transition-all p-2 text-2xl font-light"
+              title="Return to Sheet"
             >
-              <X className="w-4 h-4" /> Exit Map
-            </Button>
+              ✕
+            </button>
             
             {/* Fullscreen Iframe */}
             <iframe 
               src="/esbern_map.html" 
               className="w-full h-full border-0"
-              style={{ background: 'transparent' }}
             />
           </div>
         </TabsContent>
