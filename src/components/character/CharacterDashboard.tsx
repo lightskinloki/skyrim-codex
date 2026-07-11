@@ -349,6 +349,7 @@ interface CharacterDashboardProps {
 
 export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCharacter, onEndSession }: CharacterDashboardProps) {
   const [currentCharacter, setCurrentCharacter] = useState<Character>(character);
+  const [activeTab, setActiveTab] = useState("sheet");
   const [showAdvancement, setShowAdvancement] = useState(false);
   const [showGrantAP, setShowGrantAP] = useState(false);
   const [showEquipment, setShowEquipment] = useState(false);
@@ -1037,7 +1038,7 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
 
         </div>
 
-        <Tabs defaultValue="sheet" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <div className="mb-6 flex justify-center">
             <TabsList className="grid w-full max-w-md grid-cols-2 bg-card-secondary/60">
               <TabsTrigger value="sheet">Character Sheet</TabsTrigger>
@@ -1608,13 +1609,22 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
       </TabsContent>
 
         <TabsContent value="map" className="mt-0">
-          <Card className="p-2 bg-card-secondary/30 border border-border/40 shadow-2xl">
+          <div className="fixed inset-0 z-[100] w-screen h-screen bg-[#111] flex flex-col">
+            {/* Floating Exit Button */}
+            <Button 
+              onClick={() => setActiveTab("sheet")}
+              className="fixed top-4 right-4 z-[110] bg-[#4a1212] hover:bg-[#631c1c] text-amber-200 border border-amber-600/50 font-cinzel text-xs py-2 px-4 shadow-2xl flex items-center gap-2"
+            >
+              <X className="w-4 h-4" /> Exit Map
+            </Button>
+            
+            {/* Fullscreen Iframe */}
             <iframe 
               src="/esbern_map.html" 
-              className="w-full h-[calc(100vh-210px)] border-0 rounded-md"
+              className="w-full h-full border-0"
               style={{ background: 'transparent' }}
             />
-          </Card>
+          </div>
         </TabsContent>
       </Tabs>
         
