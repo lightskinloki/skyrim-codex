@@ -1,0 +1,1934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>ESBERN'S WEB — Conspiracy Board</title>
+  <!-- Google Fonts for rustic/handwritten TTRPG feel -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=IM+Fell+DW+Pica:ital@0;1&family=Special+Elite&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --wood-dark: #1e130c;
+      --wood-light: #4a301c;
+      --parchment: #e4d3b2;
+      --parchment-shadow: rgba(40, 25, 10, 0.4);
+      --red-string: #9e1b1b;
+      --grey-string: #4f4f4f;
+      --blue-string: #2a5a7a;
+      --yellow-string: #cfa83c;
+      --ink: #2b251d;
+      --pencil: #575249;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background: radial-gradient(circle, #2d1c10 0%, #120a05 100%);
+      color: var(--ink);
+      font-family: 'IM Fell DW Pica', serif;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Corkboard / Wood Wall background layer */
+    #board-wrapper {
+      position: relative;
+      width: 1414px;
+      height: 1000px;
+      background: radial-gradient(circle, #3e2819 60%, #1e120b 100%);
+      border: 24px solid;
+      border-image: linear-gradient(to bottom, #5c3c26, #2d1c10, #5c3c26) 24;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8), inset 0 0 40px rgba(0, 0, 0, 0.7);
+      transform-origin: center center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    /* Pinned Parchment Map */
+    #map-container {
+      position: relative;
+      width: 1330px;
+      height: 940px;
+      background-image: url('skyrimmap.jpg');
+      background-size: 100% 100%;
+      background-position: center;
+      box-shadow: 3px 5px 25px var(--parchment-shadow), inset 0 0 80px rgba(139, 105, 60, 0.2);
+      border-radius: 4px;
+      transition: transform 0.4s ease-out;
+    }
+
+    /* SVG Overlay for Connections, Pins, and Interactions */
+    #svg-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 1330px;
+      height: 940px;
+      z-index: 10;
+      pointer-events: auto;
+    }
+
+    /* Canvas for Physics Twin Strings */
+    #physics-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 1330px;
+      height: 940px;
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    /* Canvas for Charcoal Drawing */
+    #sketch-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 1330px;
+      height: 940px;
+      z-index: 8;
+      pointer-events: none;
+      cursor: crosshair;
+    }
+
+    #sketch-canvas.active {
+      pointer-events: auto;
+    }
+
+    .pinned-note {
+      position: absolute;
+      width: 140px;
+      max-height: 400px;
+      min-height: 26px;
+      background: #faf0db;
+      border: 1px solid #dcd1ba;
+      box-shadow: 2px 4px 10px rgba(0,0,0,0.25);
+      padding: 10px 10px 14px 10px;
+      font-family: 'Special Elite', monospace;
+      font-size: 10px;
+      line-height: 1.2;
+      transform-origin: center 5px;
+      cursor: grab;
+      z-index: 12;
+      transition: max-height 0.4s ease-in-out, padding 0.4s ease-in-out, background 0.4s ease-in-out, box-shadow 0.15s;
+      overflow: hidden;
+    }
+
+    .pinned-note.collapsed {
+      max-height: 26px;
+      min-height: 26px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      box-shadow: 1px 3px 6px rgba(0,0,0,0.2);
+      background: linear-gradient(to bottom, #faf0db 0%, #d8c8a8 50%, #c0b090 100%);
+      border-bottom: 2px solid #a89878;
+    }
+
+    .pinned-note.collapsed .note-title {
+      border-bottom: none !important;
+      margin-bottom: 0 !important;
+      padding-bottom: 0 !important;
+    }
+
+    .pinned-note:active {
+      cursor: grabbing;
+      box-shadow: 4px 10px 20px rgba(0,0,0,0.3);
+    }
+
+
+
+    /* Sidebar controls drawer (looks like a wooden/metal tray) */
+    #tool-tray {
+      position: absolute;
+      left: 20px;
+      bottom: 20px;
+      width: 320px;
+      background: #2e1d11;
+      border: 4px solid #4a301c;
+      border-radius: 8px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6), inset 0 0 15px rgba(0,0,0,0.8);
+      z-index: 100;
+      color: #dfd0bb;
+      padding: 15px;
+      font-family: 'Special Elite', monospace;
+      font-size: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    #tool-tray.collapsed {
+      transform: translateY(calc(100% - 48px));
+    }
+
+    #tool-tray h2 {
+      font-size: 14px;
+      text-align: center;
+      border-bottom: 2px solid #5d3f29;
+      padding-bottom: 5px;
+      color: #ffebcc;
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .tray-section {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .tray-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Buttons inside the tray */
+    .tray-btn {
+      background: #4a301c;
+      border: 2px solid #5d3f29;
+      color: #dfd0bb;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: 'Special Elite', monospace;
+      font-size: 11px;
+      transition: all 0.15s;
+      outline: none;
+    }
+
+    .tray-btn:hover {
+      background: #5d3f29;
+      color: #fff;
+      box-shadow: 0 0 5px rgba(255, 235, 204, 0.3);
+    }
+
+    .tray-btn.active {
+      background: #8b5d33;
+      border-color: #ffebcc;
+      color: #fff;
+    }
+
+    /* Spools of colored Twine */
+    .spool-container {
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 0;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 4px;
+    }
+
+    .spool {
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      border: 3px solid #1a0f0a;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: grab;
+      position: relative;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+      transition: transform 0.1s;
+    }
+
+    .spool:hover {
+      transform: scale(1.08);
+    }
+
+    .spool::after {
+      content: '';
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #4a301c;
+      border: 2px solid #1a0f0a;
+    }
+
+    .spool-red { background: repeating-radial-gradient(circle, var(--red-string), var(--red-string) 4px, #5a0d0d 8px); }
+    .spool-grey { background: repeating-radial-gradient(circle, var(--grey-string), var(--grey-string) 4px, #2a2a2a 8px); }
+    .spool-blue { background: repeating-radial-gradient(circle, var(--blue-string), var(--blue-string) 4px, #1a3a5a 8px); }
+    .spool-yellow { background: repeating-radial-gradient(circle, var(--yellow-string), var(--yellow-string) 4px, #8a6a1c 8px); }
+
+    /* Detail Inspector (parchment note card on the right) */
+    #note-inspector {
+      position: absolute;
+      right: 20px;
+      top: 20px;
+      width: 360px;
+      max-height: 940px;
+      background: #f1dfbc;
+      background-image: radial-gradient(rgba(139,105,60,0.05) 1px, transparent 0);
+      background-size: 24px 24px;
+      border: 1px solid #c2b093;
+      box-shadow: 5px 10px 30px rgba(0,0,0,0.4), inset 0 0 60px rgba(100, 70, 40, 0.15);
+      z-index: 101;
+      padding: 24px;
+      border-radius: 2px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      transform: translateX(400px);
+      transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+      font-family: 'IM Fell DW Pica', serif;
+      line-height: 1.45;
+    }
+
+    #note-inspector.open {
+      transform: translateX(0);
+    }
+
+    #note-inspector .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 20px;
+      cursor: pointer;
+      color: #7b6a52;
+      font-weight: bold;
+    }
+
+    #note-inspector h3 {
+      font-family: 'Special Elite', monospace;
+      font-size: 18px;
+      border-bottom: 1px dashed #7b6a52;
+      padding-bottom: 6px;
+      color: #5d1b1b;
+    }
+
+    #note-inspector .meta-tag {
+      font-family: 'Special Elite', monospace;
+      font-size: 11px;
+      background: rgba(139, 105, 60, 0.15);
+      padding: 3px 8px;
+      border-radius: 4px;
+      display: inline-block;
+      margin-right: 5px;
+      color: #65543c;
+    }
+
+    #note-inspector .content-body {
+      font-size: 15px;
+      color: #3d352b;
+      overflow-y: auto;
+      flex-grow: 1;
+      max-height: 600px;
+      padding-right: 8px;
+    }
+
+    /* Scrollbar styling for inspector contents */
+    #note-inspector .content-body::-webkit-scrollbar {
+      width: 6px;
+    }
+    #note-inspector .content-body::-webkit-scrollbar-thumb {
+      background-color: #a49175;
+      border-radius: 3px;
+    }
+
+    #note-inspector .quote {
+      font-style: italic;
+      border-left: 3px solid #5d1b1b;
+      padding-left: 10px;
+      margin: 12px 0;
+      color: #4a3825;
+      background: rgba(139, 105, 60, 0.04);
+    }
+
+    /* Target Pins (SVG shapes) */
+    .pin-target {
+      cursor: pointer;
+      filter: drop-shadow(2px 3px 3px rgba(0,0,0,0.5));
+    }
+    .pin-target:hover {
+      filter: drop-shadow(2px 5px 6px rgba(0,0,0,0.6)) brightness(1.2);
+    }
+
+    /* Live Twine Drawing Thread line */
+    #drawing-line {
+      stroke: var(--red-string);
+      stroke-width: 4px;
+      stroke-dasharray: 4 4;
+      pointer-events: none;
+      display: none;
+    }
+
+    /* Calibration Info Box (Top Right, hidden by default) */
+    #calibration-box {
+      position: absolute;
+      left: 20px;
+      top: 20px;
+      background: rgba(30, 20, 10, 0.95);
+      border: 3px solid #ffebcc;
+      color: #ffebcc;
+      padding: 12px 18px;
+      font-family: monospace;
+      font-size: 11px;
+      z-index: 1000;
+      border-radius: 6px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.7);
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      max-width: 450px;
+    }
+
+    #calibration-box h3 {
+      font-size: 13px;
+      color: #ff9900;
+      border-bottom: 1px solid #555;
+      padding-bottom: 4px;
+    }
+
+    #calibration-box textarea {
+      background: #111;
+      border: 1px solid #444;
+      color: #00ff00;
+      padding: 6px;
+      width: 100%;
+      height: 120px;
+      resize: vertical;
+      font-family: monospace;
+      font-size: 10px;
+    }
+
+    /* Help & Info Badge in top center */
+    #info-badge {
+      position: absolute;
+      top: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(18, 10, 5, 0.7);
+      padding: 6px 16px;
+      border-radius: 20px;
+      border: 1px solid rgba(139, 105, 60, 0.3);
+      color: #c9bda9;
+      font-family: 'Special Elite', monospace;
+      font-size: 11px;
+      z-index: 90;
+      pointer-events: none;
+      letter-spacing: 1px;
+      text-shadow: 1px 1px 2px #000;
+    }
+
+    /* Canvas brush visual indicator */
+    #brush-indicator {
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #fff;
+      border-radius: 50%;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      z-index: 999;
+      display: none;
+      box-shadow: 0 0 3px #000;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="info-badge">ESBERN'S CART WEB — TABLE PROP</div>
+
+  <!-- Calibration Info Panel (Ctrl+Shift+C to toggle) -->
+  <div id="calibration-box">
+    <h3>⚙️ PIN GEOGRAPHY CALIBRATOR</h3>
+    <div>Drag any pin to align it on the map. Copy the config below:</div>
+    <textarea id="calibration-output" readonly></textarea>
+    <div>Press <kbd>Ctrl+Shift+C</kbd> again to lock positions and hide this board.</div>
+  </div>
+
+  <div id="brush-indicator"></div>
+
+  <div id="board-wrapper">
+    <div id="map-container">
+      <!-- Physics twine strands are drawn here -->
+      <canvas id="physics-canvas"></canvas>
+      
+      <!-- Player charcoal drawing canvas -->
+      <canvas id="sketch-canvas"></canvas>
+
+      <!-- Container for swinging paper notes -->
+      <div id="notes-container" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:11;"></div>
+
+      <!-- SVG Overlay for nodes, interactions, and dynamic strings -->
+      <svg id="svg-overlay" viewBox="0 0 1330 940" width="1330" height="940">
+        <!-- Marker definitions for twine drop-shadow filters -->
+        <defs>
+          <filter id="string-shadow" x="-10%" y="-10%" width="120%" height="120%">
+            <feDropShadow dx="2" dy="4" stdDeviation="3" flood-color="#000000" flood-opacity="0.6"/>
+          </filter>
+        </defs>
+
+        <!-- Temporary thread line used while dragging twine to link nodes -->
+        <line id="drawing-line"></line>
+
+        <!-- Group holding active pins -->
+        <g id="pins-group"></g>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Sidebar Tool Tray (Wooden interface drawer) -->
+  <div id="tool-tray">
+    <h2>🗺️ CART TRAY <span id="tray-toggle-arrow" style="font-size:10px; transition:transform 0.3s; margin-left:8px;">▼</span></h2>
+
+    <!-- Map Filtering / Thread Layers -->
+    <div class="tray-section">
+      <span>THREAD FILTER:</span>
+      <div style="display:flex; gap: 4px;">
+        <button id="filter-all" class="tray-btn active" style="flex:1;">All</button>
+        <button id="filter-red" class="tray-btn" style="flex:1;">Dragons</button>
+        <button id="filter-grey" class="tray-btn" style="flex:1;">Unmaking</button>
+      </div>
+    </div>
+
+    <!-- Twine Spools (Drag to draw connections) -->
+    <div class="tray-section">
+      <span>DRAW TWINE CONNECTION:</span>
+      <div class="spool-container">
+        <div class="spool spool-red" id="spool-red" title="Dragons (Esbern)" draggable="true"></div>
+        <div class="spool spool-grey" id="spool-grey" title="Unmaking (Esbern)" draggable="true"></div>
+        <div class="spool spool-blue" id="spool-blue" title="Theory A (Blue)" draggable="true"></div>
+        <div class="spool spool-yellow" id="spool-yellow" title="Theory B (Yellow)" draggable="true"></div>
+      </div>
+      <div style="font-size:9px; text-align:center; color:#a49175; font-style:italic;">Drag spool to map node to connect</div>
+    </div>
+
+    <!-- Charcoal Draw / Smudge / Wipe Tools -->
+    <div class="tray-section">
+      <span>MAP MARKINGS:</span>
+      <div style="display:flex; gap: 4px;">
+        <button id="tool-charcoal" class="tray-btn">Charcoal</button>
+        <button id="tool-rag" class="tray-btn">Cloth Rag</button>
+        <button id="tool-clear" class="tray-btn" style="background:#5a1d1d;">Wipe Clean</button>
+      </div>
+    </div>
+
+    <!-- Board State options -->
+    <div class="tray-section" style="margin-top:auto; border-top:1px solid #5d3f29; padding-top:10px;">
+      <div style="display:flex; justify-content:space-between; font-size:10px;">
+        <span style="color:#7b6a52; cursor:pointer;" onclick="toggleCalibration()">[Gear Calibration]</span>
+        <span style="color:#7b6a52; cursor:pointer;" onclick="resetTwines()">[Reset Twines]</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detailed Note Card inspector -->
+  <div id="note-inspector">
+    <div class="close-btn" id="close-inspector">×</div>
+    <h3 id="inspector-title">Location Notes</h3>
+    <div>
+      <span class="meta-tag" id="inspector-type">LORE</span>
+      <span class="meta-tag" id="inspector-status" style="background:#c93c3c; color:#fff;">THREAT</span>
+    </div>
+    <div class="content-body" id="inspector-content">
+      Click a pin to view Esbern's field logs and records of the apocalypse.
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // 1. DATA / CAMPAIGN STATE CONFIGURATION
+    // =========================================================================
+    
+    // Core data representing where Esbern's map sits in the campaign progression.
+    const BOARD_STATE = {
+      // Unlock flags. Toggle dynamically to represent campaign narrative changes.
+      konahrikUnlocked: false, // Turned on when they feed him the Mask prophecy.
+      
+      // Node Locations mapping to coordinates on the custom image.
+      // Coordinates can be fine-tuned interactively in Calibration Mode.        // Red Thread - Dragons / Dragon Cult (Tomb coordinates)
+        nahkriin: {
+          id: "nahkriin",
+          name: "Nahkriin's Tomb",
+          type: "dragon",
+          x: 86.1, y: 66.4, // Skuldafn-aligned
+          status: "Sleeping",
+          color: "#9e1b1b",
+          notes: "Nahkriin. The Guardian. Sleeping under the eastern peaks. Esbern: 'His agents are working the border holds, fabricating skirmishes. False flags to disrupt the Legion vanguards.'",
+          quote: "The sky is Nahkriin's fortress, but he is waiting on the dragon stone."
+        },
+        vokun: {
+          id: "vokun",
+          name: "Vokun's Tomb",
+          type: "dragon",
+          x: 39.4, y: 16.9, // High Gate Ruins
+          status: "Sleeping",
+          color: "#9e1b1b",
+          notes: "Vokun the Shadow. Pinned to the northern coast. Dawnstar. Antoine's First Cohort died of Alfonso's plague under Dawnstar's walls; Vokun watched and did nothing. He is letting the rot work for him.",
+          quote: "A dragon priest does not command the plague, he simply inherits the dead."
+        },
+        rahgot: {
+          id: "rahgot",
+          name: "Rahgot's Tomb",
+          type: "dragon",
+          x: 85.1, y: 92.0, // Forelhost
+          status: "Dangling", // Unique state: pin moved off tomb and dangling
+          color: "#9e1b1b",
+          notes: "Rahgot the Angry. Pinned to Forelhost. Risen on his own and walked out—the first empty tomb. Esbern: 'He was a priest of fury, but he's planning three sieges at once. Calculation. Grief doesn't change a dragon priest into a general. He is serving an order.'",
+          quote: "The Angry does not wait. And yet, he is waiting."
+        },
+        otar: {
+          id: "otar",
+          name: "Otar's Tomb",
+          type: "dragon",
+          x: 5.9, y: 43.1, // Ragnvald
+          status: "Awake",
+          color: "#9e1b1b",
+          notes: "Otar the Mad. Woke in Ragnvald and is building quietly in the Reach rather than burning it. Esbern notes: 'The madman is coordinating. They are waiting for something. A sixth thing.'",
+          quote: "They are waiting for him to open something. And when it opens, they mean to go through it too."
+        },
+        morokei: {
+          id: "morokei",
+          name: "Morokei's Tomb",
+          type: "dragon",
+          x: 40.2, y: 38.2, // Labyrinthian
+          status: "Sleeping",
+          color: "#9e1b1b",
+          notes: "Morokei. Sleeping in Labyrinthian. Pinned to the ruins. Esbern: 'I have heard nothing from the ruins, but Delphine's old reports say the seals are thin.'",
+          quote: "The dragon stone will write his name in fresh ink if we fail."
+        },
+        konahrik: {
+          id: "konahrik",
+          name: "Konahrik (The Sixth Mask)",
+          type: "dragon",
+          x: 54.0, y: 30.0, // Placed above the five, hidden initially
+          status: "Prophecy",
+          color: "#9e1b1b",
+          notes: "Konahrik. A sixth mask, above the five. Found carved in Rahgot's tomb: 'when the five become one, the faithful shall ascend.' Esbern: 'It's an order. They're not just waiting for Alduin. They're waiting for Konahrik.'",
+          quote: "The faithful shall ascend. Five heads, one crown, and a doorway opened."
+        },
+        kynesgrove: {
+          id: "kynesgrove",
+          name: "Kynesgrove Mounds",
+          type: "dragon",
+          x: 74.8, y: 48.3,
+          status: "Awakened",
+          color: "#9e1b1b",
+          notes: "Kynesgrove. The burial mounds. They watched a dragon rise here—the first soul eaten by the unacknowledged Dragonborn. The cult is panicking; they know something is taking their souls forever.",
+          quote: "Dragons do not fear death, but they fear the soul-eating. We have made them afraid."
+        },
+        bleak_falls: {
+          id: "bleak_falls",
+          name: "Bleak Falls Barrow",
+          type: "dragon_target",
+          x: 43.5, y: 67.0,
+          status: "Target",
+          color: "#9e1b1b",
+          notes: "Bleak Falls Barrow. Pinned in charcoal as the strategic key. The Dragonstone sits in its depths. Esbern: 'Without it, we wait for them to find us. Everything we do is a flinch, not a plan. Bring me the stone.'",
+          quote: "The map of graves is our only shield."
+        },
+ 
+        // Grey Thread - Root-Rot / Unmaking
+        eldergleam: {
+          id: "eldergleam",
+          name: "The Eldergleam (Eastmarch)",
+          type: "rot",
+          x: 70.5, y: 60.4,
+          status: "Corrupted",
+          color: "#4f4f4f",
+          notes: "The Eastmarch roots of the Eldergleam network. Corrupted. Bleeding black sap and killing the surrounding soil. Esbern: 'The Eldergleam's true location is a secret I cannot trace, but this rot is traveling along its veins. This is not the priests.'",
+          quote: "A sick branch whose roots reach every hold."
+        },
+        steps_7000: {
+          id: "steps_7000",
+          name: "The 7,000 Steps",
+          type: "rot",
+          x: 62.9, y: 69.4, // Near Ivarstead bridge
+          status: "Bleeding",
+          color: "#4f4f4f",
+          notes: "The sacred path. Klimmek's report: the Waystones are bleeding black sap. Localized time distortion is beginning. The walk stretches; footprints appear before the boot lands.",
+          quote: "The steps are bleeding. Time itself runs in the cellar."
+        },
+        throat: {
+          id: "throat",
+          name: "Throat of the World",
+          type: "rot",
+          x: 56.0, y: 62.8,
+          status: "Circled in Charcoal",
+          color: "#4f4f4f",
+          notes: "Snow-Throat. A Tower. One of the pillars holding the world up. If the corruption cracks it, time itself runs in the cellar. Esbern: 'I don't know who's doing this. I don't know what they want. I only know it isn't the priests.'",
+          quote: "The Throat holds up the floor of the sky. If the pillar cracks, time spills."
+        },
+        darkwater: {
+          id: "darkwater",
+          name: "Darkwater Crossing",
+          type: "rot",
+          x: 70.0, y: 64.5,
+          status: "Consumed",
+          color: "#4f4f4f",
+          notes: "Darkwater Crossing. Consumed by root-rot. Refugees fled the black oil weeks ago. The corruption crawls through the volcanic springs.",
+          quote: "Another node collapsed. The firewall is failing."
+        }
+      },
+
+      // Twine links. Authored links between specific nodes.
+      // Red links represent Esbern's dragon map. Grey represents the root-rot.
+      twines: [
+        // Red Twines (Dragons)
+        { from: "nahkriin", to: "vokun", color: "red" },
+        { from: "vokun", to: "morokei", color: "red" },
+        { from: "morokei", to: "otar", color: "red" },
+        { from: "otar", to: "rahgot", color: "red" },
+        { from: "rahgot", to: "kynesgrove", color: "red" },
+        { from: "kynesgrove", to: "bleak_falls", color: "red" },
+        
+        // Grey Twines (Rot)
+        { from: "eldergleam", to: "darkwater", color: "grey" },
+        { from: "darkwater", to: "steps_7000", color: "grey" },
+        { from: "steps_7000", to: "throat", color: "grey" }
+      ]
+    };
+
+    // =========================================================================
+    // 1B. IN-UNIVERSE HANDWRITTEN PAPER NOTES
+    // =========================================================================
+
+    const NOTES_DATA = [
+      {
+        id: "note-twine-warning",
+        title: "Esbern's Warning",
+        text: "RED twine: the dragons (a war).\nGREY twine: the root-rot (an unmaking).\n\nDo NOT let them touch. Two different authors. Muddle them and you parry the wrong one.",
+        x: 24, y: 70,
+        width: 160,
+        bg: "#faf0db",
+        pinColor: "#9e1b1b"
+      },
+      {
+        id: "note-world-pillar",
+        title: "The World-Pillar",
+        text: "Snow-Throat. Circled twice in charcoal. It is a pillar holding up the floor of the world. If the root-rot cracks it, time itself runs in the cellar. Not the Dragon Cult—different methods, different authors.",
+        x: 72, y: 82,
+        width: 160,
+        bg: "#faf0db",
+        pinColor: "#4f4f4f"
+      },
+      {
+        id: "note-burial-mounds",
+        title: "The Burial Mounds",
+        text: "Burial mounds are waking across the holds. Without the Whiterun Dragonstone, I am guessing at graves. They are rising in the order of their interment. Alduin is rebuilding his court.",
+        x: 24, y: 22,
+        width: 160,
+        bg: "#f3eada",
+        pinColor: "#9e1b1b"
+      },
+      {
+        id: "note-strategy-falls",
+        title: "Graves Strategy",
+        text: "Priority: Bleak Falls Barrow. The Dragonstone holds the key mapping mounds to the sky-paths. Until we have it, we are only guessing at graves.",
+        x: 12, y: 15,
+        width: 150,
+        bg: "#f3eada",
+        pinColor: "#9e1b1b"
+      }
+    ];
+
+    class PinnedNoteCard {
+      constructor(data) {
+        this.data = data;
+        this.x = data.x;
+        this.y = data.y;
+        this.angle = (Math.random() - 0.5) * 0.2;
+        this.angularVelocity = 0;
+        this.angularAcceleration = 0;
+        this.length = 13; // start small matching collapsed height / 2
+        this.isDragging = false;
+        this.isMovingPin = false; // Drag push-pin to relocate note
+        this.isCollapsed = true; // Start collapsed like a little scroll
+        this.dragStartX = 0;
+        this.dragStartY = 0;
+        this.dom = null;
+        this.createDOM();
+      }
+
+      createDOM() {
+        const div = document.createElement('div');
+        div.className = 'pinned-note collapsed';
+        div.id = this.data.id;
+        div.style.width = `${this.data.width}px`;
+        div.style.background = this.data.bg;
+        div.style.pointerEvents = 'auto';
+
+        div.innerHTML = `
+          <div class="note-title" style="font-family:'Special Elite', monospace; font-size:10px; font-weight:bold; border-bottom:1px dashed rgba(0,0,0,0.2); padding-bottom:3px; margin-bottom:5px; color:#5d1b1b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+            ${this.data.title}
+          </div>
+          <div class="note-body" style="font-size:9.5px; line-height:1.25; color:#2b251d; white-space:pre-wrap;">
+            ${this.data.text}
+          </div>
+        `;
+
+        const pinDot = document.createElement('div');
+        pinDot.style.position = 'absolute';
+        pinDot.style.top = '-6px';
+        pinDot.style.left = '50%';
+        pinDot.style.transform = 'translateX(-50%)';
+        pinDot.style.width = '10px';
+        pinDot.style.height = '10px';
+        pinDot.style.borderRadius = '50%';
+        pinDot.style.background = `radial-gradient(circle, #fff 0%, ${this.data.pinColor} 60%, #000 100%)`;
+        pinDot.style.boxShadow = '1px 2px 3px rgba(0,0,0,0.4)';
+        pinDot.style.cursor = 'grab'; // Indicates grabability
+        div.appendChild(pinDot);
+
+        div.addEventListener('click', (e) => {
+          if (isCalibrationMode) return;
+          e.stopPropagation();
+        });
+
+        div.addEventListener('dblclick', (e) => {
+          if (isCalibrationMode) return;
+          e.stopPropagation();
+          inspectNode({
+            id: this.data.id,
+            name: this.data.title,
+            type: "field_note",
+            status: "pinned",
+            notes: this.data.text.replace(/\n/g, "<br>"),
+            quote: ""
+          });
+        });
+
+        // Dragging the card body sways/wiggles it physically (already active)
+        div.addEventListener('mousedown', (e) => {
+          if (isCalibrationMode) return;
+          this.isDragging = true;
+          this.dragStartX = e.clientX;
+          this.dragStartY = e.clientY;
+          div.style.cursor = 'grabbing';
+          e.stopPropagation();
+          playPaperRustle();
+        });
+
+        // Dragging the pinDot physically moves the note's anchor on the map
+        pinDot.addEventListener('mousedown', (e) => {
+          if (isCalibrationMode) return;
+          this.isMovingPin = true;
+          pinDot.style.cursor = 'grabbing';
+          e.stopPropagation();
+          playWoodKnock();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+          if (this.isMovingPin) {
+            const rect = container.getBoundingClientRect();
+            const scale = 1414 / wrapper.getBoundingClientRect().width;
+            const mx = (e.clientX - rect.left) * scale;
+            const my = (e.clientY - rect.top) * scale;
+            
+            // Clamp note pin within map boundary
+            const clampX = Math.max(20, Math.min(mx, canvasWidth - 20));
+            const clampY = Math.max(20, Math.min(my, canvasHeight - 20));
+
+            this.x = parseFloat(((clampX / canvasWidth) * 100).toFixed(1));
+            this.y = parseFloat(((clampY / canvasHeight) * 100).toFixed(1));
+          } else if (this.isDragging) {
+            const rect = container.getBoundingClientRect();
+            const scale = 1414 / wrapper.getBoundingClientRect().width;
+            const mx = (e.clientX - rect.left) * scale;
+            const my = (e.clientY - rect.top) * scale;
+            const px = (this.x / 100) * canvasWidth;
+            const py = (this.y / 100) * canvasHeight;
+
+            const dx = mx - px;
+            const dy = my - py;
+            this.angle = Math.atan2(dx, dy);
+            this.angularVelocity = 0;
+          }
+        });
+
+        document.addEventListener('mouseup', (e) => {
+          if (this.isMovingPin) {
+            this.isMovingPin = false;
+            pinDot.style.cursor = 'grab';
+            playPaperRustle();
+            saveLocalState();
+          } else if (this.isDragging) {
+            this.isDragging = false;
+            div.style.cursor = 'grab';
+            playPaperRustle();
+            
+            const dx = e.clientX - this.dragStartX;
+            const dy = e.clientY - this.dragStartY;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            if (dist < 5) {
+              this.toggleCollapse();
+            }
+          }
+        });
+
+        document.getElementById('notes-container').appendChild(div);
+        this.dom = div;
+        
+        // Dynamically compute pendulum length based on initial rendered height
+        this.length = div.offsetHeight / 2;
+      }
+
+      toggleCollapse() {
+        this.isCollapsed = !this.isCollapsed;
+        if (this.isCollapsed) {
+          this.dom.classList.add('collapsed');
+        } else {
+          this.dom.classList.remove('collapsed');
+        }
+        playPaperRustle();
+      }
+
+      update(gravity, wind) {
+        const px = (this.x / 100) * canvasWidth;
+        const py = (this.y / 100) * canvasHeight;
+
+        // Dynamically compute pendulum length as it transitions
+        this.length = this.dom.offsetHeight / 2;
+
+        if (!this.isDragging) {
+          const gravityTorque = -0.05 * Math.sin(this.angle);
+          const windTorque = wind * 0.02;
+          this.angularAcceleration = gravityTorque + windTorque;
+          this.angularVelocity += this.angularAcceleration;
+          this.angularVelocity *= 0.94;
+          this.angle += this.angularVelocity;
+        }
+
+        const angleDeg = (this.angle * 180) / Math.PI;
+        this.dom.style.left = `${px - this.data.width/2}px`;
+        this.dom.style.top = `${py - 5}px`;
+        this.dom.style.transform = `rotate(${-angleDeg}deg)`;
+      }
+    }
+
+    // =========================================================================
+    // 2. PHYSICS ENGINE (VERLET INTEGRATION FOR SAGGING TWINE)
+    // =========================================================================
+
+    class Particle {
+      constructor(x, y, isPinned = false) {
+        this.x = x;
+        this.y = y;
+        this.px = x;
+        this.py = y;
+        this.isPinned = isPinned;
+      }
+    }
+
+    class Link {
+      constructor(p1, p2, length) {
+        this.p1 = p1;
+        this.p2 = p2;
+        this.length = length;
+      }
+    }
+
+    class TwineString {
+      constructor(fromNode, toNode, color = "red") {
+        this.fromNode = fromNode;
+        this.toNode = toNode;
+        this.color = color;
+        this.particles = [];
+        this.links = [];
+        
+        // Build the string segments
+        const steps = 12;
+        const p1 = new Particle(0, 0, true);
+        const p2 = new Particle(0, 0, true);
+        
+        this.particles.push(p1);
+        for(let i = 1; i < steps; i++) {
+          this.particles.push(new Particle(0, 0, false));
+        }
+        this.particles.push(p2);
+
+        this.updateEndpoints();
+        this.initPositions();
+        
+        // Build distance constraints between segments
+        const segLen = this.getDirectDistance() / steps * 1.15; // Slack multiplier
+        for(let i = 0; i < this.particles.length - 1; i++) {
+          this.links.push(new Link(this.particles[i], this.particles[i+1], segLen));
+        }
+      }
+
+      getDirectDistance() {
+        const dx = this.toNode.x - this.fromNode.x;
+        const dy = this.toNode.y - this.fromNode.y;
+        return Math.sqrt(dx*dx + dy*dy);
+      }
+
+      updateEndpoints() {
+        const startX = (this.fromNode.x / 100) * canvasWidth;
+        const startY = (this.fromNode.y / 100) * canvasHeight;
+        const endX = (this.toNode.x / 100) * canvasWidth;
+        const endY = (this.toNode.y / 100) * canvasHeight;
+
+        this.particles[0].x = startX;
+        this.particles[0].y = startY;
+        this.particles[this.particles.length - 1].x = endX;
+        this.particles[this.particles.length - 1].y = endY;
+      }
+
+      initPositions() {
+        const startX = this.particles[0].x;
+        const startY = this.particles[0].y;
+        const endX = this.particles[this.particles.length - 1].x;
+        const endY = this.particles[this.particles.length - 1].y;
+
+        for(let i = 1; i < this.particles.length - 1; i++) {
+          const ratio = i / (this.particles.length - 1);
+          const px = startX + (endX - startX) * ratio;
+          const py = startY + (endY - startY) * ratio + 30 * Math.sin(ratio * Math.PI); // Sag initial curve
+          this.particles[i].x = px;
+          this.particles[i].y = py;
+          this.particles[i].px = px;
+          this.particles[i].py = py;
+        }
+      }
+
+      update(gravity, wind) {
+        this.updateEndpoints();
+        
+        // Verlet step
+        for(let i = 1; i < this.particles.length - 1; i++) {
+          const p = this.particles[i];
+          const vx = p.x - p.px;
+          const vy = p.y - p.py;
+          
+          p.px = p.x;
+          p.py = p.y;
+          
+          p.x += vx + wind;
+          p.y += vy + gravity;
+        }
+
+        // Satisfy distance constraints (8 iterations for higher stiffness)
+        for(let iter = 0; iter < 8; iter++) {
+          for(const l of this.links) {
+            const dx = l.p2.x - l.p1.x;
+            const dy = l.p2.y - l.p1.y;
+            const dist = Math.sqrt(dx*dx + dy*dy) || 1;
+            const diff = l.length - dist;
+            
+            const p1Movable = !l.p1.isPinned;
+            const p2Movable = !l.p2.isPinned;
+            
+            if (p1Movable && p2Movable) {
+              const percent = (diff / dist) / 2;
+              const offsetRefX = dx * percent;
+              const offsetRefY = dy * percent;
+              l.p1.x -= offsetRefX;
+              l.p1.y -= offsetRefY;
+              l.p2.x += offsetRefX;
+              l.p2.y += offsetRefY;
+            } else if (p1Movable) {
+              const percent = (diff / dist);
+              const offsetRefX = dx * percent;
+              const offsetRefY = dy * percent;
+              l.p1.x -= offsetRefX;
+              l.p1.y -= offsetRefY;
+            } else if (p2Movable) {
+              const percent = (diff / dist);
+              const offsetRefX = dx * percent;
+              const offsetRefY = dy * percent;
+              l.p2.x += offsetRefX;
+              l.p2.y += offsetRefY;
+            }
+          }
+        }
+      }
+
+      draw(ctx) {
+        ctx.beginPath();
+        ctx.moveTo(this.particles[0].x, this.particles[0].y);
+        for(let i = 1; i < this.particles.length; i++) {
+          ctx.lineTo(this.particles[i].x, this.particles[i].y);
+        }
+        
+        // Styled shadows and twine colors
+        ctx.lineWidth = 4.5;
+        let strokeColor = 'rgba(0,0,0,0.5)';
+        switch(this.color) {
+          case "red": strokeColor = '#801313'; break;
+          case "grey": strokeColor = '#3a3a3a'; break;
+          case "blue": strokeColor = '#214e6b'; break;
+          case "yellow": strokeColor = '#aa821e'; break;
+        }
+        
+        ctx.strokeStyle = strokeColor;
+        ctx.stroke();
+
+        // Draw dynamic fiber threads slightly offset for twisted twine texture
+        ctx.beginPath();
+        ctx.moveTo(this.particles[0].x, this.particles[0].y);
+        for(let i = 1; i < this.particles.length; i++) {
+          ctx.lineTo(this.particles[i].x + 0.5, this.particles[i].y - 0.5);
+        }
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = this.color === "red" ? "#ff6666" : 
+                          this.color === "grey" ? "#777777" :
+                          this.color === "blue" ? "#6fa8d6" : "#ffeb99";
+        ctx.stroke();
+      }
+    }
+
+    // =========================================================================
+    // 3. MAIN APPLICATION LOGIC & SETUP
+    // =========================================================================
+
+    const wrapper = document.getElementById('board-wrapper');
+    const container = document.getElementById('map-container');
+    const svgOverlay = document.getElementById('svg-overlay');
+    const physicsCanvas = document.getElementById('physics-canvas');
+    const sketchCanvas = document.getElementById('sketch-canvas');
+    const pinsGroup = document.getElementById('pins-group');
+    const drawingLine = document.getElementById('drawing-line');
+    const noteInspector = document.getElementById('note-inspector');
+    const inspectorTitle = document.getElementById('inspector-title');
+    const inspectorType = document.getElementById('inspector-type');
+    const inspectorStatus = document.getElementById('inspector-status');
+    const inspectorContent = document.getElementById('inspector-content');
+
+    let canvasWidth = 1330;
+    let canvasHeight = 940;
+    
+    let isCalibrationMode = false;
+    let selectedNodeId = null;
+    let activeFilter = "all"; // all, red, grey
+
+    // Spool twine variables
+    let currentDrawingColor = null;
+    let drawingStartNode = null;
+    let pointerX = 0;
+    let pointerY = 0;
+
+    // Simulation twine arrays
+    const twinesList = [];
+    const notesList = [];
+
+    // Scale aspect ratio calculations
+    function adjustScale() {
+      const windowWidth = window.innerWidth;
+      const windowHeight = window.innerHeight;
+      const scaleX = windowWidth / 1414;
+      const scaleY = windowHeight / 1000;
+      const minScale = Math.min(scaleX, scaleY, 1); // Clamp to max 1.0 (actual size)
+      wrapper.style.transform = `scale(${minScale})`;
+    }
+    
+    window.addEventListener('resize', adjustScale);
+    adjustScale();
+
+    // Init canvases size
+    function initCanvases() {
+      physicsCanvas.width = canvasWidth;
+      physicsCanvas.height = canvasHeight;
+      sketchCanvas.width = canvasWidth;
+      sketchCanvas.height = canvasHeight;
+    }
+    initCanvases();
+
+    // =========================================================================
+    // 4. DRAWING & RENDERING PINS
+    // =========================================================================
+
+    function createPins() {
+      pinsGroup.innerHTML = '';
+      
+      // Filter out Konahrik if not unlocked
+      const nodesToRender = Object.values(BOARD_STATE.nodes).filter(node => {
+        if (node.id === "konahrik" && !BOARD_STATE.konahrikUnlocked) {
+          return false;
+        }
+        return true;
+      });
+
+      nodesToRender.forEach(node => {
+        const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        group.setAttribute('class', 'pin-target');
+        group.setAttribute('id', `g-pin-${node.id}`);
+        group.setAttribute('transform', `translate(${(node.x/100)*canvasWidth}, ${(node.y/100)*canvasHeight})`);
+        
+        // Click action (Disabled during calibration drag)
+        group.addEventListener('click', (e) => {
+          if (!isCalibrationMode) {
+            e.stopPropagation();
+            inspectNode(node);
+          }
+        });
+
+        // Drag handlers for Calibration Mode only (Disabled for players, Esbern's pins are locked)
+        let isDragging = false;
+        
+        group.addEventListener('mousedown', (e) => {
+          if (!isCalibrationMode) return;
+          isDragging = true;
+          selectedNodeId = node.id;
+          group.setAttribute('cursor', 'grabbing');
+          e.stopPropagation();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+          if (!isDragging || !isCalibrationMode) return;
+          const rect = container.getBoundingClientRect();
+          const scale = 1414 / wrapper.getBoundingClientRect().width; // accounts for scale transform
+          
+          let clientX = (e.clientX - rect.left) * scale;
+          let clientY = (e.clientY - rect.top) * scale;
+          
+          // Clamp inside container boundary
+          clientX = Math.max(10, Math.min(clientX, canvasWidth - 10));
+          clientY = Math.max(10, Math.min(clientY, canvasHeight - 10));
+
+          node.x = parseFloat(((clientX / canvasWidth) * 100).toFixed(1));
+          node.y = parseFloat(((clientY / canvasHeight) * 100).toFixed(1));
+
+          group.setAttribute('transform', `translate(${clientX}, ${clientY})`);
+          
+          // Re-trigger string endpoints updates immediately
+          twinesList.forEach(t => t.updateEndpoints());
+          updateCalibrationOutput();
+        });
+
+        document.addEventListener('mouseup', () => {
+          if (isDragging) {
+            isDragging = false;
+            group.setAttribute('cursor', 'pointer');
+            saveLocalState();
+          }
+        });
+
+        // 3D Styled SVG Push Pin elements
+        const pinShadow = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+        pinShadow.setAttribute('cx', '2');
+        pinShadow.setAttribute('cy', '4');
+        pinShadow.setAttribute('rx', '5');
+        pinShadow.setAttribute('ry', '3');
+        pinShadow.setAttribute('fill', 'rgba(0,0,0,0.4)');
+        group.appendChild(pinShadow);
+
+        const metalNeedle = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        metalNeedle.setAttribute('x1', '0');
+        metalNeedle.setAttribute('y1', '0');
+        metalNeedle.setAttribute('x2', '2');
+        metalNeedle.setAttribute('y2', '4');
+        metalNeedle.setAttribute('stroke', '#a0a0a0');
+        metalNeedle.setAttribute('stroke-width', '2.5');
+        metalNeedle.setAttribute('stroke-linecap', 'round');
+        group.appendChild(metalNeedle);
+
+        const pinHead = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        pinHead.setAttribute('cx', '-1');
+        pinHead.setAttribute('cy', '-5');
+        pinHead.setAttribute('r', '7');
+        
+        // Colors corresponding to Root-Rot vs Dragon apocalypse
+        let pinColor = '#d94b4b'; // Red default
+        if (node.type === "rot") pinColor = '#5e5e5e'; // Charcoal grey
+        if (node.type === "dragon_target") pinColor = '#b8a67c'; // Brass targets
+        if (node.status === "Dangling") pinColor = '#f03a3a'; // Hanging threat
+        
+        pinHead.setAttribute('fill', `radial-gradient(circle at 4px 4px, #ffffff 0%, ${pinColor} 50%, #1a0505 100%)`);
+        pinHead.setAttribute('fill', pinColor);
+        pinHead.setAttribute('stroke', '#1a0505');
+        pinHead.setAttribute('stroke-width', '1.5');
+        group.appendChild(pinHead);
+
+        // Label tag
+        const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        label.setAttribute('x', '12');
+        label.setAttribute('y', '-1');
+        label.setAttribute('font-family', 'Special Elite, monospace');
+        label.setAttribute('font-size', '10px');
+        label.setAttribute('fill', '#2d1c10');
+        label.setAttribute('font-weight', 'bold');
+        label.textContent = node.name;
+        
+        // Text backing card for readability
+        const backing = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        backing.setAttribute('x', '10');
+        backing.setAttribute('y', '-11');
+        backing.setAttribute('height', '14');
+        backing.setAttribute('fill', 'rgba(241,223,188,0.85)');
+        backing.setAttribute('stroke', '#7b6a52');
+        backing.setAttribute('stroke-width', '0.5');
+        backing.setAttribute('rx', '3');
+
+        group.appendChild(backing);
+        group.appendChild(label);
+        pinsGroup.appendChild(group);
+
+        // Adjust backing size dynamically to fit text
+        setTimeout(() => {
+          try {
+            const bbox = label.getBBox();
+            backing.setAttribute('width', bbox.width + 8);
+          } catch(e){}
+        }, 10);
+      });
+    }
+
+    // =========================================================================
+    // 5. TWINE CONNECTIONS & DRAW LOGIC
+    // =========================================================================
+
+    function buildTwineSimulations() {
+      twinesList.length = 0;
+      
+      // Filter list based on toggles
+      const filteredTwines = BOARD_STATE.twines.filter(t => {
+        if (activeFilter === "red" && t.color !== "red") return false;
+        if (activeFilter === "grey" && t.color !== "grey") return false;
+        
+        // Check if both nodes exist (Konahrik check)
+        const n1 = BOARD_STATE.nodes[t.from];
+        const n2 = BOARD_STATE.nodes[t.to];
+        if (!n1 || !n2) return false;
+        if (t.from === "konahrik" && !BOARD_STATE.konahrikUnlocked) return false;
+        if (t.to === "konahrik" && !BOARD_STATE.konahrikUnlocked) return false;
+
+        return true;
+      });
+
+      filteredTwines.forEach(t => {
+        const fromNode = BOARD_STATE.nodes[t.from];
+        const toNode = BOARD_STATE.nodes[t.to];
+        twinesList.push(new TwineString(fromNode, toNode, t.color));
+      });
+    }
+
+    // Drag and Drop Spool handlers
+    const spools = document.querySelectorAll('.spool');
+    spools.forEach(s => {
+      s.addEventListener('dragstart', (e) => {
+        currentDrawingColor = s.id.split('-')[1];
+        e.dataTransfer.setData('text/plain', currentDrawingColor);
+        
+        // Play spool pickup audio cue
+        playWoodKnock();
+      });
+    });
+
+    svgOverlay.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      
+      // Track drag coordinate relative to map container
+      const rect = container.getBoundingClientRect();
+      const scale = 1414 / wrapper.getBoundingClientRect().width;
+      pointerX = (e.clientX - rect.left) * scale;
+      pointerY = (e.clientY - rect.top) * scale;
+      
+      // Find closest node to draw temporary drag indicator
+      const closestNode = findClosestNode(pointerX, pointerY);
+      if (closestNode.dist < 50) {
+        const n = BOARD_STATE.nodes[closestNode.id];
+        drawingLine.style.display = 'block';
+        
+        let startX, startY;
+        if (drawingStartNode) {
+          startX = (drawingStartNode.x/100)*canvasWidth;
+          startY = (drawingStartNode.y/100)*canvasHeight;
+        } else {
+          // If we haven't locked onto a starting node yet, lock to closest
+          drawingStartNode = n;
+          startX = (n.x/100)*canvasWidth;
+          startY = (n.y/100)*canvasHeight;
+        }
+
+        drawingLine.setAttribute('x1', startX);
+        drawingLine.setAttribute('y1', startY);
+        drawingLine.setAttribute('x2', pointerX);
+        drawingLine.setAttribute('y2', pointerY);
+        drawingLine.setAttribute('stroke', getTwineColorHex(currentDrawingColor));
+      } else if (!drawingStartNode) {
+        drawingLine.style.display = 'none';
+      } else {
+        // Dragging away from start node
+        const startX = (drawingStartNode.x/100)*canvasWidth;
+        const startY = (drawingStartNode.y/100)*canvasHeight;
+        drawingLine.setAttribute('x1', startX);
+        drawingLine.setAttribute('y1', startY);
+        drawingLine.setAttribute('x2', pointerX);
+        drawingLine.setAttribute('y2', pointerY);
+      }
+    });
+
+    svgOverlay.addEventListener('drop', (e) => {
+      e.preventDefault();
+      drawingLine.style.display = 'none';
+      
+      const rect = container.getBoundingClientRect();
+      const scale = 1414 / wrapper.getBoundingClientRect().width;
+      const dropX = (e.clientX - rect.left) * scale;
+      const dropY = (e.clientY - rect.top) * scale;
+
+      const closestNode = findClosestNode(dropX, dropY);
+      
+      if (drawingStartNode && closestNode.dist < 50 && closestNode.id !== drawingStartNode.id) {
+        const destNode = BOARD_STATE.nodes[closestNode.id];
+        
+        // Add new twine to state
+        BOARD_STATE.twines.push({
+          from: drawingStartNode.id,
+          to: destNode.id,
+          color: currentDrawingColor
+        });
+
+        // Rebuild twine simulations and play drop audio
+        buildTwineSimulations();
+        saveLocalState();
+        playPaperRustle();
+      }
+
+      drawingStartNode = null;
+      currentDrawingColor = null;
+    });
+
+    function findClosestNode(x, y) {
+      let minDist = Infinity;
+      let closestId = null;
+
+      Object.values(BOARD_STATE.nodes).forEach(n => {
+        if (n.id === "konahrik" && !BOARD_STATE.konahrikUnlocked) return;
+        
+        const nx = (n.x/100)*canvasWidth;
+        const ny = (n.y/100)*canvasHeight;
+        const dist = Math.sqrt((x-nx)*(x-nx) + (y-ny)*(y-ny));
+        if (dist < minDist) {
+          minDist = dist;
+          closestId = n.id;
+        }
+      });
+
+      return { id: closestId, dist: minDist };
+    }
+
+    function getTwineColorHex(col) {
+      if (col === "red") return "var(--red-string)";
+      if (col === "grey") return "var(--grey-string)";
+      if (col === "blue") return "var(--blue-string)";
+      if (col === "yellow") return "var(--yellow-string)";
+      return "#000";
+    }
+
+    function resetTwines() {
+      // Revert back to original campaign twines
+      BOARD_STATE.twines = [
+        { from: "nahkriin", to: "vokun", color: "red" },
+        { from: "vokun", to: "morokei", color: "red" },
+        { from: "morokei", to: "otar", color: "red" },
+        { from: "otar", to: "rahgot", color: "red" },
+        { from: "rahgot", to: "kynesgrove", color: "red" },
+        { from: "kynesgrove", to: "bleak_falls", color: "red" },
+        
+        { from: "eldergleam", to: "darkwater", color: "grey" },
+        { from: "darkwater", to: "steps_7000", color: "grey" },
+        { from: "steps_7000", to: "throat", color: "grey" }
+      ];
+      buildTwineSimulations();
+      saveLocalState();
+    }
+
+    // =========================================================================
+    // 6. CHARCOAL DRAWING / SMUDGING SYSTEM
+    // =========================================================================
+
+    const sketchCtx = sketchCanvas.getContext('2d');
+    let isDrawing = false;
+    let currentDrawingTool = null; // null, charcoal, rag
+    let lastDrawX = 0;
+    let lastDrawY = 0;
+    const brushIndicator = document.getElementById('brush-indicator');
+
+    // UI tool buttons selection
+    const charcoalBtn = document.getElementById('tool-charcoal');
+    const ragBtn = document.getElementById('tool-rag');
+    const clearBtn = document.getElementById('tool-clear');
+
+    charcoalBtn.addEventListener('click', () => {
+      setActiveTool(currentDrawingTool === 'charcoal' ? null : 'charcoal');
+    });
+
+    ragBtn.addEventListener('click', () => {
+      setActiveTool(currentDrawingTool === 'rag' ? null : 'rag');
+    });
+
+    clearBtn.addEventListener('click', () => {
+      if (confirm("Are you sure you want to wipe the map's charcoal markings clean?")) {
+        sketchCtx.clearRect(0, 0, canvasWidth, canvasHeight);
+        saveLocalDrawings();
+        playPaperRustle();
+      }
+    });
+
+    function setActiveTool(tool) {
+      currentDrawingTool = tool;
+      charcoalBtn.classList.remove('active');
+      ragBtn.classList.remove('active');
+      
+      if (tool === 'charcoal') {
+        charcoalBtn.classList.add('active');
+        sketchCanvas.classList.add('active');
+        brushIndicator.style.display = 'block';
+        brushIndicator.style.borderColor = 'rgba(0,0,0,0.8)';
+      } else if (tool === 'rag') {
+        ragBtn.classList.add('active');
+        sketchCanvas.classList.add('active');
+        brushIndicator.style.display = 'block';
+        brushIndicator.style.borderColor = 'rgba(255,255,255,0.7)';
+      } else {
+        sketchCanvas.classList.remove('active');
+        brushIndicator.style.display = 'none';
+      }
+    }
+
+    // Capture drawings relative to canvas coordinates
+    sketchCanvas.addEventListener('mousedown', (e) => {
+      if (!currentDrawingTool) return;
+      isDrawing = true;
+      const rect = sketchCanvas.getBoundingClientRect();
+      const scale = 1414 / wrapper.getBoundingClientRect().width;
+      lastDrawX = (e.clientX - rect.left) * scale;
+      lastDrawY = (e.clientY - rect.top) * scale;
+    });
+
+    sketchCanvas.addEventListener('mousemove', (e) => {
+      const rect = sketchCanvas.getBoundingClientRect();
+      const scale = 1414 / wrapper.getBoundingClientRect().width;
+      const x = (e.clientX - rect.left) * scale;
+      const y = (e.clientY - rect.top) * scale;
+
+      // Update brush circle indicator positions
+      brushIndicator.style.left = `${e.clientX}px`;
+      brushIndicator.style.top = `${e.clientY}px`;
+
+      if (!isDrawing || !currentDrawingTool) return;
+
+      if (currentDrawingTool === 'charcoal') {
+        drawCharcoalLine(lastDrawX, lastDrawY, x, y);
+      } else if (currentDrawingTool === 'rag') {
+        smudgeLine(lastDrawX, lastDrawY, x, y);
+      }
+
+      lastDrawX = x;
+      lastDrawY = y;
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (isDrawing) {
+        isDrawing = false;
+        saveLocalDrawings();
+      }
+    });
+
+    // Custom textured charcoal brush line
+    function drawCharcoalLine(x1, y1, x2, y2) {
+      sketchCtx.save();
+      sketchCtx.strokeStyle = 'rgba(20, 18, 15, 0.75)';
+      sketchCtx.lineCap = 'round';
+      sketchCtx.lineJoin = 'round';
+      sketchCtx.lineWidth = 4;
+
+      // Draw standard line first
+      sketchCtx.beginPath();
+      sketchCtx.moveTo(x1, y1);
+      sketchCtx.lineTo(x2, y2);
+      sketchCtx.stroke();
+
+      // Scatter noise charcoal particles along the line segments for chalky texture
+      const dist = Math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1));
+      const steps = Math.floor(dist / 2);
+      for(let i = 0; i < steps; i++) {
+        const ratio = i / steps;
+        const px = x1 + (x2 - x1) * ratio;
+        const py = y1 + (y2 - y1) * ratio;
+
+        // Draw scatter dots
+        for(let dot = 0; dot < 3; dot++) {
+          const ox = (Math.random() - 0.5) * 5;
+          const oy = (Math.random() - 0.5) * 5;
+          const alpha = Math.random() * 0.4;
+          sketchCtx.fillStyle = `rgba(20, 18, 15, ${alpha})`;
+          sketchCtx.beginPath();
+          sketchCtx.arc(px + ox, py + oy, Math.random() * 1.5, 0, Math.PI * 2);
+          sketchCtx.fill();
+        }
+      }
+      sketchCtx.restore();
+    }
+
+    // Smudge rag erases charcoal markings with blurry transparency
+    function smudgeLine(x1, y1, x2, y2) {
+      // Simulate carbon smudge/erase by local alpha blitting
+      sketchCtx.save();
+      sketchCtx.globalCompositeOperation = 'destination-out';
+      
+      const grad = sketchCtx.createRadialGradient(x2, y2, 2, x2, y2, 24);
+      grad.addColorStop(0, 'rgba(0,0,0,1)');
+      grad.addColorStop(0.5, 'rgba(0,0,0,0.5)');
+      grad.addColorStop(1, 'rgba(0,0,0,0)');
+      
+      sketchCtx.fillStyle = grad;
+      sketchCtx.beginPath();
+      sketchCtx.arc(x2, y2, 24, 0, Math.PI*2);
+      sketchCtx.fill();
+      
+      sketchCtx.restore();
+    }
+
+    // Save and load drawing layer coordinates from storage
+    function saveLocalDrawings() {
+      const dataURL = sketchCanvas.toDataURL();
+      localStorage.setItem('esberns_map_drawings', dataURL);
+    }
+
+    function loadLocalDrawings() {
+      const dataURL = localStorage.getItem('esberns_map_drawings');
+      if (dataURL) {
+        const img = new Image();
+        img.onload = () => {
+          sketchCtx.clearRect(0, 0, canvasWidth, canvasHeight);
+          sketchCtx.drawImage(img, 0, 0);
+        };
+        img.src = dataURL;
+      }
+    }
+
+    // =========================================================================
+    // 7. INTERACTIVE DETAIL INSPECTOR (NOTES CARD)
+    // =========================================================================
+
+    function inspectNode(node) {
+      selectedNodeId = node.id;
+      noteInspector.classList.add('open');
+      
+      inspectorTitle.textContent = node.name;
+      
+      // Tags
+      inspectorType.textContent = node.type.toUpperCase();
+      inspectorStatus.textContent = node.status.toUpperCase();
+      
+      // Update color coding
+      if (node.type === "rot") {
+        inspectorType.style.background = "#5e5e5e";
+        inspectorType.style.color = "#fff";
+      } else {
+        inspectorType.style.background = "#a93636";
+        inspectorType.style.color = "#fff";
+      }
+
+      let contentHTML = `<p>${node.notes}</p>`;
+      if (node.quote) {
+        contentHTML += `<div class="quote">"${node.quote}"</div>`;
+      }
+      
+      inspectorContent.innerHTML = contentHTML;
+
+      // Play card click audio
+      playPaperRustle();
+    }
+
+    document.getElementById('close-inspector').addEventListener('click', () => {
+      noteInspector.classList.remove('open');
+      selectedNodeId = null;
+    });
+
+    // =========================================================================
+    // 8. TRAY TRIGGERS & ACTIONS
+    // =========================================================================
+
+    // Expose Konahrik unlock method to developer console/internal code only
+    window.unlockKonahrik = function(unlocked = true) {
+      BOARD_STATE.konahrikUnlocked = unlocked;
+      if (BOARD_STATE.konahrikUnlocked) {
+        // Add Konahrik twines if not already present
+        const currentTwines = BOARD_STATE.twines;
+        const exists = currentTwines.some(t => t.from === "konahrik" || t.to === "konahrik");
+        if (!exists) {
+          BOARD_STATE.twines.push(
+            { from: "konahrik", to: "nahkriin", color: "red" },
+            { from: "konahrik", to: "vokun", color: "red" },
+            { from: "konahrik", to: "morokei", color: "red" },
+            { from: "konahrik", to: "otar", color: "red" },
+            { from: "konahrik", to: "rahgot", color: "red" }
+          );
+        }
+      } else {
+        // Remove Konahrik links
+        BOARD_STATE.twines = BOARD_STATE.twines.filter(t => t.from !== "konahrik" && t.to !== "konahrik");
+      }
+      
+      createPins();
+      buildTwineSimulations();
+      saveLocalState();
+      playWoodKnock();
+      console.log(`Konahrik status: ${BOARD_STATE.konahrikUnlocked ? "UNLOCKED" : "LOCKED"}`);
+    };
+
+    // Toggle Collapsible Tool Tray
+    const toolTray = document.getElementById('tool-tray');
+    const trayToggleArrow = document.getElementById('tray-toggle-arrow');
+    toolTray.querySelector('h2').addEventListener('click', () => {
+      const isCollapsed = toolTray.classList.toggle('collapsed');
+      trayToggleArrow.textContent = isCollapsed ? '▲' : '▼';
+      trayToggleArrow.style.transform = isCollapsed ? 'rotate(180deg)' : 'rotate(0deg)';
+      playPaperRustle();
+    });
+
+    // Layer Filtering
+    const filterAll = document.getElementById('filter-all');
+    const filterRed = document.getElementById('filter-red');
+    const filterGrey = document.getElementById('filter-grey');
+
+    function selectFilter(filter, btn) {
+      activeFilter = filter;
+      document.querySelectorAll('#filter-all, #filter-red, #filter-grey').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      buildTwineSimulations();
+      playWoodKnock();
+    }
+
+    filterAll.addEventListener('click', () => selectFilter('all', filterAll));
+    filterRed.addEventListener('click', () => selectFilter('red', filterRed));
+    filterGrey.addEventListener('click', () => selectFilter('grey', filterGrey));
+
+    // =========================================================================
+    // 9. PIN CALIBRATION MODULE (HIDDEN)
+    // =========================================================================
+
+    const calibrationBox = document.getElementById('calibration-box');
+    const calibrationOutput = document.getElementById('calibration-output');
+
+    function toggleCalibration() {
+      isCalibrationMode = !isCalibrationMode;
+      if (isCalibrationMode) {
+        calibrationBox.style.display = 'flex';
+        container.style.boxShadow = '0 0 35px #ff9900';
+        updateCalibrationOutput();
+        createPins();
+      } else {
+        calibrationBox.style.display = 'none';
+        container.style.boxShadow = `3px 5px 25px var(--parchment-shadow), inset 0 0 80px rgba(139, 105, 60, 0.2)`;
+        createPins();
+      }
+      playWoodKnock();
+    }
+
+    // Toggle by Ctrl+Shift+C key combination
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'c') {
+        toggleCalibration();
+      }
+    });
+
+    function updateCalibrationOutput() {
+      const output = {};
+      Object.keys(BOARD_STATE.nodes).forEach(id => {
+        output[id] = {
+          name: BOARD_STATE.nodes[id].name,
+          x: BOARD_STATE.nodes[id].x,
+          y: BOARD_STATE.nodes[id].y
+        };
+      });
+      calibrationOutput.value = JSON.stringify(output, null, 2);
+    }
+
+    // =========================================================================
+    // 10. LOCAL STORAGE / STATE PERSISTENCE
+    // =========================================================================
+
+    function saveLocalState() {
+      // Serialize note card positions
+      const serializedNotes = notesList.map(n => ({
+        id: n.data.id,
+        x: n.x,
+        y: n.y
+      }));
+
+      localStorage.setItem('esberns_board_state', JSON.stringify({
+        konahrikUnlocked: BOARD_STATE.konahrikUnlocked,
+        nodes: BOARD_STATE.nodes,
+        twines: BOARD_STATE.twines,
+        notes: serializedNotes
+      }));
+    }
+
+    function loadLocalState() {
+      const stored = localStorage.getItem('esberns_board_state');
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          BOARD_STATE.konahrikUnlocked = parsed.konahrikUnlocked;
+          BOARD_STATE.twines = parsed.twines;
+          
+          // Re-map nodes coords
+          Object.keys(parsed.nodes).forEach(id => {
+            if (BOARD_STATE.nodes[id]) {
+              BOARD_STATE.nodes[id].x = parsed.nodes[id].x;
+              BOARD_STATE.nodes[id].y = parsed.nodes[id].y;
+            }
+          });
+
+          // Re-map paper notes coords if they exist
+          if (parsed.notes) {
+            parsed.notes.forEach(savedNote => {
+              const note = NOTES_DATA.find(n => n.id === savedNote.id);
+              if (note) {
+                note.x = savedNote.x;
+                note.y = savedNote.y;
+              }
+            });
+          }
+
+          // Migrate old cached off-map coordinates to new safe default coordinates
+          if (BOARD_STATE.nodes.nahkriin.x === 94.0 && BOARD_STATE.nodes.nahkriin.y === 64.0) {
+            BOARD_STATE.nodes.nahkriin.x = 88.5;
+            BOARD_STATE.nodes.nahkriin.y = 63.5;
+          }
+          if ((BOARD_STATE.nodes.rahgot.x === 93.0 && BOARD_STATE.nodes.rahgot.y === 89.0) || 
+              (BOARD_STATE.nodes.rahgot.x === 88.8 && BOARD_STATE.nodes.rahgot.y === 91.2)) {
+            BOARD_STATE.nodes.rahgot.x = 87.0;
+            BOARD_STATE.nodes.rahgot.y = 90.0;
+          }
+        } catch(e) {
+          console.error("Error loading board state: ", e);
+        }
+      }
+    }
+
+    // =========================================================================
+    // 11. WEB AUDIO API SYNTHESIZER (IMMERSIVE AUDIO)
+    // =========================================================================
+
+    let audioCtx = null;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+    }
+
+    // Synthesize wood-knock when buttons/pins are clicked
+    function playWoodKnock() {
+      initAudio();
+      if (!audioCtx) return;
+
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(140, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.12);
+
+      gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.12);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.13);
+    }
+
+    // Synthesize parchment rustle when card slides or thread is spooled
+    function playPaperRustle() {
+      initAudio();
+      if (!audioCtx) return;
+
+      const bufferSize = audioCtx.sampleRate * 0.15;
+      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const data = buffer.getChannelData(0);
+
+      // Generate pink/white noise
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = buffer;
+
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.value = 1200;
+      filter.Q.value = 1.0;
+
+      const gain = audioCtx.createGain();
+      gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      noise.start();
+      noise.stop(audioCtx.currentTime + 0.16);
+    }
+
+    // Trigger audio context initialization on first click
+    document.body.addEventListener('click', () => {
+      initAudio();
+    }, { once: true });
+
+    // =========================================================================
+    // 12. RUN ENGINE PHYSICS TICK LOOP
+    // =========================================================================
+
+    const gravityForce = 0.22;
+    let windForce = 0;
+
+    function physicsTick() {
+      // Slow, minor wind sway
+      windForce = Math.sin(Date.now() / 1500) * 0.05;
+      
+      const ctx = physicsCanvas.getContext('2d');
+      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+      // Draw active twines
+      twinesList.forEach(twine => {
+        twine.update(gravityForce, windForce);
+        twine.draw(ctx);
+      });
+
+      // Update paper notes pendulum swings
+      notesList.forEach(note => {
+        note.update(gravityForce, windForce);
+      });
+
+      requestAnimationFrame(physicsTick);
+    }
+
+    // =========================================================================
+    // 13. INITIALIZATION
+    // =========================================================================
+
+    loadLocalState();
+    loadLocalDrawings();
+    createPins();
+    buildTwineSimulations();
+
+    // Instantiate in-universe pinned notes
+    NOTES_DATA.forEach(noteData => {
+      notesList.push(new PinnedNoteCard(noteData));
+    });
+    
+    // Start physics simulation loop
+    physicsTick();
+
+  </script>
+</body>
+</html>

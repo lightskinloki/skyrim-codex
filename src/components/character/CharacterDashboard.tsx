@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ToastAction } from "@/components/ui/toast";
 import { Heart, Zap, Sword, Shield, Settings, Plus, UserPlus, Play, RotateCcw, Package, Download, Minus, BookText, Edit2, Trash2, X, Check, ScrollText, Sparkles, AlertTriangle, LogOut } from "lucide-react";
 import { officialEquipment } from "@/data/equipment";
@@ -1036,8 +1037,17 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
 
         </div>
 
-        {/* Three Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Tabs defaultValue="sheet" className="w-full">
+          <div className="mb-6 flex justify-center">
+            <TabsList className="grid w-full max-w-md grid-cols-2 bg-card-secondary/60">
+              <TabsTrigger value="sheet">Character Sheet</TabsTrigger>
+              <TabsTrigger value="map">Esbern's Map</TabsTrigger>
+            </TabsList>
+          </div>
+
+          <TabsContent value="sheet" className="mt-0 space-y-0">
+            {/* Three Column Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           {/* Left Column - Stats & Resources */}
           <div className="space-y-6">
@@ -1594,7 +1604,18 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
               </div>
             </Card>
           </div>
-        </div>
+        </TabsContent>
+
+        <TabsContent value="map" className="mt-0">
+          <Card className="p-2 bg-card-secondary/30 border border-border/40 shadow-2xl">
+            <iframe 
+              src="/esbern_map.html" 
+              className="w-full h-[calc(100vh-210px)] border-0 rounded-md"
+              style={{ background: 'transparent' }}
+            />
+          </Card>
+        </TabsContent>
+      </Tabs>
         
         <AdvancementModal
           isOpen={showAdvancement}
