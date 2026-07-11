@@ -71,16 +71,16 @@
       transform-origin: center center;
     }
 
-    /* Floating Zoom Controls for parchment feel */
+    /* Floating Zoom Controls — fixed to viewport, never moves with pan/zoom */
     #zoom-controls {
-      position: absolute;
-      bottom: 40px;
-      right: 40px;
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
       display: flex;
       flex-direction: column;
       gap: 8px;
       z-index: 999999;
-      pointer-events: auto !important;
+      pointer-events: auto;
     }
     
     #zoom-controls button {
@@ -523,14 +523,14 @@
         <!-- Group holding active pins -->
         <g id="pins-group"></g>
       </svg>
-
-      <!-- Floating Zoom Controls (inside map-container, outside svg) -->
-      <div id="zoom-controls">
-        <button id="zoom-in" title="Zoom In">+</button>
-        <button id="zoom-out" title="Zoom Out">−</button>
-        <button id="zoom-reset" title="Recenter View">⟲</button>
-      </div>
     </div>
+  </div>
+
+  <!-- Zoom Controls: body-level, fixed to viewport corner -->
+  <div id="zoom-controls">
+    <button id="zoom-in" title="Zoom In">+</button>
+    <button id="zoom-out" title="Zoom Out">−</button>
+    <button id="zoom-reset" title="Recenter View">⟲</button>
   </div>
 
   <!-- Sidebar Tool Tray (Wooden interface drawer) -->
@@ -1205,8 +1205,9 @@
       container.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
     }
 
-    // Mouse wheel zoom relative to mouse cursor
-    wrapper.addEventListener('wheel', (e) => {
+    // Mouse wheel zoom relative to mouse cursor — listen on document so it works
+    // anywhere in the page/iframe, not just when hovering over the wrapper element
+    document.addEventListener('wheel', (e) => {
       e.preventDefault();
       const zoomFactor = 1.15;
       let newZoom = zoom;
@@ -1274,41 +1275,28 @@
       }
     });
 
-    // Zoom Controls UI buttons
+    // Zoom Controls UI buttons — block mousedown so pan handler ignores them
+    const zoomCtrlEl = document.getElementById('zoom-controls');
+    zoomCtrlEl.addEventListener('mousedown', (e) => e.stopPropagation());
+
     document.getElementById('zoom-in').addEventListener('click', (e) => {
-      console.log("zoom-in click event captured");
       e.stopPropagation();
-      const newZoom = Math.min(zoom * 1.25, MAX_ZOOM);
-      if (newZoom !== zoom) {
-        panX = panX * (newZoom / zoom);
-        panY = panY * (newZoom / zoom);
-        zoom = newZoom;
-        updateMapTransform();
-        console.log("Zoomed in. New zoom level:", zoom);
-      }
+      zoom = Math.min(zoom * 1.25, MAX_ZOOM);
+      updateMapTransform();
     });
 
     document.getElementById('zoom-out').addEventListener('click', (e) => {
-      console.log("zoom-out click event captured");
       e.stopPropagation();
-      const newZoom = Math.max(zoom / 1.25, MIN_ZOOM);
-      if (newZoom !== zoom) {
-        panX = panX * (newZoom / zoom);
-        panY = panY * (newZoom / zoom);
-        zoom = newZoom;
-        updateMapTransform();
-        console.log("Zoomed out. New zoom level:", zoom);
-      }
+      zoom = Math.max(zoom / 1.25, MIN_ZOOM);
+      updateMapTransform();
     });
 
     document.getElementById('zoom-reset').addEventListener('click', (e) => {
-      console.log("zoom-reset click event captured");
       e.stopPropagation();
       panX = 0;
       panY = 0;
       zoom = 1.0;
       updateMapTransform();
-      console.log("Zoom reset. Recenter complete.");
     });
 
     // Init canvases size
