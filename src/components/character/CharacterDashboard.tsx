@@ -1604,7 +1604,8 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
               </div>
             </Card>
           </div>
-        </TabsContent>
+        </div>
+      </TabsContent>
 
         <TabsContent value="map" className="mt-0">
           <Card className="p-2 bg-card-secondary/30 border border-border/40 shadow-2xl">
