@@ -68,17 +68,7 @@
       box-shadow: 3px 5px 25px var(--parchment-shadow), inset 0 0 80px rgba(139, 105, 60, 0.2);
       border-radius: 4px;
       transition: transform 0.4s ease-out;
-      transform-origin: center center;
     }
-
-    
-    
-    
-    
-    
-    
-    
-    
 
     /* SVG Overlay for Connections, Pins, and Interactions */
     #svg-overlay {
@@ -451,38 +441,11 @@
       display: none;
       box-shadow: 0 0 3px #000;
     }
-    /* Exit Board Button styled like the info badge */
-    #exit-board {
-      position: absolute;
-      top: 15px;
-      right: 20px;
-      background: rgba(18, 10, 5, 0.85);
-      padding: 6px 16px;
-      border-radius: 20px;
-      border: 1px solid rgba(139, 105, 60, 0.4);
-      color: #e4d3b2;
-      font-family: 'Special Elite', monospace;
-      font-size: 11px;
-      z-index: 110;
-      cursor: pointer;
-      letter-spacing: 1px;
-      text-shadow: 1px 1px 2px #000;
-      transition: background 0.2s, transform 0.2s, border-color 0.2s;
-    }
-    #exit-board:hover {
-      background: rgba(74, 18, 18, 0.85); /* subtle dark red highlight */
-      border-color: rgba(180, 100, 60, 0.6);
-      transform: scale(1.05);
-    }
-    #exit-board:active {
-      transform: scale(0.95);
-    }
   </style>
 </head>
 <body>
 
   <div id="info-badge">ESBERN'S CART WEB — TABLE PROP</div>
-  <button id="exit-board" onclick="window.parent.postMessage('closeMap', '*')">RETURN TO SHEET</button>
 
   <!-- Calibration Info Panel (Ctrl+Shift+C to toggle) -->
   <div id="calibration-box">
@@ -521,13 +484,6 @@
         <g id="pins-group"></g>
       </svg>
     </div>
-  </div>
-
-  <!-- Zoom Controls: body-level, fixed to viewport corner -->
-  <div id="zoom-controls">
-    <button id="zoom-in" title="Zoom In">+</button>
-    <button id="zoom-out" title="Zoom Out">−</button>
-    <button id="zoom-reset" title="Recenter View">⟲</button>
   </div>
 
   <!-- Sidebar Tool Tray (Wooden interface drawer) -->
@@ -873,9 +829,10 @@
 
         document.addEventListener('mousemove', (e) => {
           if (this.isMovingPin) {
-            const coords = getCanvasCoords(e);
-            const mx = coords.x;
-            const my = coords.y;
+            const rect = container.getBoundingClientRect();
+            const scale = 1414 / wrapper.getBoundingClientRect().width;
+            const mx = (e.clientX - rect.left) * scale;
+            const my = (e.clientY - rect.top) * scale;
             
             // Clamp note pin within map boundary
             const clampX = Math.max(20, Math.min(mx, canvasWidth - 20));
@@ -884,9 +841,10 @@
             this.x = parseFloat(((clampX / canvasWidth) * 100).toFixed(1));
             this.y = parseFloat(((clampY / canvasHeight) * 100).toFixed(1));
           } else if (this.isDragging) {
-            const coords = getCanvasCoords(e);
-            const mx = coords.x;
-            const my = coords.y;
+            const rect = container.getBoundingClientRect();
+            const scale = 1414 / wrapper.getBoundingClientRect().width;
+            const mx = (e.clientX - rect.left) * scale;
+            const my = (e.clientY - rect.top) * scale;
             const px = (this.x / 100) * canvasWidth;
             const py = (this.y / 100) * canvasHeight;
 
@@ -1176,108 +1134,6 @@
     window.addEventListener('resize', adjustScale);
     adjustScale();
 
-    // Viewport Pan and Zoom state variables
-    let zoom = 1.0;
-    let panX = 0;
-    let panY = 0;
-    const MIN_ZOOM = 0.5;
-    const MAX_ZOOM = 4.0;
-
-    // Helper to calculate mouse coordinates mapping screen client position back to 1330x940 local space
-    function getCanvasCoords(e) {
-      const rect = container.getBoundingClientRect();
-      const mx = (e.clientX - rect.left) * (canvasWidth / rect.width);
-      const my = (e.clientY - rect.top) * (canvasHeight / rect.height);
-      return { x: mx, y: my };
-    }
-
-    // Zoom and pan update transform helper
-    function updateMapTransform() {
-      // Clamping to prevent panning completely out of view (keep at least 20% of the map visible)
-      const limitX = canvasWidth * zoom * 0.8;
-      const limitY = canvasHeight * zoom * 0.8;
-      panX = Math.max(-limitX, Math.min(panX, limitX));
-      panY = Math.max(-limitY, Math.min(panY, limitY));
-      
-      container.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
-    }
-
-    // Mouse wheel zoom relative to mouse cursor
-    // Listen on document to capture scrolling reliably
-    document.addEventListener('wheel', (e) => {
-      e.preventDefault();
-      const zoomFactor = 1.15;
-      let newZoom = zoom;
-      if (e.deltaY < 0) {
-        newZoom = Math.min(zoom * zoomFactor, MAX_ZOOM);
-      } else {
-        newZoom = Math.max(zoom / zoomFactor, MIN_ZOOM);
-      }
-      
-      if (newZoom !== zoom) {
-        // Calculate mouse position relative to wrapper to zoom invariant around it
-        const boardRect = wrapper.getBoundingClientRect();
-        const wrapperScale = boardRect.width / 1414;
-        const mx = (e.clientX - boardRect.left) / wrapperScale;
-        const my = (e.clientY - boardRect.top) / wrapperScale;
-        
-        const cx = canvasWidth / 2;
-        const cy = canvasHeight / 2;
-        
-        const nextZoom = newZoom;
-        panX = mx - cx - (mx - cx - panX) * (nextZoom / zoom);
-        panY = my - cy - (my - cy - panY) * (nextZoom / zoom);
-        zoom = nextZoom;
-        updateMapTransform();
-      }
-    }, { passive: false });
-
-    // Click and drag background to pan
-    let isPanning = false;
-    let startPanX = 0;
-    let startPanY = 0;
-    let startMouseX = 0;
-    let startMouseY = 0;
-    
-    wrapper.addEventListener('mousedown', (e) => {
-      // Only pan if clicking on empty board background, map container background, or the svg itself
-      const target = e.target;
-      const isBg = target.id === 'board-wrapper' || target.id === 'map-container' || target.id === 'svg-overlay' || target.tagName === 'svg' || target.tagName === 'SVG';
-      
-      // Do not pan if drawing with charcoal/rag, or if dragging notes/pins
-      const isDrawingActive = currentDrawingTool !== null;
-      const isCardMoving = notesList.some(n => n.isMovingPin || n.isDragging);
-      const isPinDragging = typeof isDragging !== 'undefined' && isDragging;
-      
-      if (isBg && !isDrawingActive && !isCardMoving && !isPinDragging) {
-        isPanning = true;
-        startMouseX = e.clientX;
-        startMouseY = e.clientY;
-        startPanX = panX;
-        startPanY = panY;
-        container.style.transition = 'none'; // disable transitions during drag
-        wrapper.style.cursor = 'grabbing';
-      }
-    });
-    
-    window.addEventListener('mousemove', (e) => {
-      if (isPanning) {
-        // Adjust for wrapper's current window scale so drag feels 1:1
-        const scale = wrapper.getBoundingClientRect().width / 1414;
-        panX = startPanX + (e.clientX - startMouseX) / scale;
-        panY = startPanY + (e.clientY - startMouseY) / scale;
-        updateMapTransform();
-      }
-    });
-    
-    window.addEventListener('mouseup', () => {
-      if (isPanning) {
-        isPanning = false;
-        container.style.transition = 'transform 0.4s ease-out'; // restore transition for snapping
-        wrapper.style.cursor = 'default';
-      }
-    });
-
     // Init canvases size
     function initCanvases() {
       physicsCanvas.width = canvasWidth;
@@ -1329,9 +1185,11 @@
 
         document.addEventListener('mousemove', (e) => {
           if (!isDragging || !isCalibrationMode) return;
-          const coords = getCanvasCoords(e);
-          let clientX = coords.x;
-          let clientY = coords.y;
+          const rect = container.getBoundingClientRect();
+          const scale = 1414 / wrapper.getBoundingClientRect().width; // accounts for scale transform
+          
+          let clientX = (e.clientX - rect.left) * scale;
+          let clientY = (e.clientY - rect.top) * scale;
           
           // Clamp inside container boundary
           clientX = Math.max(10, Math.min(clientX, canvasWidth - 10));
@@ -1470,9 +1328,10 @@
       e.preventDefault();
       
       // Track drag coordinate relative to map container
-      const coords = getCanvasCoords(e);
-      pointerX = coords.x;
-      pointerY = coords.y;
+      const rect = container.getBoundingClientRect();
+      const scale = 1414 / wrapper.getBoundingClientRect().width;
+      pointerX = (e.clientX - rect.left) * scale;
+      pointerY = (e.clientY - rect.top) * scale;
       
       // Find closest node to draw temporary drag indicator
       const closestNode = findClosestNode(pointerX, pointerY);
@@ -1513,9 +1372,10 @@
       e.preventDefault();
       drawingLine.style.display = 'none';
       
-      const coords = getCanvasCoords(e);
-      const dropX = coords.x;
-      const dropY = coords.y;
+      const rect = container.getBoundingClientRect();
+      const scale = 1414 / wrapper.getBoundingClientRect().width;
+      const dropX = (e.clientX - rect.left) * scale;
+      const dropY = (e.clientY - rect.top) * scale;
 
       const closestNode = findClosestNode(dropX, dropY);
       
@@ -1641,15 +1501,17 @@
     sketchCanvas.addEventListener('mousedown', (e) => {
       if (!currentDrawingTool) return;
       isDrawing = true;
-      const coords = getCanvasCoords(e);
-      lastDrawX = coords.x;
-      lastDrawY = coords.y;
+      const rect = sketchCanvas.getBoundingClientRect();
+      const scale = 1414 / wrapper.getBoundingClientRect().width;
+      lastDrawX = (e.clientX - rect.left) * scale;
+      lastDrawY = (e.clientY - rect.top) * scale;
     });
 
     sketchCanvas.addEventListener('mousemove', (e) => {
-      const coords = getCanvasCoords(e);
-      const x = coords.x;
-      const y = coords.y;
+      const rect = sketchCanvas.getBoundingClientRect();
+      const scale = 1414 / wrapper.getBoundingClientRect().width;
+      const x = (e.clientX - rect.left) * scale;
+      const y = (e.clientY - rect.top) * scale;
 
       // Update brush circle indicator positions
       brushIndicator.style.left = `${e.clientX}px`;
