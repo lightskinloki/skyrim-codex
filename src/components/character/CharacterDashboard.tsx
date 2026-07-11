@@ -1620,7 +1620,7 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
       </TabsContent>
 
         <TabsContent value="map" className="mt-0">
-          <div className="fixed inset-0 z-[100] w-screen h-screen bg-[#120a05] flex flex-col">
+          <div className="fixed inset-0 z-[100] w-screen h-screen bg-[#120a05]">
             {/* Floating Exit Button */}
             <Button 
               onClick={() => setActiveTab("sheet")}
@@ -1629,10 +1629,10 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
               <X className="w-4 h-4" /> Exit Map
             </Button>
             
-            {/* Fullscreen Iframe (Using cache-busting query parameter to force reload the fresh layout) */}
+            {/* Fullscreen Iframe - absolutely positioned to ensure exact viewport dimensions */}
             <iframe 
               src="/esbern_map.html?v=3" 
-              className="w-full h-full border-0"
+              className="absolute inset-0 w-full h-full border-0"
             />
           </div>
         </TabsContent>
