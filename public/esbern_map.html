@@ -1129,6 +1129,26 @@
       const scaleY = windowHeight / 1000;
       const minScale = Math.min(scaleX, scaleY, 1); // Clamp to max 1.0 (actual size)
       wrapper.style.transform = `scale(${minScale})`;
+      
+      // Temporary diagnostic overlay to find layout mismatch source
+      let dbg = document.getElementById('scale-debug');
+      if (!dbg) {
+        dbg = document.createElement('div');
+        dbg.id = 'scale-debug';
+        dbg.style.position = 'fixed';
+        dbg.style.top = '10px';
+        dbg.style.left = '10px';
+        dbg.style.background = 'rgba(0,0,0,0.85)';
+        dbg.style.color = '#0f0';
+        dbg.style.padding = '6px 12px';
+        dbg.style.fontFamily = 'monospace';
+        dbg.style.fontSize = '12px';
+        dbg.style.zIndex = '99999';
+        dbg.style.borderRadius = '4px';
+        dbg.style.border = '1px solid #0f0';
+        document.body.appendChild(dbg);
+      }
+      dbg.innerText = `VWP: ${windowWidth}x${windowHeight} | Scale: ${minScale.toFixed(3)} (X:${scaleX.toFixed(2)}, Y:${scaleY.toFixed(2)})`;
     }
     
     window.addEventListener('resize', adjustScale);
