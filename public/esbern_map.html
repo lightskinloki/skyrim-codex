@@ -71,44 +71,14 @@
       transform-origin: center center;
     }
 
-    /* Floating Zoom Controls — fixed to viewport, never moves with pan/zoom */
-    #zoom-controls {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      z-index: 999999;
-      pointer-events: auto;
-    }
     
-    #zoom-controls button {
-      width: 40px;
-      height: 40px;
-      background: #e4d3b2;
-      border: 2px solid #5c3c26;
-      border-radius: 4px;
-      color: #2b251d;
-      font-family: 'IM Fell DW Pica', serif;
-      font-size: 20px;
-      font-weight: bold;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-      transition: background 0.2s, transform 0.1s;
-    }
     
-    #zoom-controls button:hover {
-      background: #f1e2c3;
-      transform: scale(1.05);
-    }
     
-    #zoom-controls button:active {
-      transform: scale(0.95);
-    }
+    
+    
+    
+    
+    
 
     /* SVG Overlay for Connections, Pins, and Interactions */
     #svg-overlay {
@@ -481,11 +451,38 @@
       display: none;
       box-shadow: 0 0 3px #000;
     }
+    /* Exit Board Button styled like the info badge */
+    #exit-board {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      background: rgba(18, 10, 5, 0.85);
+      padding: 6px 16px;
+      border-radius: 20px;
+      border: 1px solid rgba(139, 105, 60, 0.4);
+      color: #e4d3b2;
+      font-family: 'Special Elite', monospace;
+      font-size: 11px;
+      z-index: 110;
+      cursor: pointer;
+      letter-spacing: 1px;
+      text-shadow: 1px 1px 2px #000;
+      transition: background 0.2s, transform 0.2s, border-color 0.2s;
+    }
+    #exit-board:hover {
+      background: rgba(74, 18, 18, 0.85); /* subtle dark red highlight */
+      border-color: rgba(180, 100, 60, 0.6);
+      transform: scale(1.05);
+    }
+    #exit-board:active {
+      transform: scale(0.95);
+    }
   </style>
 </head>
 <body>
 
   <div id="info-badge">ESBERN'S CART WEB — TABLE PROP</div>
+  <button id="exit-board" onclick="window.parent.postMessage('closeMap', '*')">RETURN TO SHEET</button>
 
   <!-- Calibration Info Panel (Ctrl+Shift+C to toggle) -->
   <div id="calibration-box">
@@ -1205,8 +1202,8 @@
       container.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
     }
 
-    // Mouse wheel zoom relative to mouse cursor — listen on document so it works
-    // anywhere in the page/iframe, not just when hovering over the wrapper element
+    // Mouse wheel zoom relative to mouse cursor
+    // Listen on document to capture scrolling reliably
     document.addEventListener('wheel', (e) => {
       e.preventDefault();
       const zoomFactor = 1.15;
@@ -1237,8 +1234,10 @@
 
     // Click and drag background to pan
     let isPanning = false;
-    let startX = 0;
-    let startY = 0;
+    let startPanX = 0;
+    let startPanY = 0;
+    let startMouseX = 0;
+    let startMouseY = 0;
     
     wrapper.addEventListener('mousedown', (e) => {
       // Only pan if clicking on empty board background, map container background, or the svg itself
@@ -1252,8 +1251,10 @@
       
       if (isBg && !isDrawingActive && !isCardMoving && !isPinDragging) {
         isPanning = true;
-        startX = e.clientX - panX;
-        startY = e.clientY - panY;
+        startMouseX = e.clientX;
+        startMouseY = e.clientY;
+        startPanX = panX;
+        startPanY = panY;
         container.style.transition = 'none'; // disable transitions during drag
         wrapper.style.cursor = 'grabbing';
       }
@@ -1261,8 +1262,10 @@
     
     window.addEventListener('mousemove', (e) => {
       if (isPanning) {
-        panX = e.clientX - startX;
-        panY = e.clientY - startY;
+        // Adjust for wrapper's current window scale so drag feels 1:1
+        const scale = wrapper.getBoundingClientRect().width / 1414;
+        panX = startPanX + (e.clientX - startMouseX) / scale;
+        panY = startPanY + (e.clientY - startMouseY) / scale;
         updateMapTransform();
       }
     });
@@ -1273,30 +1276,6 @@
         container.style.transition = 'transform 0.4s ease-out'; // restore transition for snapping
         wrapper.style.cursor = 'default';
       }
-    });
-
-    // Zoom Controls UI buttons — block mousedown so pan handler ignores them
-    const zoomCtrlEl = document.getElementById('zoom-controls');
-    zoomCtrlEl.addEventListener('mousedown', (e) => e.stopPropagation());
-
-    document.getElementById('zoom-in').addEventListener('click', (e) => {
-      e.stopPropagation();
-      zoom = Math.min(zoom * 1.25, MAX_ZOOM);
-      updateMapTransform();
-    });
-
-    document.getElementById('zoom-out').addEventListener('click', (e) => {
-      e.stopPropagation();
-      zoom = Math.max(zoom / 1.25, MIN_ZOOM);
-      updateMapTransform();
-    });
-
-    document.getElementById('zoom-reset').addEventListener('click', (e) => {
-      e.stopPropagation();
-      panX = 0;
-      panY = 0;
-      zoom = 1.0;
-      updateMapTransform();
     });
 
     // Init canvases size
