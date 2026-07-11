@@ -43,7 +43,9 @@
 
     /* Corkboard / Wood Wall background layer */
     #board-wrapper {
-      position: relative;
+      position: absolute;
+      top: 50%;
+      left: 50%;
       width: 1414px;
       height: 1000px;
       background: radial-gradient(circle, #3e2819 60%, #1e120b 100%);
@@ -51,6 +53,7 @@
       border-image: linear-gradient(to bottom, #5c3c26, #2d1c10, #5c3c26) 24;
       box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8), inset 0 0 40px rgba(0, 0, 0, 0.7);
       transform-origin: center center;
+      transform: translate(-50%, -50%);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -1128,7 +1131,7 @@
       const scaleX = windowWidth / 1414;
       const scaleY = windowHeight / 1000;
       const minScale = Math.min(scaleX, scaleY, 1); // Clamp to max 1.0 (actual size)
-      wrapper.style.transform = `scale(${minScale})`;
+      wrapper.style.transform = `translate(-50%, -50%) scale(${minScale})`;
       
       // Temporary diagnostic overlay to find layout mismatch source
       let dbg = document.getElementById('scale-debug');
