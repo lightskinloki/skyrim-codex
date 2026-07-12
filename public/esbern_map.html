@@ -1138,6 +1138,12 @@
     window.addEventListener('resize', adjustScale);
     adjustScale();
 
+    // Ensure scaling adjusts when the iframe changes size or becomes visible in a tab
+    if (typeof ResizeObserver !== 'undefined') {
+      const ro = new ResizeObserver(() => adjustScale());
+      ro.observe(document.body);
+    }
+
     // Init canvases size
     function initCanvases() {
       physicsCanvas.width = canvasWidth;

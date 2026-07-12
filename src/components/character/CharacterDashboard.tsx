@@ -1632,7 +1632,7 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
               
               {/* Fullscreen Iframe (Using cache-busting query parameter to force reload the fresh layout) */}
               <iframe 
-                src="/esbern_map.html?v=reverted_smaller" 
+                src="/esbern_map.html?v=reverted_smaller_v2" 
                 className="absolute inset-0 w-full h-full border-0"
               />
             </div>
