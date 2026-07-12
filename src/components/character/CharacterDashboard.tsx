@@ -350,6 +350,9 @@ interface CharacterDashboardProps {
 export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCharacter, onEndSession }: CharacterDashboardProps) {
   const [currentCharacter, setCurrentCharacter] = useState<Character>(character);
   const [activeTab, setActiveTab] = useState("sheet");
+  const [mapRevealed, setMapRevealed] = useState(
+    () => localStorage.getItem(`skyrimTTRPG_mapRevealed_${character.id}`) === 'true'
+  );
   const [showAdvancement, setShowAdvancement] = useState(false);
   const [showGrantAP, setShowGrantAP] = useState(false);
   const [showEquipment, setShowEquipment] = useState(false);
@@ -1049,11 +1052,21 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
 
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs
+          value={activeTab}
+          onValueChange={(value) => {
+            setActiveTab(value);
+            if (value === "map" && !mapRevealed) {
+              setMapRevealed(true);
+              localStorage.setItem(`skyrimTTRPG_mapRevealed_${currentCharacter.id}`, 'true');
+            }
+          }}
+          className="w-full"
+        >
           <div className="mb-6 flex justify-center">
             <TabsList className="grid w-full max-w-md grid-cols-2 bg-card-secondary/60">
               <TabsTrigger value="sheet">Character Sheet</TabsTrigger>
-              <TabsTrigger value="map">Esbern's Map</TabsTrigger>
+              <TabsTrigger value="map">{mapRevealed ? "Esbern's Map" : "Unlockable"}</TabsTrigger>
             </TabsList>
           </div>
 
