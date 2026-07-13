@@ -151,6 +151,7 @@ Structured tools for capturing what happens during a session.
 - [ ] Add NPC directly to combat from their card
 
 #### 5F — Combat Tracker Improvements
+*(Multi-target damage/healing, direct HP input, and combatant notes are already built on a local unpushed branch — needs merging in.)*
 - [ ] **Multi-target damage/healing:** Select multiple combatants via checkboxes, enter a value, apply to all selected simultaneously — essential for AoE spells
 - [ ] **Direct HP input:** Click a combatant's HP to type an exact value, not just increment/decrement
 - [ ] **Save to library:** Promote any enemy currently in combat to the permanent GM library with one click
