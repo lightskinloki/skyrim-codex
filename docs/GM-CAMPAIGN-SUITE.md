@@ -325,3 +325,166 @@ access feel native (dialogs, remembered folders, optional watching).
 3. **Export** `registry.json` / `annotations.json` (demotes JSON to optional).
 4. **Proper-noun extraction + dedupe** in the review studio (unstructured prose).
 5. **Phase 6**: local-AI extraction as the optional booster; Electron for native files.
+
+---
+
+## 13. Session Recording & Transcription
+
+**Origin:** a live session was captured via one phone's on-device dictation (Notes app).
+It had no speaker separation, mangled campaign-specific proper nouns badly (generic
+dictionaries don't know "Ivarstead" or "Ismara"), and interleaved in-character lines with
+table banter with no boundary marker. Reconstructing the session afterward required
+manually cross-referencing that transcript against GM notes and in-document comments —
+workable once, not something to depend on every session.
+
+**Design decision — this is two features, not one, split by the Mirror Principle:**
+a multi-track recorder (non-AI, real value on its own) and speech transcription (AI,
+opt-in). They must not be blurred into a single "transcription feature," because
+transcription itself cannot be made to work well without a neural model — see §13.5 —
+and folding it into the non-AI core would either misrepresent that or ship a bad tool
+to make the label technically true.
+
+### 13.1 Non-AI core — Multi-Track Session Recorder
+
+Every device at the table is already running the app (character sheets, Combat Portal).
+Any device can opt into **Session Recorder**:
+
+- Captures its own local audio only. Nothing leaves the device automatically.
+- Records a running **volume/amplitude trace** alongside the audio — cheap signal
+  processing (RMS over time), not a model.
+- After the session (or live, via a lightweight sync primitive — see below), tracks from
+  every participating device merge into one **synced multi-track archive**, aligned by
+  timestamp.
+- A **Playback/Compare UI**: scrub the merged timeline; each track's volume curve is a
+  visual cue for who was probably talking (closer mic → louder signal, even though every
+  device hears the whole room); jump between tracks to catch a word one mic missed that
+  another caught; take notes inline.
+
+This stands alone. A GM who never touches an AI feature gets multiple synced recordings
+of their own table instead of one ambient phone track, and a tool to cross-reference them
+by ear — a real improvement for hand-writing session notes or a narrative record, with
+zero models, zero downloads, matching Privacy-by-Architecture (§9) exactly as everything
+else in this suite does.
+
+**Why not full acoustic diarization instead of volume comparison?** Automatic
+speaker-ID from audio alone is itself a trained model (speaker-embedding clustering,
+e.g. pyannote) — another AI dependency, and an unreliable one in a same-room,
+every-mic-hears-everyone setup. Volume-across-devices is deterministic signal math that
+exploits physical mic placement instead, and needs no model at all.
+
+**Why not just tag the loudest device as "the speaker" live?** Considered and rejected —
+in a shared room every device hears every speaker, so origin-device alone isn't a valid
+speaker label. Cross-track comparison (multiple witnesses, not one vote) is the
+correction; a segment where two tracks disagree is a real signal, not noise to discard.
+
+**Sync mechanism (open question, sized small deliberately):** does not require Phase 8's
+full networked-combat build (HP/FP/status sync). Only needs a much thinner slice: devices
+join a session by code, stream small timestamped metadata (volume trace, later transcript
+text) to a host device, host merges. Audio itself can even stay fully local and be merged
+from local files after the session, no networking required for a first version.
+
+### 13.2 What "AI" actually means here — three tiers, not a binary
+
+Earlier drafts of this section called Vosk "non-neural." That was wrong and got corrected
+mid-design; worth stating precisely since a technical reader would catch a sloppy claim
+here immediately, and getting it right is what makes §13.3's argument to skeptical users
+actually hold up:
+
+| Tier | Tech | Architecture | Generates content? | Scale |
+|---|---|---|---|---|
+| **1 — Recorder** (13.1) | none | — | no | zero model |
+| **2 — Vosk** | Kaldi | HMM sequence structure + a small TDNN neural net for acoustic classification | no — constrained decoding against a known vocabulary, not open-ended generation | ~50MB/language |
+| **3 — Whisper** | transformer | same architectural family as an LLM, encoder-decoder | yes — token-by-token generation, which is why it can hallucinate on silence/noise | hundreds of MB |
+
+Tier 2 is not literally "zero AI" — it contains a small neural net. What's true and does
+matter: it's not a transformer, it doesn't do open-ended generation, and it has no
+hallucination failure mode the way Tier 3 does, because it's decoding against a
+constrained vocabulary rather than freely predicting. "Non-AI" is the wrong label for it;
+"small, non-generative, offline, not an LLM" is the accurate one.
+
+**Training data, checked rather than assumed:** the specific "AI scraping" objection —
+non-consensual harvesting of copyrighted creative work to train a model that then
+substitutes for that work — is aimed at generative models trained on opportunistic web
+scrapes (art platforms, books, articles). Vosk's models are trained on purpose-built
+speech corpora (LibriSpeech — volunteer LibriVox readings of public-domain text, CC BY
+4.0 — plus Common Voice, Tuda, and similar academic corpora): people read text aloud
+specifically so it could be used this way. That's a genuinely different provenance story,
+confirmed by checking it, not assumed because the model is smaller.
+
+### 13.3 Speech Transcription — Tier 2 (Vosk), the default
+
+- **Vocabulary/grammar constraint:** Vosk supports constraining recognition to a defined
+  vocabulary or grammar, improving accuracy on domain terms at the source. The campaign's
+  entity graph (§3/§12) already has every proper noun tagged as exhaust of normal use —
+  Ivarstead, Ismara, Klimmek — feed that list into Vosk's constraint mechanism for free.
+  Whisper has no equivalent hard lever, only soft prompt-based hinting.
+- **Per-table enrollment, scoped to what's actually mature:** Kaldi has real speaker-
+  adaptation techniques (fMLLR, i-vectors), but Kaldi's own maintainers describe acoustic
+  fine-tuning as unfinished tooling ("not designed for finetuning... scripts are not easy
+  to set up"). Don't build on that. Instead: each player reads a fixed reference passage
+  (phonetically varied, and written to include the campaign's own proper nouns). Because
+  the passage's real text is known, diffing Vosk's transcription of it against the truth
+  surfaces that player's actual, confirmed errors — accent-driven or otherwise, not
+  limited to campaign vocabulary. Every consistent mismatch becomes a correction rule keyed
+  to that player's device, applied automatically to future transcripts from the same
+  device. This uses only mature, documented capabilities (transcribe + text diff) and
+  never touches the acoustic model.
+- **Why corrections work better here than they might elsewhere:** Vosk's constrained
+  decoding tends to fail the same way on the same word repeatedly, which is what makes a
+  fixed correction table effective. (Noted as reasoned inference, not independently
+  verified: if Whisper's freer generation turns out to be just as consistent in its
+  mistakes, this specific advantage narrows.)
+- **Portability caveat:** the enrollment/correction mechanism itself isn't Vosk-exclusive
+  — it could sit on top of Whisper's output too. What's genuinely Vosk-specific is the
+  vocabulary-constraint mechanism and the multi-device resource footprint (~50MB models,
+  no WebGPU requirement, cheap to run five-at-once across a table of phones/laptops).
+
+### 13.4 Speech Transcription — Tier 3 (Whisper), still open
+
+Whisper's real advantage is baseline generalization to speech it's never adapted for —
+new players, guest sessions, a table that's never run the enrollment flow, or (per the
+product's actual scope — `app-integration-plan.txt`: paid GM app, DLC ecosystem,
+system-agnostic, "any ruleset and any setting") a different GM's different table
+entirely, whose voices and vocabulary this table's tuning never touched. Tier 2's
+advantages (vocabulary constraint, enrollment) are per-campaign and don't transfer to a
+stranger's install; Tier 3's strength is exactly that it doesn't need to.
+
+**Not yet decided whether to build it at all.** Depends on how far Tier 2 actually gets
+on real audio — see 13.6, first step, still not executed as of this writing — and how
+much "works out of the box for a customer we'll never meet" matters versus "works
+excellently for the tables that use it." Revisit after the empirical test, not before.
+
+### 13.5 Open questions
+- [ ] Merged archive format (audio + volume trace + transcript + correction table,
+      versioned per §9).
+- [ ] Reconciliation algorithm specifics if/when Tier 3 ships and multiple transcripts of
+      the same segment need comparing.
+- [ ] Compare/Playback UI — where it lives in the 4-pillar dashboard (§8), or a session's
+      post-game view.
+- [ ] Whether Tier 3 (Whisper) gets built at all — see 13.4.
+
+### 13.6 Build order
+
+1. **Empirical spike (throwaway script, not product code):** run real table audio through
+   `vosk-python` locally — not the browser WASM port yet. Measure actual word-error-rate,
+   specifically on proper nouns and this table's voices, before investing further. This is
+   the test that's been proposed several times in this design process and not yet run;
+   nothing past this point should be built on an unverified assumption about accuracy.
+2. **Single-device local capture + transcription, in-app, zero networking:** Web Audio API
+   capture, local volume trace (13.1), Vosk transcribing on one device. Delivers real
+   standalone value already — a GM could use one device as a session recorder before any
+   other device joins.
+3. **Enrollment + correction-table pipeline, still single-device:** reference-passage UI,
+   diff against known text, per-player correction rules, applied to that device's own
+   future transcripts (13.3). Fully buildable and testable alone.
+4. **Vocabulary biasing wire-up:** feed the campaign entity graph into Vosk's constraint
+   mechanism for that device.
+5. **Thin networking primitive — deliberately last, not first:** join-by-code session
+   pairing; each device streams small timestamped metadata (volume trace, transcript text
+   — not raw audio) to a host, which merges into one timeline. This is the point where
+   pulling a thin slice of Phase 8's PeerJS foundation forward actually makes sense —
+   *after* steps 2-4 exist and their data shapes are known, not before. Designing the
+   transport before the payload exists risks building the wrong interface.
+6. **Merged multi-track Playback/Compare UI**, consuming the synced timeline from step 5.
+7. **Revisit Tier 3 (Whisper)** using step 1's actual results, not the assumption that
+   drove this design conversation.
