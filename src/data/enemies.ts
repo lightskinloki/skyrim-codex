@@ -486,6 +486,218 @@ export const enemyTemplates: EnemyTemplate[] = [
     ],
     isBoss: true,
   },
+
+  // ---- FIRE B: THE ROAD & THE BLEEDING STAIR ----
+  // Adventure modules/choice gate 3/FIRE B - THE ROAD & THE BLEEDING STAIR (redraft).rtf
+  {
+    id: 'dagonite_cultist',
+    name: 'Dagonite Cultist', // razor-scarred, ash-grey robes — RTF:734
+    category: 'humanoid',
+    hp: 100,
+    dr: 11,
+    stats: { might: 17, agility: 15, magic: 13, guile: 8 },
+    attacks: [{ name: 'Jagged Glass-Steel Blade', damage: 20, stat: 'might' }],
+    abilities: [
+      'Tide-shard graft (sternum): CHOOSES its Tempo result instead of rolling, until the shard is destroyed',
+      'Counter: Called Shot (Very Hard, -6) or Sunder aimed at the shard, or the bearer’s death, shatters it and the cultist rolls Tempo normally',
+      'Fights to the end — retreat is not in the liturgy',
+    ],
+  },
+  {
+    id: 'shard_zealot',
+    name: 'Shard Zealot', // the graft has spread up the throat; voice doubles — RTF:734
+    category: 'humanoid',
+    hp: 250,
+    fp: 4,
+    dr: 17,
+    stats: { might: 18, agility: 16, magic: 13, guile: 8 },
+    attacks: [
+      { name: 'Blade-work', damage: 31, stat: 'might' },
+      { name: 'Ash Shell', damage: 0, stat: 'magic', properties: '4 FP, encases a target' },
+      { name: 'Firebolt', damage: 6, stat: 'magic', properties: '3 FP' },
+    ],
+    abilities: [
+      'Cheats Tempo (tide-shard graft, same counter as Dagonite Cultist)',
+      'On death the shard bursts: 5 damage to all within 5 ft',
+    ],
+    isBoss: true,
+  },
+  {
+    id: 'scamp_wild_crossed',
+    name: 'Scamp, Wild-Crossed', // TL1 Harassment tier, weaker than a Guardian-tier enemy — RTF:931
+    category: 'daedra',
+    hp: 30,
+    dr: 1,
+    stats: { might: 8, agility: 15, magic: 12, guile: 9 },
+    attacks: [
+      { name: 'Claws', damage: 6, stat: 'agility' },
+      { name: 'Weak Firebolt', damage: 5, stat: 'magic', properties: '2 FP, in place of a claw attack' },
+    ],
+    abilities: ['No tide-shard — rolls Tempo like everyone else', 'Cowardly alone: flees below half HP if it has anywhere to flee to'],
+  },
+  {
+    id: 'frost_troll_dagon_warped',
+    name: 'Frost Troll, Dagon-Warped', // TL3 BOSS, Expert tier, party AP~12 — RTF:998-1027
+    category: 'beast',
+    hp: 900,
+    dr: 22,
+    stats: { might: 19, agility: 17, magic: 13, guile: 8 },
+    attacks: [{ name: 'Grab and Maul', damage: 41, stat: 'might' }],
+    abilities: [
+      'THREE PHASE BARS of 300 (900 total); damage does NOT carry between bars',
+      'Fire damage is DOUBLED in every bar; immune to frost',
+      'Villain Action: one extra action at the end of every second player turn',
+      'Does not regenerate turn-by-turn — its healing IS the phase transition',
+      'Bar 1 (900→601, "The Troll"): ONE attack/turn, DR 22',
+      'Bar 2 (600→301, "Too Much Arm"): TWO attacks/turn, DR drops to 14 (new limbs unhided)',
+      'Bar 3 (300→1, "The Loop That Will Not Stop Running"): THREE attacks/turn, DR 10, all other resistances gone; roll d20 per attack — 11+ hits its target, 6-10 hits a random other creature in reach, 1-5 strikes rock/snow/itself; no wounded state or morale; no facing (flanking does not apply)',
+      'GM lethality dial: if the party’s DR spread cannot absorb three Bar-3 attacks/turn, drop it to two and keep everything else',
+    ],
+    isBoss: true,
+  },
+  {
+    id: 'yolshulnir',
+    name: 'Yolshulnir', // fire dragon (APEX), hatched with Strunbahnir — RTF:286, 340
+    category: 'dragon',
+    hp: 900,
+    dr: 22,
+    stats: { might: 20, agility: 17, magic: 15, guile: 13 },
+    attacks: [
+      { name: 'Inferno Breath', damage: 40, stat: 'agility', properties: 'Major, 40ft cone, -6 Agi (40 fire fail / 20 success)' },
+      { name: 'Bite', damage: 45, stat: 'might', properties: 'Major, melee, Prone + Grapple' },
+      { name: 'Wildfire Claws', damage: 30, stat: 'might', properties: 'Major, melee, ignites the ground beneath the target' },
+    ],
+    abilities: [
+      'TWO PHASE BARS of 450 (900 total); damage does NOT carry between bars',
+      'Immune: Fear, Poison, Disease, Fire',
+      'Terrain Ignition (automatic): Inferno Breath, Wildfire Claws, or a Fanned Inferno ignites dry ground — standing fire hazard, 5 fire/round, no check required',
+      'Growing Hunger (passive): regains 10 HP at the start of his turn if any fire is burning anywhere on the field, his own or Strunbahnir’s',
+      'Fanned Inferno (paired w/ Strunbahnir): either of her lightning attacks landing on his ignited ground doubles that fire zone’s damage this round and expands its area 10ft',
+      'Each dragon rolls its own initiative — NOT a shared enemy slot',
+    ],
+    isBoss: true,
+  },
+  {
+    id: 'strunbahnir',
+    name: 'Strunbahnir', // storm dragon (APEX), hatched with Yolshulnir — RTF:286, 341
+    category: 'dragon',
+    hp: 900,
+    dr: 22,
+    stats: { might: 20, agility: 17, magic: 15, guile: 13 },
+    attacks: [
+      { name: 'Storm Call', damage: 40, stat: 'agility', properties: 'Major, ranged 60ft, -6 Agi (40 shock fail / 20 success), ignores half DR from metal armor, usable at full altitude' },
+      { name: 'Storm Fracture', damage: 15, stat: 'agility', properties: 'Major, ranged 60ft anchor bolt at full Storm Call force, then 15 shock/-2 Agi to everyone else within 30ft' },
+      { name: 'Bite', damage: 45, stat: 'might', properties: 'Major, melee, Prone + Grapple (only if grounded)' },
+      { name: 'Gale Slam', damage: 15, stat: 'might', properties: 'Major, 20ft radius downdraft, -4 Might, push 15ft, snuffs small fires in radius' },
+    ],
+    abilities: [
+      'TWO PHASE BARS of 450 (900 total); damage does NOT carry between bars',
+      'Immune: Fear, Poison, Disease, Shock',
+      'Storm Gathering (automatic): every Storm Call/Storm Fracture used ionizes the air; at 3 uses a real storm forms overhead and stays — from the round after, regains 10 HP at start of her turn',
+      'Passive: Advantage resisting Prone/stagger',
+      'Each dragon rolls its own initiative — NOT a shared enemy slot',
+    ],
+    isBoss: true,
+  },
+  {
+    id: 'gaelen_root_twister',
+    name: 'Gaelen the Root-Twister', // Apex Villain — full sheet: Npcs/new mythic dawn leader — RTF:1161
+    category: 'humanoid',
+    hp: 40,
+    fp: 35,
+    dr: 22,
+    stats: { might: 8, agility: 17, magic: 21, guile: 15 },
+    attacks: [],
+    abilities: [
+      'Magic 21: cannot fail a Magic roll',
+      'DR 23 vs spells; Paradise Mantle regenerates (outheal or shut off)',
+      'Mythic Dawn chitin skin; Daedric graft-arm acts on its own initiative',
+      'HE IS NOT HERE TO DIE: at disruption (3 of 5 anchors down) he PHASES away — falls back to the Eldergleam plan',
+      'These stats are for escape only — he never initiates an attack this encounter',
+    ],
+    isBoss: true,
+  },
+  {
+    id: 'jasper_avalon',
+    name: 'Jasper Avalon', // lieutenant, ~AP 10, Dunmer mage, The Atronach — RTF:1161
+    category: 'humanoid',
+    hp: 9,
+    fp: 16,
+    dr: 8,
+    stats: { might: 4, agility: 6, magic: 19, guile: 12 },
+    attacks: [
+      { name: 'Incinerate', damage: 12, stat: 'magic', properties: '9 FP' },
+      { name: 'Ash Shell', damage: 0, stat: 'magic', properties: '4 FP, Might roll or encased 2 rounds' },
+      { name: 'Lightning Bolt', damage: 0, stat: 'magic', properties: '3 FP' },
+    ],
+    abilities: [
+      'Spell Absorption (Atronach Stone): once per combat, negates a hostile spell and regains its FP cost',
+      "Ancestor's Wrath (Dunmer): 1/adventure fire aura",
+      'Ash Rune: 10 FP',
+      'Tide-shard graft: cheats Tempo',
+      'Fights to the end defending the ritual space — dies here, one-and-done',
+    ],
+    isBoss: true,
+  },
+  {
+    id: 'valerius_caelus_man_form',
+    name: 'Valerius Caelus (Man Form)', // Mythic Tier, TL3 Boss, Controller — RTF:520-521
+    category: 'daedra',
+    hp: 800,
+    fp: 90,
+    dr: 60,
+    stats: { might: 20, agility: 18, magic: 26, guile: 24 },
+    attacks: [{ name: 'Vampiric Drain', damage: 220, stat: 'magic' }],
+    abilities: [
+      'BAR 1 of 3 (total pool 2400; damage does NOT carry between bars) — courteous, fights as long as he believes he is winning',
+      'Dominate Will (Major): forces a resisted Guile check at the Contest Level-Gap Penalty (-20 to -25 TN)',
+      'Mist Form (Minor, 2 FP): incorporeal for 1 round, immune to non-magical attacks',
+      'Summon Death Hounds (Major): summons 1d4 Death Hounds',
+      'Empowered Casting (once/combat): declare one spell an automatic critical',
+      'Villain Action: one extra action at the end of every second player turn',
+      'Weakness: naming his wife Livia or son Marcus aloud costs him his next Villain Action — both forms, does not stop working',
+      'Weakness: daylight — breaks off and leaves at dawn regardless of how the fight is going',
+      'Breaking this bar transforms him into Lord Form (see valerius_caelus_lord_form) — GM DOES NOT initiate this fight; it exists so the wall is real if the players walk into it',
+    ],
+    isBoss: true,
+  },
+  {
+    id: 'valerius_caelus_lord_form',
+    name: 'Valerius Caelus (Lord Form)', // Mythic Tier, TL3 Boss, Controller/Brute — RTF:527-529
+    category: 'daedra',
+    hp: 800,
+    dr: 75,
+    stats: { might: 28, agility: 26, magic: 26, guile: 24 },
+    attacks: [
+      { name: 'Claws', damage: 260, stat: 'might' },
+      { name: 'Vampiric Drain', damage: 260, stat: 'magic', properties: 'heals him half of what he deals, into the current bar only' },
+    ],
+    abilities: [
+      'BARS 2 AND 3 — 800 each; damage does NOT carry between bars',
+      'Flight: full aerial mobility; melee cannot reach him without reach, a climb, a grapple, or something that grounds him',
+      'Immune: Fear, Poison, Disease. Constrained by daylight',
+      'Vampiric Grip (Major): telekinetically lifts one target, contested Might at the Contest Level-Gap Penalty; held targets take 40/round and drop what’s in their hands',
+      'Summon Gargoyles (Major, once/bar): two stone guardians, DR 40, no Frost Breath, statline as Death Hounds otherwise',
+      'Corpse Curse (Major): every corpse on the field stands up under his control',
+      'Detect Life (passive): always knows where everything living on the field is — hiding, invisibility, cover do not work on him',
+      'Same two weaknesses as Man Form (his wife/son’s name; daylight)',
+      'Villain Action: one extra action at the end of every second player turn',
+    ],
+    isBoss: true,
+  },
+  {
+    id: 'death_hound',
+    name: 'Death Hound', // Mythic Tier, TL1 Minion, Skirmisher — RTF:534
+    category: 'beast',
+    hp: 300,
+    dr: 25,
+    stats: { might: 20, agility: 22, magic: 16, guile: 18 },
+    attacks: [{ name: 'Icy Bite', damage: 35, stat: 'agility' }],
+    abilities: [
+      'Frost Breath (Minor): +5 frost damage, can Slow target',
+      'Roughly shoulder-height to a horse, eight feet at the shoulder, jaws built to fit around a grown man’s ribcage',
+    ],
+  },
 ];
 
 // Helper to get enemies by category

@@ -35,6 +35,12 @@ export function LivePlay({ onDeployEncounter }: LivePlayProps) {
     setOpenNpc(null);
   }
 
+  function goToScene(id: string) {
+    const i = scenes.findIndex((s) => s.id === id);
+    if (i === -1) return; // dangling target — caller falls back to linear advance
+    go(i);
+  }
+
   function toggleReveal(id: string) {
     setRevealed((prev) => {
       const next = new Set(prev);
@@ -238,7 +244,11 @@ export function LivePlay({ onDeployEncounter }: LivePlayProps) {
                 {scene.exits.length === 0 ? <p className="text-xs text-muted-foreground">End of the line.</p> : (
                   <div className="space-y-1">
                     {scene.exits.map((ex) => (
-                      <button key={ex.id} onClick={() => go(sceneIndex + 1)} className="w-full text-left text-sm border rounded p-2 hover:bg-accent flex items-center gap-2">
+                      <button
+                        key={ex.id}
+                        onClick={() => ex.targetSceneId ? goToScene(ex.targetSceneId) : go(sceneIndex + 1)}
+                        className="w-full text-left text-sm border rounded p-2 hover:bg-accent flex items-center gap-2"
+                      >
                         <ArrowRight className="h-4 w-4 text-primary shrink-0" />
                         <span>{ex.description}{ex.branchLabel && <span className="text-muted-foreground"> → {ex.branchLabel}</span>}</span>
                       </button>

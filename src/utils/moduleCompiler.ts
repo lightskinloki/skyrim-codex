@@ -229,6 +229,30 @@ function compileScene(raw: { title: string; body: string[] }, inlineEdges: WebEd
   return scene;
 }
 
+// normalize a title/label for fuzzy exit-target matching: lowercase, strip
+// punctuation, collapse whitespace. Scene titles in a session sheet often
+// carry a number/letter prefix and a colon-subtitle ("3B -- THE WIND TUNNEL:
+// the thing that cannot finish") that a hand-written EXIT branch label won't
+// always repeat verbatim, so match is exact-first, then substring-fallback.
+function normalizeTitle(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+/** Resolve EXIT branch labels (scene-title text) into real targetSceneId links. */
+function resolveExitTargets(scenes: SceneNode[]): void {
+  const norm = scenes.map((s) => normalizeTitle(s.title));
+  scenes.forEach((s) => {
+    s.exits.forEach((ex) => {
+      if (ex.targetSceneId || !ex.branchLabel) return;
+      const label = normalizeTitle(ex.branchLabel);
+      if (!label) return;
+      let idx = norm.findIndex((t) => t === label);
+      if (idx === -1) idx = norm.findIndex((t) => t.includes(label) || label.includes(t));
+      if (idx !== -1) ex.targetSceneId = scenes[idx].id;
+    });
+  });
+}
+
 export function compileModule(markdown: string, name = 'Untitled Module', sourcePath?: string): CompileResult {
   const inlineEdges: WebEdge[] = [];
   const rawScenes = splitScenes(markdown);
@@ -238,6 +262,7 @@ export function compileModule(markdown: string, name = 'Untitled Module', source
     s.moduleId = moduleId;
     return s;
   });
+  resolveExitTargets(scenes);
 
   const warnings = lintModule(scenes);
   return {
