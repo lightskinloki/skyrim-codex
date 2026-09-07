@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Character, Equipment, CustomAbility, Enchantment } from "@/types/character";
 import { CharacterCard } from "./CharacterCard";
+import { CompanionRoster } from "./CompanionRoster";
 import { StatBlock } from "./StatBlock";
 import { ResourceBar } from "./ResourceBar";
 import { SkillsDisplay } from "./SkillsDisplay";
@@ -1064,8 +1065,9 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
           className="w-full"
         >
           <div className="mb-6 flex justify-center">
-            <TabsList className="grid w-full max-w-md grid-cols-2 bg-card-secondary/60">
+            <TabsList className="grid w-full max-w-lg grid-cols-3 bg-card-secondary/60">
               <TabsTrigger value="sheet">Character Sheet</TabsTrigger>
+              <TabsTrigger value="companions">Companions</TabsTrigger>
               <TabsTrigger value="map">{mapRevealed ? "Esbern's Map" : "Unlockable"}</TabsTrigger>
             </TabsList>
           </div>
@@ -1631,6 +1633,10 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
           </div>
         </div>
       </TabsContent>
+
+        <TabsContent value="companions" className="mt-0">
+          <CompanionRoster />
+        </TabsContent>
 
         <TabsContent value="map" className="mt-0">
           {activeTab === "map" && (
