@@ -45,10 +45,17 @@ export function CompanionCard({ companion, onUpdate, onRemove }: CompanionCardPr
     });
   };
 
+  // DR has no source-given max (Sunder/repair move it up and down with no fixed ceiling),
+  // so it's just a floored current value rather than a {current,max} pair.
+  const adjustDR = (delta: number) => {
+    const next = Math.max(0, companion.resources.dr + delta);
+    onUpdate({ ...companion, resources: { ...companion.resources, dr: next } });
+  };
+
   const useAbility = (ability: CompanionAbility) => {
     // Spend the resource cost first.
     let resources = companion.resources;
-    if (ability.cost.type === 'fp') {
+    if (ability.cost.type === 'fp' && resources.fp) {
       resources = { ...resources, fp: { ...resources.fp, current: Math.max(0, resources.fp.current - ability.cost.amount) } };
     } else if (ability.cost.type === 'hp' && resources.hp) {
       resources = { ...resources, hp: { ...resources.hp, current: Math.max(0, resources.hp.current - ability.cost.amount) } };
@@ -80,8 +87,8 @@ export function CompanionCard({ companion, onUpdate, onRemove }: CompanionCardPr
     (typeof a.usesRemaining === 'number' && a.usesRemaining <= 0) || a.used === true;
 
   const canAfford = (a: CompanionAbility) => {
-    if (a.cost.type === 'fp') return companion.resources.fp.current >= a.cost.amount;
-    if (a.cost.type === 'hp') return companion.resources.hp.current >= a.cost.amount;
+    if (a.cost.type === 'fp') return !!companion.resources.fp && companion.resources.fp.current >= a.cost.amount;
+    if (a.cost.type === 'hp') return !!companion.resources.hp && companion.resources.hp.current >= a.cost.amount;
     return true;
   };
 
@@ -119,7 +126,13 @@ export function CompanionCard({ companion, onUpdate, onRemove }: CompanionCardPr
       </div>
 
       {/* Resources */}
-      <div className={cn("grid gap-2", companion.resources.hp ? "grid-cols-3" : "grid-cols-2")}>
+      {/* Tailwind needs literal class names (no dynamic grid-cols-${n} — it'd get purged), so spell out the three cases. */}
+      <div className={cn(
+        "grid gap-2",
+        companion.resources.hp && companion.resources.fp ? "grid-cols-3"
+          : companion.resources.hp || companion.resources.fp ? "grid-cols-2"
+          : "grid-cols-1"
+      )}>
         {companion.resources.hp && (
           <div className="flex items-center gap-2 rounded border p-2">
             <Heart className="h-4 w-4 text-red-500 shrink-0" />
@@ -133,22 +146,28 @@ export function CompanionCard({ companion, onUpdate, onRemove }: CompanionCardPr
             </div>
           </div>
         )}
-        <div className="flex items-center gap-2 rounded border p-2">
-          <Zap className="h-4 w-4 text-blue-500 shrink-0" />
-          <div className="flex-1">
-            <div className="text-xs text-muted-foreground">{companion.resources.hp ? 'FP' : 'FP (also HP)'}</div>
-            <div className="flex items-center gap-1">
-              <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => adjustResource('fp', -1)}>-</Button>
-              <span className="text-sm tabular-nums w-14 text-center">{companion.resources.fp.current}/{companion.resources.fp.max}</span>
-              <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => adjustResource('fp', 1)}>+</Button>
+        {companion.resources.fp && (
+          <div className="flex items-center gap-2 rounded border p-2">
+            <Zap className="h-4 w-4 text-blue-500 shrink-0" />
+            <div className="flex-1">
+              <div className="text-xs text-muted-foreground">{companion.resources.hp ? 'FP' : 'FP (also HP)'}</div>
+              <div className="flex items-center gap-1">
+                <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => adjustResource('fp', -1)}>-</Button>
+                <span className="text-sm tabular-nums w-14 text-center">{companion.resources.fp.current}/{companion.resources.fp.max}</span>
+                <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => adjustResource('fp', 1)}>+</Button>
+              </div>
             </div>
           </div>
-        </div>
+        )}
         <div className="flex items-center gap-2 rounded border p-2">
           <Shield className="h-4 w-4 text-slate-500 shrink-0" />
-          <div>
+          <div className="flex-1">
             <div className="text-xs text-muted-foreground">DR</div>
-            <div className="text-sm tabular-nums">{companion.resources.dr}</div>
+            <div className="flex items-center gap-1">
+              <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => adjustDR(-1)}>-</Button>
+              <span className="text-sm tabular-nums w-8 text-center">{companion.resources.dr}</span>
+              <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => adjustDR(1)}>+</Button>
+            </div>
           </div>
         </div>
       </div>

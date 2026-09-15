@@ -19,7 +19,8 @@ export interface CompanionStats {
 export interface CompanionResources {
   /** Omit for a construct whose FP pool IS its structural integrity (e.g. GEAR's Aetherium Core) — don't invent a fake HP number to fill the slot. */
   hp?: { current: number; max: number };
-  fp: { current: number; max: number };
+  /** Omit for a unit with no FP/magicka pool at all (e.g. Click, a non-caster minion-class construct) — the mirror case of the HP omission above. */
+  fp?: { current: number; max: number };
   dr: number;
 }
 
