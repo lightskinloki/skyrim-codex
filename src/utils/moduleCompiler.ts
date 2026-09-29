@@ -1,9 +1,16 @@
-// Markdown → CampaignModule compiler (the Forge's "Preflight compile").
+// Markdown → CampaignModule compiler (the Forge's "Import (veteran)" path).
 //
 // Parses a GM's markdown runsheet into structured SceneNodes using the campaign's
 // existing session-sheet vocabulary (see Frogs-5-skyrim/Toryggs legacy/SESSION
 // SHEET FORMAT and docs/LOREWEB-PORT-SPEC.md). It also harvests inline `@web:`
 // edges so authoring a runsheet grows the lore web as a byproduct.
+//
+// v2 note: this still parses into the old flat buckets (readAloud, gmNotes,
+// bullets, npcs, checks, findables) — the shape markdown naturally has no
+// paragraph-order concept for — then hands the result to sceneBlocks'
+// legacyToBlocks()/migrateScene() to fold into ordered v2 blocks. The wizard
+// is the priority authoring path; this compiler exists for veterans of the
+// old markdown format and stays intentionally simple.
 //
 // Recognized markers:
 //   # / ## / ###  Title      → scene boundary + title
@@ -23,13 +30,14 @@
 //
 // Unrecognized prose lines become bullets; bare ALL-CAPS section labels are
 // treated as visual dividers and dropped. Coverage is pragmatic v1 — the GM
-// refines in the editor; the linter flags gaps.
+// refines in the wizard; the linter flags gaps.
 
 import {
-  CampaignModule, SceneNode, SceneCheck, Findable, SceneNpc, ExitLink,
-  WebEdge, Difficulty, CheckStat, DIFFICULTY_PENALTY, createScene,
-  CAMPAIGN_SCHEMA_VERSION,
+  SceneNode, SceneCheck, Findable, SceneNpc, ExitLink,
+  WebEdge, Difficulty, CheckStat, DIFFICULTY_PENALTY,
+  CampaignModule, CAMPAIGN_SCHEMA_VERSION,
 } from '@/types/campaign';
+import { migrateScene, legacyToBlocks, lintModuleV2, uid } from './sceneBlocks';
 
 export interface CompileResult {
   module: CampaignModule;
@@ -68,7 +76,7 @@ function extractChecks(text: string): SceneCheck[] {
     const stat = (m[2]?.toLowerCase() as CheckStat) || 'none';
     const penalty = m[3] !== undefined ? parseInt(m[3], 10) : DIFFICULTY_PENALTY[difficulty];
     out.push({
-      id: crypto.randomUUID(),
+      id: uid(),
       stat,
       difficulty,
       penalty,
@@ -106,8 +114,33 @@ function splitScenes(md: string): { title: string; body: string[] }[] {
   return scenes.filter((s) => s.title || s.body.some((l) => l.trim()));
 }
 
-function compileScene(raw: { title: string; body: string[] }, inlineEdges: WebEdge[]): SceneNode {
-  const scene = createScene({ title: raw.title || 'Untitled Scene' });
+/** Flat v1-shaped intermediate — parsing has no paragraph-order concept, so
+ * we fill these buckets, then legacyToBlocks() folds them into ordered v2
+ * blocks in a fixed, sensible sequence (read-aloud, then notes, then bullets,
+ * then NPCs, then checks, then findables). */
+interface RawScene {
+  title: string;
+  subtitle?: string;
+  type: SceneNode['type'];
+  readAloud: string[];
+  gmNotes: string[];
+  bullets: string[];
+  findables: Findable[];
+  npcs: SceneNpc[];
+  checks: SceneCheck[];
+  enemies: string[];
+  exits: ExitLink[];
+}
+
+function newRawScene(title: string): RawScene {
+  return {
+    title: title || 'Untitled Scene', type: 'set-piece',
+    readAloud: [], gmNotes: [], bullets: [], findables: [], npcs: [], checks: [], enemies: [], exits: [],
+  };
+}
+
+function compileScene(raw: { title: string; body: string[] }, inlineEdges: WebEdge[]): RawScene {
+  const scene = newRawScene(raw.title);
   let mode: 'none' | 'readaloud' | 'handout' = 'none';
   let handout: Findable | null = null;
   let findSection: Findable | null = null;
@@ -118,7 +151,7 @@ function compileScene(raw: { title: string; body: string[] }, inlineEdges: WebEd
     const key = name.toUpperCase();
     let npc = npcByName.get(key);
     if (!npc) {
-      npc = { id: crypto.randomUUID(), name };
+      npc = { id: uid(), name };
       npcByName.set(key, npc);
       scene.npcs.push(npc);
     }
@@ -146,7 +179,7 @@ function compileScene(raw: { title: string; body: string[] }, inlineEdges: WebEd
     if (/^>>?\s*read\s*aloud/i.test(line)) { mode = 'readaloud'; continue; }
     const ho = line.match(/^>>?\s*handout\s*[-–—:]+\s*(.+)$/i);
     if (ho) {
-      handout = { id: crypto.randomUUID(), name: ho[1].trim(), description: '', readAloud: '', resolved: false };
+      handout = { id: uid(), name: ho[1].trim(), description: '', readAloud: '', resolved: false };
       scene.findables.push(handout);
       mode = 'handout';
       continue;
@@ -155,7 +188,7 @@ function compileScene(raw: { title: string; body: string[] }, inlineEdges: WebEd
 
     const find = line.match(/^find\b[ \-–—:]*(.*)$/i);
     if (find) {
-      findSection = { id: crypto.randomUUID(), name: (find[1] || 'Findable').trim(), description: '', resolved: false };
+      findSection = { id: uid(), name: (find[1] || 'Findable').trim(), description: '', resolved: false };
       scene.findables.push(findSection);
       mode = 'none';
       continue;
@@ -164,7 +197,7 @@ function compileScene(raw: { title: string; body: string[] }, inlineEdges: WebEd
     const exit = line.match(/^exit\s*[-–—]*>?\s*(.+)$/i);
     if (exit) {
       const parts = exit[1].split(/\s*->\s*|\s{2,}->\s*/);
-      const link: ExitLink = { id: crypto.randomUUID(), description: parts[0].trim() };
+      const link: ExitLink = { id: uid(), description: parts[0].trim() };
       if (parts[1]) link.branchLabel = parts[1].trim();
       scene.exits.push(link);
       mode = 'none';
@@ -224,7 +257,7 @@ function compileScene(raw: { title: string; body: string[] }, inlineEdges: WebEd
 
   // classify scene type
   if (/combat|initiative|fight|battle/i.test(scene.title)) scene.type = 'combat';
-  else if (scene.npcs.length > 0 && scene.readAloud.length >= 0 && /camp|farewell|debrief|meeting/i.test(scene.title)) scene.type = 'character';
+  else if (scene.npcs.length > 0 && /camp|farewell|debrief|meeting/i.test(scene.title)) scene.type = 'character';
 
   return scene;
 }
@@ -239,7 +272,7 @@ function normalizeTitle(s: string): string {
 }
 
 /** Resolve EXIT branch labels (scene-title text) into real targetSceneId links. */
-function resolveExitTargets(scenes: SceneNode[]): void {
+function resolveExitTargets(scenes: { title: string; exits: ExitLink[] }[]): void {
   const norm = scenes.map((s) => normalizeTitle(s.title));
   scenes.forEach((s) => {
     s.exits.forEach((ex) => {
@@ -248,7 +281,7 @@ function resolveExitTargets(scenes: SceneNode[]): void {
       if (!label) return;
       let idx = norm.findIndex((t) => t === label);
       if (idx === -1) idx = norm.findIndex((t) => t.includes(label) || label.includes(t));
-      if (idx !== -1) ex.targetSceneId = scenes[idx].id;
+      if (idx !== -1) ex.targetSceneId = (scenes[idx] as unknown as { id: string }).id;
     });
   });
 }
@@ -256,50 +289,124 @@ function resolveExitTargets(scenes: SceneNode[]): void {
 export function compileModule(markdown: string, name = 'Untitled Module', sourcePath?: string): CompileResult {
   const inlineEdges: WebEdge[] = [];
   const rawScenes = splitScenes(markdown);
-  const moduleId = crypto.randomUUID();
-  const scenes = rawScenes.map((rs) => {
-    const s = compileScene(rs, inlineEdges);
-    s.moduleId = moduleId;
-    return s;
-  });
-  resolveExitTargets(scenes);
+  const moduleId = uid();
+  const raws = rawScenes.map((rs) => compileScene(rs, inlineEdges));
 
-  const warnings = lintModule(scenes);
-  return {
-    module: {
-      id: moduleId,
-      name,
-      scenes,
-      sourcePath,
-      schemaVersion: CAMPAIGN_SCHEMA_VERSION,
-    },
-    inlineEdges,
-    warnings,
+  const withIds = raws.map((r) => ({ ...r, id: uid() }));
+  resolveExitTargets(withIds);
+
+  const scenes: SceneNode[] = withIds.map((r) =>
+    migrateScene({
+      id: r.id, moduleId, title: r.title, subtitle: r.subtitle, type: r.type,
+      blocks: legacyToBlocks(r), enemies: r.enemies, exits: r.exits, tags: [],
+    })
+  );
+
+  const module: CampaignModule = {
+    id: moduleId, name, scenes, sourcePath, tierTables: [], schemaVersion: CAMPAIGN_SCHEMA_VERSION,
   };
+  return { module, inlineEdges, warnings: lintModuleV2(module) };
 }
 
-/** Preflight linter — flags the session-sheet build-checklist failures. */
+/** Preflight linter — kept for callers that only have loose SceneNode[]
+ * (rare after v2; prefer lintModuleV2 on a full CampaignModule). */
 export function lintModule(scenes: SceneNode[]): string[] {
-  const warnings: string[] = [];
-  if (scenes.length === 0) warnings.push('No scenes found. Use "# Title" or "---" to divide scenes.');
-  scenes.forEach((s, i) => {
-    const n = `Scene ${i + 1} "${s.title}"`;
-    if (s.readAloud.length === 0) warnings.push(`${n}: no read-aloud block (every scene should open with one).`);
-    if (s.exits.length === 0 && i < scenes.length - 1) warnings.push(`${n}: no EXIT — the reader won't know where it leads.`);
-    if (s.type === 'character' && s.npcs.every((npc) => !npc.line)) {
-      warnings.push(`${n}: a character scene where no NPC has a line (a beat is never a character sheet).`);
-    }
-  });
-  return warnings;
+  return lintModuleV2({ id: '', name: '', scenes, tierTables: [], schemaVersion: CAMPAIGN_SCHEMA_VERSION });
 }
 
 /* ------------------------------------------------------------------ *
  * Dual-format export: SceneNodes → human-readable session-sheet
- * markdown. This is the fallback the GM can read/run with the app
- * closed, and it re-imports through compileModule (round-trip).
+ * markdown. Round-trips the original v1 vocabulary faithfully for the
+ * block kinds that map onto it (read-aloud, GM notes, lists, spoken NPC
+ * lines, checks, findables/handouts, exits, enemies); every other v2
+ * block kind (branch/choices/card/director/combat/etc.) is dumped as
+ * readable prose under a labeled marker so nothing is silently lost —
+ * it will re-import as a bullet rather than reconstruct the original
+ * widget, which is the known limit of the markdown veteran path.
  * ------------------------------------------------------------------ */
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+function blocksToMarkdown(blocks: SceneNode['blocks'], titleById: Map<string, string>, lines: string[], indent = ''): void {
+  for (const b of blocks) {
+    switch (b.kind) {
+      case 'readAloud':
+        lines.push(`${indent}>> READ ALOUD${b.tag ? ` — ${b.tag}` : ''}`);
+        b.paragraphs.forEach((p, j) => { lines.push(indent + p); if (j < b.paragraphs.length - 1) lines.push(''); });
+        lines.push('');
+        break;
+      case 'gmNote':
+      case 'gmAlert':
+        lines.push(`${indent}GM: ${b.tag ? `[${b.tag}] ` : ''}${b.text}`);
+        b.items?.forEach((it) => lines.push(`${indent}- ${it}`));
+        lines.push('');
+        break;
+      case 'stop':
+        lines.push(`${indent}GM: STOP. ${b.text}`, '');
+        break;
+      case 'spoken':
+        lines.push(`${indent}**${b.speaker.toUpperCase()}:** "${b.line}"`, '');
+        break;
+      case 'handout':
+        lines.push(`${indent}FIND -- ${b.title}`, `${indent}>> HANDOUT -- ${b.title}`, indent + b.text, '');
+        break;
+      case 'list':
+        if (b.title) lines.push(`${indent}${b.title}`);
+        b.items.forEach((it, i) => lines.push(`${indent}${b.ordered ? `${i + 1}.` : '-'} ${it}`));
+        lines.push('');
+        break;
+      case 'text':
+        lines.push(indent + b.text, '');
+        break;
+      case 'heading':
+        lines.push(`${indent}### ${b.text}`, '');
+        break;
+      case 'quote':
+        b.lines.forEach((l) => lines.push(`${indent}> "${l}"`));
+        lines.push('');
+        break;
+      case 'card':
+        lines.push(`${indent}CARD -- ${b.title}`);
+        b.items.forEach((it) => lines.push(`${indent}- ${it}`));
+        b.quotes?.forEach((q) => lines.push(`${indent}> "${q}"`));
+        if (b.note) lines.push(indent + b.note);
+        lines.push('');
+        break;
+      case 'check':
+        lines.push(`${indent}- **${b.difficulty}${b.stat !== 'none' ? ` ${cap(b.stat)}` : ''}${b.penalty ? ` (${b.penalty > 0 ? '+' : ''}${b.penalty})` : ''}**${b.label ? ` — ${b.label}` : ''}`, '');
+        break;
+      case 'findable':
+        lines.push(`${indent}FIND -- ${b.name}`);
+        if (b.description) lines.push(`${indent}- ${b.description}`);
+        if (b.readAloud) lines.push(`${indent}>> HANDOUT -- ${b.name}`, indent + b.readAloud);
+        lines.push('');
+        break;
+      case 'exit': {
+        const tgt = b.targetSceneId ? titleById.get(b.targetSceneId) : undefined;
+        lines.push(`${indent}EXIT -> ${b.description}${tgt ? ` -> ${tgt}` : ''}`, '');
+        break;
+      }
+      case 'branch':
+        lines.push(`${indent}BRANCH -- ${b.title}${b.tag ? ` [${b.tag}]` : ''}`);
+        blocksToMarkdown(b.blocks, titleById, lines, indent + '  ');
+        break;
+      case 'choices':
+        lines.push(`${indent}CHOICES${b.prompt ? ` -- ${b.prompt}` : ''}`);
+        b.options.forEach((o) => {
+          lines.push(`${indent}OPTION -- ${o.label}`);
+          blocksToMarkdown(o.blocks, titleById, lines, indent + '  ');
+        });
+        lines.push('');
+        break;
+      case 'director':
+        lines.push(`${indent}[Conversation director: ${b.director.npc} — ${b.director.nodes.length} nodes. Edit in the Forge wizard; not represented in markdown.]`, '');
+        break;
+      case 'combat':
+        lines.push(`${indent}[Combat manager: ${b.combat.title} — ${b.combat.trackers.length} trackers, ${b.combat.triggers.length} triggers. Edit in the Forge wizard; not represented in markdown.]`, '');
+        break;
+    }
+  }
+}
 
 export function moduleToMarkdown(module: CampaignModule): string {
   const titleById = new Map(module.scenes.map((s) => [s.id, s.title]));
@@ -310,35 +417,8 @@ export function moduleToMarkdown(module: CampaignModule): string {
     if (s.subtitle) lines.push(`SUBTITLE: ${s.subtitle}`);
     lines.push('');
 
-    if (s.readAloud.length) {
-      lines.push('>> READ ALOUD');
-      s.readAloud.forEach((p, j) => { lines.push(p); if (j < s.readAloud.length - 1) lines.push(''); });
-      lines.push('');
-    }
-    if (s.gmNotes.length) { s.gmNotes.forEach((n) => lines.push(`GM: ${n}`)); lines.push(''); }
-    if (s.bullets.length) { s.bullets.forEach((b) => lines.push(`- ${b}`)); lines.push(''); }
+    blocksToMarkdown(s.blocks, titleById, lines);
 
-    if (s.checks.length) {
-      s.checks.forEach((c) => {
-        const statTxt = c.stat && c.stat !== 'none' ? ` ${cap(c.stat)}` : '';
-        const pen = c.penalty !== 0 ? ` (${c.penalty > 0 ? '+' : ''}${c.penalty})` : '';
-        lines.push(`- **${c.difficulty}${statTxt}${pen}**${c.label ? ` — ${c.label}` : ''}`);
-      });
-      lines.push('');
-    }
-    if (s.npcs.length) {
-      s.npcs.forEach((npc) => {
-        lines.push(npc.line ? `**${npc.name.toUpperCase()}:** "${npc.line}"` : `**${npc.name.toUpperCase()}:**`);
-        npc.reactions?.forEach((r) => lines.push(`REACTION (${npc.name}): ${r.response}`));
-      });
-      lines.push('');
-    }
-    s.findables.forEach((f) => {
-      lines.push(`FIND -- ${f.name}`);
-      if (f.description) f.description.split('\n').forEach((d) => lines.push(`- ${d}`));
-      if (f.readAloud) { lines.push(`>> HANDOUT -- ${f.name}`); lines.push(f.readAloud); }
-      lines.push('');
-    });
     if (s.enemies.length) { lines.push(`ENEMIES: ${s.enemies.join(', ')}`); lines.push(''); }
     s.exits.forEach((ex) => {
       const tgt = ex.targetSceneId ? titleById.get(ex.targetSceneId) : ex.branchLabel;
