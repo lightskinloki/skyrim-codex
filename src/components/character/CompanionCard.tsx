@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Heart, Zap, Shield, Sparkles, RotateCcw, Trash2, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { applySummonDamage, riseSummon } from "@/utils/summoning";
 
 interface CompanionCardProps {
   companion: Companion;
@@ -38,6 +39,11 @@ export function CompanionCard({ companion, onUpdate, onRemove }: CompanionCardPr
   const adjustResource = (key: 'hp' | 'fp', delta: number) => {
     const res = companion.resources[key];
     if (!res) return; // e.g. GEAR has no HP field at all
+    // HP goes through the shared rule so a Revenant is marked fallen, not deleted.
+    if (key === 'hp') {
+      onUpdate(applySummonDamage(companion, delta));
+      return;
+    }
     const next = Math.max(0, Math.min(res.max, res.current + delta));
     onUpdate({
       ...companion,
@@ -125,6 +131,16 @@ export function CompanionCard({ companion, onUpdate, onRemove }: CompanionCardPr
         </div>
       </div>
 
+      {companion.image && (
+        <div className="relative w-full h-36 rounded-md overflow-hidden border border-border bg-muted">
+          <img
+            src={`/images/summons/${companion.image}`}
+            alt={companion.name}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
+
       {/* Resources */}
       {/* Tailwind needs literal class names (no dynamic grid-cols-${n} — it'd get purged), so spell out the three cases. */}
       <div className={cn(
@@ -171,6 +187,20 @@ export function CompanionCard({ companion, onUpdate, onRemove }: CompanionCardPr
           </div>
         </div>
       </div>
+
+      {companion.risePending && (
+        <div className="flex items-center justify-between gap-2 rounded border border-destructive/40 bg-destructive/10 px-2 py-1.5 text-xs">
+          <span><strong className="text-destructive">Fallen.</strong> Rises at the start of its next turn.</span>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-6 text-xs shrink-0"
+            onClick={() => riseSummon(companion)}
+          >
+            Rise now
+          </Button>
+        </div>
+      )}
 
       {expanded && (
         <>

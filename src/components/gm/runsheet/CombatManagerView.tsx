@@ -2,13 +2,14 @@
 // round/tier roller, combatant priority cards, and condition-trigger cards
 // (Saijah hits 0 HP, Jasper's second 0 HP). One-to-one port of the Fire B
 // runsheet's #jasper-combat-manager section.
-import { useState } from "react";
+import { useMemo } from "react";
 import { Swords } from "lucide-react";
 import { Inline } from "./Inline";
 import { SceneBlocks, RenderCtx } from "./SceneBlockRenderer";
 import { CombatManager, ObjectiveTracker } from "@/types/campaign";
 import { rollD20, tierFor } from "@/utils/sceneBlocks";
 import { useCampaign } from "../CampaignContext";
+import { useEncounter } from "@/hooks/useEncounter";
 
 interface TrackerState { hp: Record<string, number>; down: Record<string, boolean>; }
 
@@ -20,14 +21,38 @@ function initTracker(t: ObjectiveTracker): TrackerState {
 
 export function CombatManagerView({ combat: c, blockId, ctx }: { combat: CombatManager; blockId: string; ctx: RenderCtx }) {
   const { campaign } = useCampaign();
-  const [round, setRound] = useState(1);
-  const [fields, setFields] = useState<Record<string, string>>(() =>
-    Object.fromEntries(c.statusFields.map((f) => [f.id, f.initial])));
-  const [trackers, setTrackers] = useState<Record<string, TrackerState>>(() =>
-    Object.fromEntries(c.trackers.map((t) => [t.id, initTracker(t)])));
-  const [firedTriggers, setFiredTriggers] = useState<Set<string>>(new Set());
-  const [tierRoll, setTierRoll] = useState<{ roll: number; label: string; effect?: string } | null>(null);
-  const [log, setLog] = useState("");
+
+  // The encounter is the fight, not this component. It is restored from storage
+  // on mount, so a refresh (or a tab switch) no longer resets every bar.
+  const seedTrackers = useMemo(() =>
+    Object.fromEntries(c.trackers.map((t) => [t.id, initTracker(t)])),
+    // Trackers are authored data for this block; they do not change mid-fight.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [blockId]);
+  const seedFields = useMemo(() =>
+    Object.fromEntries(c.statusFields.map((f) => [f.id, f.initial])),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [blockId]);
+
+  const { state: encounter, dispatch, reset } = useEncounter({
+    blockId, moduleId: campaign.id, trackers: seedTrackers, fields: seedFields,
+  });
+
+  // Merge in any tracker or field the module has gained since this fight began.
+  const trackers = useMemo(() => {
+    const merged: Record<string, TrackerState> = { ...encounter.trackers };
+    for (const t of c.trackers) if (!merged[t.id]) merged[t.id] = initTracker(t);
+    return merged;
+  }, [encounter.trackers, c.trackers]);
+  const fields = useMemo(() => {
+    const merged: Record<string, string> = {};
+    for (const f of c.statusFields) merged[f.id] = f.initial;
+    return { ...merged, ...encounter.fields };
+  }, [encounter.fields, c.statusFields]);
+  const round = encounter.round;
+  const firedTriggers = useMemo(() => new Set(encounter.firedTriggers), [encounter.firedTriggers]);
+  const tierRoll = encounter.tierRoll;
+  const log = encounter.log;
 
   const tierTable = c.tierTableId ? campaign.modules.flatMap((m) => m.tierTables ?? []).find((t) => t.id === c.tierTableId) : undefined;
 
@@ -39,16 +64,12 @@ export function CombatManagerView({ combat: c, blockId, ctx }: { combat: CombatM
     return !!t.threshold && downCount(t) >= t.threshold;
   }
   function damage(t: ObjectiveTracker, targetId: string, amt: number) {
-    setTrackers((prev) => {
-      const s = prev[t.id]; const hp = Math.max(0, (s.hp[targetId] ?? 0) - amt);
-      const down = { ...s.down, [targetId]: hp <= 0 };
-      return { ...prev, [t.id]: { hp: { ...s.hp, [targetId]: hp }, down } };
-    });
+    dispatch({ type: "tracker.damage", trackerId: t.id, targetId, amount: amt });
   }
   function setDown(t: ObjectiveTracker, targetId: string, val: boolean) {
-    setTrackers((prev) => {
-      const s = prev[t.id];
-      return { ...prev, [t.id]: { hp: { ...s.hp, [targetId]: val ? 0 : t.targets.find((x) => x.id === targetId)?.maxHp ?? 0 }, down: { ...s.down, [targetId]: val } } };
+    dispatch({
+      type: "tracker.setDown", trackerId: t.id, targetId, down: val,
+      maxHp: t.targets.find((x) => x.id === targetId)?.maxHp ?? 0,
     });
   }
 
@@ -56,10 +77,10 @@ export function CombatManagerView({ combat: c, blockId, ctx }: { combat: CombatM
     if (!tierTable) return;
     const roll = rollD20();
     const tier = tierFor(tierTable, roll);
-    setTierRoll({ roll, label: tier?.label ?? "?", effect: tier?.effect });
+    dispatch({ type: "tier.roll", roll, label: tier?.label ?? "?", effect: tier?.effect });
   }
   function advanceRound() {
-    setRound((r) => r + 1);
+    dispatch({ type: "round.advance" });
     if (tierTable) rollTier();
   }
 
@@ -91,7 +112,7 @@ export function CombatManagerView({ combat: c, blockId, ctx }: { combat: CombatM
         {c.statusFields.map((f) => (
           <div key={f.id}>
             <label>{f.label}</label>
-            <input className="rs-input" value={fields[f.id] ?? ""} onChange={(e) => setFields((prev) => ({ ...prev, [f.id]: e.target.value }))} />
+            <input className="rs-input" value={fields[f.id] ?? ""} onChange={(e) => dispatch({ type: "field.set", fieldId: f.id, value: e.target.value })} />
           </div>
         ))}
       </div>
@@ -115,8 +136,7 @@ export function CombatManagerView({ combat: c, blockId, ctx }: { combat: CombatM
                 return (
                   <div key={x.id} className={`rs-target${isDown ? " down" : ""}`}>
                     <label>{x.label} — <input value={hp} onChange={(e) => {
-                      const v = Math.max(0, Number(e.target.value) || 0);
-                      setTrackers((prev) => ({ ...prev, [t.id]: { hp: { ...prev[t.id].hp, [x.id]: v }, down: { ...prev[t.id].down, [x.id]: v <= 0 } } }));
+                      dispatch({ type: "tracker.setHp", trackerId: t.id, targetId: x.id, hp: Number(e.target.value) || 0 });
                     }} /></label>
                     {t.quickDamage.map((amt) => (
                       <button key={amt} className="rs-tool-btn" onClick={() => damage(t, x.id, amt)}>−{amt}</button>
@@ -167,8 +187,14 @@ export function CombatManagerView({ combat: c, blockId, ctx }: { combat: CombatM
         ))}
         <div className="rs-box">
           <h3>Round log</h3>
-          <textarea className="rs-textarea" value={log} onChange={(e) => setLog(e.target.value)} placeholder="Round 1: who moved, who is threatened, what changed..." />
+          <textarea className="rs-textarea" value={log} onChange={(e) => dispatch({ type: "log.set", text: e.target.value })} placeholder="Round 1: who moved, who is threatened, what changed..." />
           <button className="rs-dir-btn" onClick={advanceRound} style={{ marginTop: "0.5rem" }}>Advance round</button>
+          <button
+            className="rs-tool-btn danger"
+            style={{ marginTop: "0.5rem", marginLeft: "0.5rem" }}
+            onClick={() => reset()}
+            title="Start this encounter over: full bars, round 1, empty log."
+          >Reset encounter</button>
         </div>
       </div>
 
@@ -178,11 +204,7 @@ export function CombatManagerView({ combat: c, blockId, ctx }: { combat: CombatM
           <div key={t.id} className="rs-gm-alert amber">
             <span className="rs-gm-tag">{t.condition}</span>
             <label style={{ float: "right", fontSize: "0.8rem" }}>
-              <input type="checkbox" checked={fired} onChange={() => setFiredTriggers((prev) => {
-                const next = new Set(prev);
-                if (fired) next.delete(t.id); else next.add(t.id);
-                return next;
-              })} /> hit
+              <input type="checkbox" checked={fired} onChange={() => dispatch({ type: "trigger.toggle", triggerId: t.id })} /> hit
             </label>
             {fired && <div className="rs-panel"><SceneBlocks blocks={t.blocks} ctx={ctx} /></div>}
           </div>

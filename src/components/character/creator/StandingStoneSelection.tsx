@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StandingStone } from "@/types/character";
@@ -9,6 +10,9 @@ interface StandingStoneSelectionProps {
 }
 
 export function StandingStoneSelection({ stones, selectedStone, onStoneSelect }: StandingStoneSelectionProps) {
+  // A stone without art should look finished, not broken.
+  const [missingArt, setMissingArt] = useState<Set<string>>(new Set());
+
   return (
     <div className="space-y-6">
       <div className="text-center">
@@ -40,6 +44,17 @@ export function StandingStoneSelection({ stones, selectedStone, onStoneSelect }:
                   {stone.archetype}
                 </Badge>
               </div>
+
+              {selectedStone?.id === stone.id && !missingArt.has(stone.id) && (
+                <div className="mb-3 relative w-full aspect-square rounded-lg overflow-hidden border-2 border-primary">
+                  <img
+                    src={`/images/standingstones/${stone.id}.jpg`}
+                    alt={stone.name}
+                    className="w-full h-full object-cover"
+                    onError={() => setMissingArt((prev) => new Set(prev).add(stone.id))}
+                  />
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div className="text-center">

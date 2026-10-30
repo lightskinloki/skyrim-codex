@@ -34,6 +34,7 @@ const statusEffectIcons: Record<StatusEffectType, { icon: string; color: string 
   burning: { icon: '🔥', color: 'bg-orange-500/20 text-orange-400 border-orange-500/50' },
   slowed: { icon: '🐌', color: 'bg-blue-500/20 text-blue-400 border-blue-500/50' },
   staggered: { icon: '💫', color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50' },
+  prone: { icon: '🛌', color: 'bg-amber-500/20 text-amber-400 border-amber-500/50' },
   paralyzed: { icon: '⚡', color: 'bg-purple-500/20 text-purple-400 border-purple-500/50' },
   invisible: { icon: '👻', color: 'bg-gray-500/20 text-gray-400 border-gray-500/50' },
   hidden: { icon: '🥷', color: 'bg-slate-500/20 text-slate-400 border-slate-500/50' },

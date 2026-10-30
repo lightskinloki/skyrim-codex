@@ -177,7 +177,12 @@ export type SceneKind = 'opening' | 'scene' | 'conversation' | 'combat' | 'endin
 
 export type BranchTone = 'red' | 'green' | 'gold' | 'blue' | 'neutral';
 
-export interface BlockBase { id: string; }
+export interface BlockBase {
+  id: string;
+  /** Which template slot this block fills ('startHere', 'resume', 'director'...). The guided
+   * wizard finds its blocks by role, so it works regardless of block order. */
+  role?: string;
+}
 
 /** Blue serif block, spoken cold at the table. `tone: 'danger'` = red edge (failure read-alouds). */
 export interface ReadAloudBlock extends BlockBase { kind: 'readAloud'; tag?: string; paragraphs: string[]; tone?: 'danger'; }
@@ -267,6 +272,8 @@ export interface ConversationDirector {
   groups: DirectorGroup[];
   startNodeId: string;
   hubNodeId: string;
+  /** The 'Makes it personal (pick the person)' node that links to the person nodes, once any exist. */
+  personalNodeId?: string;
   nodes: DirectorNode[];    // ordered
 }
 

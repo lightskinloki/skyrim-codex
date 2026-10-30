@@ -10,9 +10,10 @@ import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   Play, Square, SkipForward, Undo2, ChevronDown, ChevronUp,
-  Users, Sparkles, ListOrdered,
+  Users, Sparkles, ListOrdered, Swords,
 } from "lucide-react";
 import { GMCombatTracker } from "./GMCombatTracker";
+import { DamageCalculator } from "./DamageCalculator";
 import { EnemyManager } from "./EnemyManager";
 import { InitiativeEditor } from "./InitiativeEditor";
 import { EffectApplicator } from "./EffectApplicator";
@@ -104,7 +105,7 @@ export function CombatView({ combatState, onUpdateState }: CombatViewProps) {
 
         <Card className="p-4 overflow-hidden flex flex-col">
           <Tabs defaultValue="enemies" className="flex-1 flex flex-col">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="enemies" className="flex items-center gap-1">
                 <Users className="h-4 w-4" />
                 <span className="hidden sm:inline">Enemies</span>
@@ -117,6 +118,10 @@ export function CombatView({ combatState, onUpdateState }: CombatViewProps) {
                 <ListOrdered className="h-4 w-4" />
                 <span className="hidden sm:inline">Initiative</span>
               </TabsTrigger>
+              <TabsTrigger value="damage" className="flex items-center gap-1">
+                <Swords className="h-4 w-4" />
+                <span className="hidden sm:inline">Damage</span>
+              </TabsTrigger>
             </TabsList>
             <TabsContent value="enemies" className="flex-1 overflow-auto mt-4">
               <EnemyManager combatState={combatState} onUpdateState={onUpdateState} />
@@ -126,6 +131,9 @@ export function CombatView({ combatState, onUpdateState }: CombatViewProps) {
             </TabsContent>
             <TabsContent value="initiative" className="flex-1 overflow-auto mt-4">
               <InitiativeEditor combatState={combatState} onUpdateState={onUpdateState} />
+            </TabsContent>
+            <TabsContent value="damage" className="flex-1 overflow-auto mt-4">
+              <DamageCalculator combatState={combatState} onUpdateState={onUpdateState} />
             </TabsContent>
           </Tabs>
         </Card>

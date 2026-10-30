@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, PanelLeftClose, PanelLeft, Swords } from "lu
 import { SceneBlocks, RenderCtx } from "./SceneBlockRenderer";
 import { CampaignModule, SceneNode } from "@/types/campaign";
 import { rollD20, tierFor } from "@/utils/sceneBlocks";
+import { COLOR_KEY } from "../builder/wizard/copy";
 import "./runsheet.css";
 
 export function RunsheetView({
@@ -73,6 +74,16 @@ export function RunsheetView({
                 </div>
                 <div className="rs-roll-result">{rollResult}</div>
               </div>
+              <details className="rs-widget">
+                <summary style={{ cursor: "pointer", fontSize: "0.75rem", color: "var(--gold)", textTransform: "uppercase", letterSpacing: "0.08em" }}>What do the colors mean?</summary>
+                <ul style={{ listStyle: "none", margin: "0.5rem 0 0", padding: 0, fontSize: "0.78rem" }}>
+                  {COLOR_KEY.map((k) => (
+                    <li key={k.label} style={{ display: "flex", gap: "0.5rem", alignItems: "center", margin: "0.25rem 0" }}>
+                      <span style={{ width: 10, height: 10, borderRadius: 2, background: k.color, flexShrink: 0 }} />{k.label}
+                    </li>
+                  ))}
+                </ul>
+              </details>
             </>
           )}
         </nav>

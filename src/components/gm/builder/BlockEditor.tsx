@@ -12,7 +12,7 @@ import {
 import {
   SceneBlock, BranchTone, Difficulty, CheckStat, DIFFICULTY_PENALTY,
 } from "@/types/campaign";
-import { BLOCK_META, NESTED_KINDS, block, uid, cloneBlock } from "@/utils/sceneBlocks";
+import { BLOCK_META, NESTED_KINDS, newBlockOf, uid, cloneBlock } from "@/utils/sceneBlocks";
 import { DirectorEditor } from "./DirectorEditor";
 import { CombatEditor } from "./CombatEditor";
 import { useCampaign } from "../CampaignContext";
@@ -59,29 +59,6 @@ export function BlockListEditor({ blocks, onChange, allow = NESTED_KINDS, compac
       <AddBlockMenu allow={allow} onAdd={add} />
     </div>
   );
-}
-
-function newBlockOf(kind: SceneBlock["kind"]): SceneBlock {
-  switch (kind) {
-    case "readAloud": return block("readAloud", { paragraphs: [""] });
-    case "gmNote": return block("gmNote", { text: "" });
-    case "gmAlert": return block("gmAlert", { text: "" });
-    case "stop": return block("stop", { text: "GM: STOP. Turn to " });
-    case "spoken": return block("spoken", { speaker: "", line: "" });
-    case "handout": return block("handout", { title: "", text: "" });
-    case "list": return block("list", { items: [""] });
-    case "text": return block("text", { text: "" });
-    case "heading": return block("heading", { text: "" });
-    case "quote": return block("quote", { lines: [""] });
-    case "card": return block("card", { title: "", items: [] });
-    case "branch": return block("branch", { title: "", tone: "neutral", blocks: [] });
-    case "choices": return block("choices", { options: [] });
-    case "check": return block("check", { stat: "none", difficulty: "Standard", penalty: 0 });
-    case "findable": return block("findable", { name: "", description: "" });
-    case "exit": return block("exit", { description: "" });
-    case "director": return block("director", { director: { npc: "", mustSay: [], always: [], beats: [], groups: [], startNodeId: "", hubNodeId: "", nodes: [] } });
-    case "combat": return block("combat", { combat: { title: "Combat Manager", statusFields: [], trackers: [], cards: [], triggers: [], enemies: [] } });
-  }
 }
 
 function AddBlockMenu({ allow, onAdd }: { allow: SceneBlock["kind"][]; onAdd: (k: SceneBlock["kind"]) => void }) {

@@ -158,12 +158,12 @@ export function directorNode(partial: Partial<DirectorNode> & { title: string; g
  * never a phrase they must say (GM correction, 9/28).
  */
 export function createDirector(npc = 'the NPC'): ConversationDirector {
-  const welcome = directorNode({ group: 'start', title: 'Welcome (read-aloud)', intent: 'The party arrives.', aim: '', points: ['Opening read', 'Asked "What do you do?"'] });
-  const hub = directorNode({ group: 'start', title: 'WHAT DID THE PLAYERS DO?', intent: 'The center of the chart. Every node returns here.', aim: 'Pick the node closest to what the player just said or did.', info: ['Loop: player acts -> open the closest node -> answer in your own words from it -> one beat -> back here.'] });
-  const ask = directorNode({ group: 'talk', title: 'Asks for more (who / what / why)', intent: '"Who are you?" "What is this?" "Why?"', points: [] });
-  const disagree = directorNode({ group: 'talk', title: 'Disagrees / objects', intent: 'They push back on what was said or asked.', points: [] });
-  const agree = directorNode({ group: 'exit', title: `Agrees / sides with ${npc}`, intent: 'A player goes along with it.', points: ['Asked what they physically do'] });
-  const attack = directorNode({ group: 'exit', title: `Attacks ${npc}`, intent: 'Someone draws steel or casts.', points: [] });
+  const welcome = directorNode({ group: 'start', title: 'The first meeting', intent: 'The players arrive and meet the character.', aim: '', points: ['Read the first meeting aloud', 'Asked "What do you do?"'] });
+  const hub = directorNode({ group: 'start', title: 'WHAT DID THE PLAYERS DO?', intent: 'The main map. Every card leads back here.', aim: 'Tap the card closest to what the players just said or did.', info: ['How it works: players do something, you tap the closest card, answer in your own words from it, show one background beat, then come back here.'] });
+  const ask = directorNode({ group: 'talk', title: 'They ask questions', intent: 'They ask who, what, or why.', points: [] });
+  const disagree = directorNode({ group: 'talk', title: 'They disagree or object', intent: 'They push back on what was said or asked.', points: [] });
+  const agree = directorNode({ group: 'exit', title: 'They agree or go along with it', intent: 'A player goes along with it.', points: ['Asked what they physically do'] });
+  const attack = directorNode({ group: 'exit', title: 'They attack or threaten', intent: 'Someone draws steel or casts.', points: [] });
   welcome.next = [hub.id];
   hub.next = [ask.id, disagree.id, agree.id, attack.id];
   for (const n of [ask, disagree, agree, attack]) n.next = [hub.id];
@@ -241,32 +241,33 @@ export function templateBlocks(kind: SceneKind, npc?: string): SceneBlock[] {
   switch (kind) {
     case 'opening':
       return [
-        block('gmAlert', { tag: 'START HERE:', text: '' }),
-        block('readAloud', { tag: 'RESUME', paragraphs: [''] }),
-        block('gmAlert', { tag: 'OPEN THE TABLE:', text: 'Ask: **"What does everyone do before we move on?"** Then run the choices below as player-led scenes.' }),
-        block('card', { title: 'Everyone present and their current state', open: true, items: [] }),
-        block('card', { title: 'What the party found', items: [] }),
-        block('card', { title: 'Exact text available to the players', items: [], quotes: [] }),
-        block('card', { title: 'Available NPC beats', items: [] }),
-        block('gmNote', { tag: 'DO NOT AUTOMATE THE PARTY:', text: 'Let the players choose. The next scene does not begin until they move.' }),
-        block('choices', { options: [opt('They do one last thing'), opt('They revisit what they found'), opt('They approach the way forward'), opt('They go straight through')] }),
+        block('gmAlert', { role: 'startHere', tag: 'START HERE:', text: '' }),
+        block('readAloud', { role: 'resume', tag: 'RESUME', paragraphs: [''] }),
+        block('gmAlert', { role: 'openTable', tag: 'OPEN THE TABLE:', text: 'Ask: **"What does everyone do before we move on?"** Then run the choices below as player-led scenes.' }),
+        block('card', { role: 'present', title: 'Everyone present and their current state', open: true, items: [] }),
+        block('card', { role: 'found', title: 'What the party found', items: [] }),
+        block('card', { role: 'exactText', title: 'Exact text available to the players', items: [], quotes: [] }),
+        block('card', { role: 'npcBeats', title: 'Available NPC beats', items: [] }),
+        block('gmNote', { role: 'noAutomate', tag: 'DO NOT AUTOMATE THE PARTY:', text: 'Let the players choose. The next scene does not begin until they move.' }),
+        block('choices', { role: 'options', options: [opt('They do one last thing'), opt('They revisit what they found'), opt('They approach the way forward'), opt('They go straight through')] }),
       ];
     case 'conversation': {
-      const d = createDirector(npc || 'the NPC');
+      const d = createDirector(npc || '');
       return [
-        block('gmAlert', { tag: 'SCENE SHAPE:', text: `${npc || 'The NPC'} speaks first. The players respond. Open the closest node in the director, answer from it, show one room reaction, then return to "What did the players do?"` }),
-        block('readAloud', { tag: 'ARRIVAL', paragraphs: [''] }),
-        block('gmNote', { text: 'Stop after the opening. Ask the table: **"What do you do?"** Do not begin a second speech until someone responds.' }),
-        block('director', { director: d }),
+        block('gmAlert', { role: 'shape', tag: 'SCENE SHAPE:', text: `${npc || 'The character'} speaks first. The players respond. Open the card that's closest to what they just did, answer from it, show one reaction from the room, then come back to the main map.` }),
+        block('readAloud', { role: 'arrival', tag: 'ARRIVAL', paragraphs: [''] }),
+        block('gmNote', { role: 'stopAsk', text: 'Stop after the opening. Ask the table: **"What do you do?"** Do not begin a second speech until someone responds.' }),
+        block('director', { role: 'director', director: d }),
       ];
     }
     case 'combat':
       return [
-        block('combat', { combat: createCombat() }),
+        block('combat', { role: 'combat', combat: createCombat() }),
       ];
     case 'endings':
       return [
         block('choices', {
+          role: 'endings',
           variant: 'endings',
           prompt: 'Click the outcome. Each card says what happens and where to go next.',
           options: [opt('A. They succeed'), opt('B. Partial success'), opt('C. They fail / withdraw')],
@@ -274,15 +275,15 @@ export function templateBlocks(kind: SceneKind, npc?: string): SceneBlock[] {
       ];
     case 'resolution':
       return [
-        block('readAloud', { paragraphs: [''] }),
-        block('list', { title: 'GM -- REWARDS:', items: [] }),
-        block('list', { title: 'GM -- SEEDS PLANTED (they finish growing after the module):', items: [] }),
-        block('list', { title: 'GM -- CONSEQUENCE LEDGER (what the other threads did meanwhile):', items: [] }),
+        block('readAloud', { role: 'resolution', paragraphs: [''] }),
+        block('list', { role: 'rewards', title: 'GM -- REWARDS:', items: [] }),
+        block('list', { role: 'seeds', title: 'GM -- SEEDS PLANTED (they finish growing after the module):', items: [] }),
+        block('list', { role: 'ledger', title: 'GM -- CONSEQUENCE LEDGER (what the other threads did meanwhile):', items: [] }),
       ];
     default:
       return [
-        block('readAloud', { paragraphs: [''] }),
-        block('gmNote', { text: '' }),
+        block('readAloud', { role: 'read', paragraphs: [''] }),
+        block('gmNote', { role: 'truth', text: '' }),
       ];
   }
 }
@@ -294,6 +295,124 @@ export function createSceneOfKind(kind: SceneKind, title: string, moduleId?: str
     label: kind === 'endings' ? 'How it ends' : undefined,
     blocks: templateBlocks(kind, npc),
   });
+}
+
+/* ------------------------------------------------------------------ *
+ * Fresh block of any kind (Forge "+ Add block" and the wizard)
+ * ------------------------------------------------------------------ */
+
+export function newBlockOf(kind: SceneBlock['kind']): SceneBlock {
+  switch (kind) {
+    case 'readAloud': return block('readAloud', { paragraphs: [''] });
+    case 'gmNote': return block('gmNote', { text: '' });
+    case 'gmAlert': return block('gmAlert', { text: '' });
+    case 'stop': return block('stop', { text: 'GM: STOP. Turn to ' });
+    case 'spoken': return block('spoken', { speaker: '', line: '' });
+    case 'handout': return block('handout', { title: '', text: '' });
+    case 'list': return block('list', { items: [''] });
+    case 'text': return block('text', { text: '' });
+    case 'heading': return block('heading', { text: '' });
+    case 'quote': return block('quote', { lines: [''] });
+    case 'card': return block('card', { title: '', items: [] });
+    case 'branch': return block('branch', { title: '', tone: 'neutral', blocks: [] });
+    case 'choices': return block('choices', { options: [] });
+    case 'check': return block('check', { stat: 'none', difficulty: 'Standard', penalty: 0 });
+    case 'findable': return block('findable', { name: '', description: '' });
+    case 'exit': return block('exit', { description: '' });
+    case 'director': return block('director', { director: createDirector('') });
+    case 'combat': return block('combat', { combat: createCombat() });
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Role lookup — the wizard finds "the START HERE alert" by role, not position
+ * ------------------------------------------------------------------ */
+
+/** The block filling `role`. With `fallback`, an unroled block of that kind also matches
+ * (so imported/free-edited scenes still work in the wizard for single-instance kinds). */
+export function findRole<K extends SceneBlock['kind']>(
+  blocks: SceneBlock[], role: string, kind: K, fallback = false,
+): Extract<SceneBlock, { kind: K }> | undefined {
+  const hit = blocks.find((b) => b.role === role && b.kind === kind)
+    ?? (fallback ? blocks.find((b) => b.kind === kind && !b.role) : undefined);
+  return hit as Extract<SceneBlock, { kind: K }> | undefined;
+}
+
+/** Update (or create) the block filling `role`, returning the new block list. */
+export function updateRole<K extends SceneBlock['kind']>(
+  blocks: SceneBlock[], role: string, kind: K,
+  fn: (b: Extract<SceneBlock, { kind: K }>) => Extract<SceneBlock, { kind: K }>,
+  fallback = false,
+): SceneBlock[] {
+  let i = blocks.findIndex((b) => b.role === role && b.kind === kind);
+  if (i < 0 && fallback) i = blocks.findIndex((b) => b.kind === kind && !b.role);
+  if (i >= 0) {
+    const arr = [...blocks];
+    arr[i] = { ...fn(arr[i] as Extract<SceneBlock, { kind: K }>), role } as SceneBlock;
+    return arr;
+  }
+  const fresh = { ...newBlockOf(kind), role } as Extract<SceneBlock, { kind: K }>;
+  return [...blocks, { ...fn(fresh), role } as SceneBlock];
+}
+
+/* ------------------------------------------------------------------ *
+ * Conversation-director graph edits (used by the wizard)
+ * ------------------------------------------------------------------ */
+
+/** Nodes that are "a thing the players might do": everything but welcome, hub, the
+ * personal pressure-point hub, and the person nodes themselves. */
+export function responseNodes(d: ConversationDirector): DirectorNode[] {
+  return d.nodes.filter((n) => n.id !== d.startNodeId && n.id !== d.hubNodeId
+    && n.id !== d.personalNodeId && n.group !== 'person');
+}
+
+export function personNodes(d: ConversationDirector): DirectorNode[] {
+  return d.nodes.filter((n) => n.group === 'person');
+}
+
+export function addResponseNode(d: ConversationDirector, title = 'New response'): ConversationDirector {
+  const n = directorNode({ group: 'talk', title });
+  n.next = [d.hubNodeId];
+  return {
+    ...d,
+    nodes: [...d.nodes.map((x) => (x.id === d.hubNodeId ? { ...x, next: [...x.next, n.id] } : x)), n],
+  };
+}
+
+export function addPersonNode(d: ConversationDirector, name = ''): ConversationDirector {
+  let out = d;
+  let personalId = out.personalNodeId;
+  if (!personalId || !out.nodes.some((x) => x.id === personalId)) {
+    const hub = directorNode({
+      group: 'talk', title: 'Makes it personal (pick the person)',
+      intent: 'A player raised their own wound, or the NPC addresses the person who just spoke.',
+      aim: 'Speak to the wound the player put in the room. Not a speech about the character.',
+    });
+    hub.next = [];
+    personalId = hub.id;
+    out = {
+      ...out, personalNodeId: hub.id,
+      nodes: [...out.nodes.map((x) => (x.id === out.hubNodeId ? { ...x, next: [...x.next, hub.id] } : x)), hub],
+    };
+  }
+  const n = directorNode({ group: 'person', title: name });
+  n.next = [out.hubNodeId];
+  return {
+    ...out,
+    nodes: [...out.nodes.map((x) => (x.id === personalId ? { ...x, next: [...x.next, n.id] } : x)), n],
+  };
+}
+
+export function removeDirectorNode(d: ConversationDirector, id: string): ConversationDirector {
+  if (id === d.startNodeId || id === d.hubNodeId) return d;
+  return {
+    ...d,
+    nodes: d.nodes.filter((n) => n.id !== id).map((n) => ({ ...n, next: n.next.filter((x) => x !== id) })),
+  };
+}
+
+export function patchDirectorNode(d: ConversationDirector, id: string, patch: Partial<DirectorNode>): ConversationDirector {
+  return { ...d, nodes: d.nodes.map((n) => (n.id === id ? { ...n, ...patch } : n)) };
 }
 
 /* ------------------------------------------------------------------ *
@@ -349,11 +468,11 @@ export function lintModuleV2(module: CampaignModule): string[] {
         case 'readAloud': if (b.paragraphs.every(blank)) w.push(`${n}: an empty read-aloud.`); break;
         case 'gmAlert': case 'gmNote': if (blank(b.text) && !(b.items?.length)) w.push(`${n}: an empty ${b.kind === 'gmAlert' ? 'GM alert' : 'GM note'}${b.tag ? ` (${b.tag})` : ''}.`); break;
         case 'spoken': if (blank(b.line)) w.push(`${n}: ${b.speaker || 'an NPC'} has an empty spoken line.`); break;
-        case 'card': if (b.items.length === 0 && !(b.quotes?.length) && blank(b.note)) w.push(`${n}: card "${b.title}" is empty.`); break;
+        case 'card': if (!b.items.some((x) => x.trim()) && !(b.quotes ?? []).some((x) => x.trim()) && blank(b.note)) w.push(`${n}: the card "${b.title}" is empty.`); break;
         case 'check': if (DIFFICULTY_PENALTY[b.difficulty] !== b.penalty) w.push(`${n}: check "${b.label ?? b.difficulty}" has a modifier that doesn't match ${b.difficulty}.`); break;
         case 'exit': if (b.targetSceneId && !ids.has(b.targetSceneId)) w.push(`${n}: a jump points at a deleted scene.`); break;
         case 'choices':
-          b.options.forEach((o) => { if (o.blocks.length === 0) w.push(`${n}: ${b.variant === 'endings' ? 'ending' : 'choice'} "${o.label}" has nothing in its panel.`); });
+          b.options.forEach((o) => { if (o.blocks.every((x) => x.kind === 'text' && blank(x.text))) w.push(`${n}: ${b.variant === 'endings' ? 'ending' : 'choice'} "${o.label}" has nothing in its panel.`); });
           break;
         case 'director': {
           const d = b.director; const nodeIds = new Set(d.nodes.map((x) => x.id));

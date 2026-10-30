@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, LayoutDashboard, Hammer, Play, Swords, BookOpen, Scroll } from "lucide-react";
+import { ArrowLeft, LayoutDashboard, Hammer, Play, Swords, BookOpen, Scroll, FlaskConical } from "lucide-react";
 import { CombatState } from "@/types/combat";
 import { combatManager } from "@/lib/combatManager";
 import { enemyTemplates } from "@/data/enemies";
@@ -16,6 +16,7 @@ import { ModuleBuilder } from "./builder/ModuleBuilder";
 import { LivePlay } from "./play/LivePlay";
 import { CombatView } from "./CombatView";
 import { UniversalCompendium } from "./compendium/UniversalCompendium";
+import { AlchemyWorkbench } from "./alchemy/AlchemyWorkbench";
 
 interface GMDashboardProps {
   onExit: () => void;
@@ -24,6 +25,7 @@ interface GMDashboardProps {
 function GMDashboardInner({ onExit }: GMDashboardProps) {
   const [combatState, setCombatState] = useState<CombatState>(combatManager.initializeCombat());
   const [activeTab, setActiveTab] = useState("hub");
+  const [liveModuleId, setLiveModuleId] = useState<string | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
   // Ctrl/Cmd+K → jump to the compendium and focus search
@@ -72,19 +74,24 @@ function GMDashboardInner({ onExit }: GMDashboardProps) {
 
       <div className="flex-1 container mx-auto px-4 py-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full max-w-3xl mx-auto grid-cols-5">
+          <TabsList className="grid w-full max-w-4xl mx-auto grid-cols-6">
             <TabsTrigger value="hub"><LayoutDashboard className="h-4 w-4 mr-1" /><span className="hidden sm:inline">Hub</span></TabsTrigger>
             <TabsTrigger value="forge"><Hammer className="h-4 w-4 mr-1" /><span className="hidden sm:inline">Forge</span></TabsTrigger>
             <TabsTrigger value="live"><Play className="h-4 w-4 mr-1" /><span className="hidden sm:inline">Live Play</span></TabsTrigger>
             <TabsTrigger value="combat"><Swords className="h-4 w-4 mr-1" /><span className="hidden sm:inline">Combat</span></TabsTrigger>
             <TabsTrigger value="compendium"><BookOpen className="h-4 w-4 mr-1" /><span className="hidden sm:inline">Compendium</span></TabsTrigger>
+            <TabsTrigger value="alchemy"><FlaskConical className="h-4 w-4 mr-1" /><span className="hidden sm:inline">Alchemy</span></TabsTrigger>
           </TabsList>
 
           <TabsContent value="hub" className="mt-4"><CampaignHub /></TabsContent>
-          <TabsContent value="forge" className="mt-4"><ModuleBuilder /></TabsContent>
-          <TabsContent value="live" className="mt-4"><LivePlay onDeployEncounter={handleDeployEncounter} /></TabsContent>
+          {/* forceMount: leaving the Forge to peek at Live Play must not throw away what someone is in the middle of writing */}
+          <TabsContent value="forge" forceMount className="mt-4 data-[state=inactive]:hidden">
+            <ModuleBuilder onRunModule={(id) => { setLiveModuleId(id); setActiveTab("live"); }} />
+          </TabsContent>
+          <TabsContent value="live" className="mt-4"><LivePlay key={liveModuleId ?? "none"} initialModuleId={liveModuleId} onDeployEncounter={handleDeployEncounter} /></TabsContent>
           <TabsContent value="combat" className="mt-4"><CombatView combatState={combatState} onUpdateState={setCombatState} /></TabsContent>
           <TabsContent value="compendium" className="mt-4"><UniversalCompendium searchInputRef={searchRef} /></TabsContent>
+          <TabsContent value="alchemy" className="mt-4"><AlchemyWorkbench /></TabsContent>
         </Tabs>
       </div>
     </div>

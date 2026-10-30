@@ -47,7 +47,7 @@ export function DirectorView({ director: d, sceneId }: { director: ConversationD
     setState((s) => ({ ...s, beats: s.beats.includes(i) ? s.beats.filter((x) => x !== i) : [...s.beats, i] }));
   }
   function reset() {
-    if (!confirm("Reset coverage for a new run?")) return;
+    if (!confirm("Clear the ticks and notes so you can run this conversation again?")) return;
     try { localStorage.removeItem(storageKey); } catch { /* ignore */ }
     setState({ visited: {}, points: {}, notes: {}, beats: [], cur: d.startNodeId });
   }
@@ -57,11 +57,11 @@ export function DirectorView({ director: d, sceneId }: { director: ConversationD
   return (
     <div className="rs-director">
       <div id={`rs-dir-top-${sceneId}`} className="rs-dir-header">
-        <h3>{d.title ?? `${d.npc} — Conversation Director`}</h3>
-        <span className="rs-pill">{visitedCount} / {d.nodes.length} nodes visited</span>
+        <h3>{d.title ?? `${d.npc || "Conversation"}: conversation map`}</h3>
+        <span className="rs-pill">{visitedCount} / {d.nodes.length} cards visited</span>
         {d.beats.length > 0 && <span className="rs-pill">{d.beatsLabel ?? "Beats"} used: {state.beats.length}</span>}
-        <button className="home" onClick={() => go(d.hubNodeId)}>⌂ What did they do?</button>
-        <button onClick={reset}>Reset</button>
+        <button className="home" onClick={() => go(d.hubNodeId)}>⌂ Main map</button>
+        <button onClick={reset}>Start over</button>
       </div>
 
       {d.mustSay.length > 0 && (
@@ -80,7 +80,7 @@ export function DirectorView({ director: d, sceneId }: { director: ConversationD
       <div className="rs-dir-wrap">
         <nav className="rs-map">
           <div className="rs-flow">
-            <b>{nodesById.get(d.startNodeId)?.title ?? "Start"}</b>&rarr;<b>Hub</b>&rarr;<b>open node</b>&rarr;<b>answer + beat</b>&rarr;<b>back</b>
+            <b>{nodesById.get(d.startNodeId)?.title ?? "Start"}</b>&rarr;<b>Main map</b>&rarr;<b>tap a card</b>&rarr;<b>answer + background beat</b>&rarr;<b>back</b>
           </div>
           {d.groups.map((g) => {
             const inGroup = d.nodes.filter((n) => n.group === g.id);
@@ -206,7 +206,7 @@ function NodePanel({ node: n, nodesById, beats, beatsLabel, usedBeats, onBeat, h
       )}
       <div className="rs-sec"><h6>Next</h6>
         <div className="rs-next">
-          {!isHub && <button className="home" onClick={() => onGo(hubId)}>⌂ What did they do?</button>}
+          {!isHub && <button className="home" onClick={() => onGo(hubId)}>⌂ Back to the main map</button>}
           {n.next.map((id) => {
             const target = nodesById.get(id);
             return target ? <button key={id} onClick={() => onGo(id)}>{target.title}</button> : null;

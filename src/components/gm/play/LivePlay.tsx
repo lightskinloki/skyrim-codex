@@ -8,12 +8,14 @@ import { RunsheetView } from "../runsheet/RunsheetView";
 
 interface LivePlayProps {
   onDeployEncounter: (enemyIds: string[]) => void;
+  /** Open this adventure first (set when someone presses "Run it" in the Forge). */
+  initialModuleId?: string | null;
 }
 
-export function LivePlay({ onDeployEncounter }: LivePlayProps) {
+export function LivePlay({ onDeployEncounter, initialModuleId }: LivePlayProps) {
   const { campaign } = useCampaign();
   const { toast } = useToast();
-  const [moduleId, setModuleId] = useState<string | null>(campaign.modules[0]?.id ?? null);
+  const [moduleId, setModuleId] = useState<string | null>(initialModuleId ?? campaign.modules[0]?.id ?? null);
   const [sceneIndex, setSceneIndex] = useState(0);
 
   const module = campaign.modules.find((m) => m.id === moduleId) ?? campaign.modules[0] ?? null;

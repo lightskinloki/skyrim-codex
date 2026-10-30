@@ -6,6 +6,7 @@ export type StatusEffectType =
   | 'burning'     // X damage at START of turn  
   | 'slowed'      // Cannot use Minor Action for movement
   | 'staggered'   // Loses next Minor Action
+  | 'prone'       // On the ground: Advantage on its own ranged attacks, any attack that hits it is an automatic critical, standing up costs a Minor
   | 'paralyzed'   // Cannot act at all
   | 'invisible'   // Cannot be targeted
   | 'hidden'      // In stealth
@@ -119,6 +120,7 @@ export const STATUS_EFFECT_INFO: Record<StatusEffectType, { icon: string; color:
   burning: { icon: '🔥', color: 'text-orange-500', description: 'Takes fire damage at start of turn' },
   slowed: { icon: '🐢', color: 'text-blue-400', description: 'Cannot use Minor Action for movement' },
   staggered: { icon: '💫', color: 'text-yellow-500', description: 'Loses next Minor Action' },
+  prone: { icon: '🛌', color: 'text-amber-600', description: 'Any hit on them is a critical; standing costs a Minor' },
   paralyzed: { icon: '⚡', color: 'text-purple-500', description: 'Cannot act' },
   invisible: { icon: '👻', color: 'text-gray-400', description: 'Cannot be targeted' },
   hidden: { icon: '🥷', color: 'text-gray-600', description: 'In stealth' },

@@ -24,7 +24,6 @@ import {
   Check,
   AlertCircle,
   Wand2,
-  FlaskConical,
   ChevronDown
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -37,7 +36,10 @@ import {
   MinorActionOption
 } from "@/utils/actionUtils";
 import { calculateTotalDR, updateCharacterResources } from "@/utils/characterCalculations";
+import { resolveInventoryItem } from "@/utils/itemLookup";
 import { useToast } from "@/hooks/use-toast";
+import { summonRuleFor, spawnSummon, risePendingSummons } from "@/utils/summoning";
+import { SummonStrip } from "./SummonStrip";
 
 interface ActionSlot {
   id: string;
@@ -79,7 +81,7 @@ function ActionCard({ action, slotId, fpCurrent, usedAbilityIds, onUse }: Action
           <span className="font-semibold text-sm leading-tight block truncate">
             {action.name}
           </span>
-          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+          <p className="text-xs text-muted-foreground mt-0.5 whitespace-normal">
             {action.description}
           </p>
         </div>
@@ -122,6 +124,7 @@ export function PlayerCombatPortal({
   const { toast } = useToast();
   const [sunderModifier, setSunderModifier] = useState(0);
   const [activeSlot, setActiveSlot] = useState<string | null>(null);
+  const [powerAttackStacks, setPowerAttackStacks] = useState(1);
   const [openSchools, setOpenSchools] = useState<Set<string>>(new Set());
 
   const toggleSchool = (school: string) => {
@@ -295,6 +298,19 @@ export function PlayerCombatPortal({
     setActionSlots([...actionSlots, newSlot]);
   };
   
+  // Potions and poisons carry their item id as `drink-<slug>` / `apply-<slug>`.
+  // Find the matching inventory entry so using the action can spend the stack.
+  const findConsumedItem = (actionId: string) => {
+    const prefix = actionId.startsWith('drink-') ? 'drink-'
+      : actionId.startsWith('apply-') ? 'apply-'
+      : null;
+    if (!prefix) return null;
+    return character.inventory.items.find(item => {
+      const slug = (item.name ?? '').toLowerCase().replace(/\s+/g, '-');
+      return `${prefix}${slug}` === actionId;
+    }) ?? null;
+  };
+
   // Use action from slot
   const handleUseAction = (slotId: string, action: MajorActionOption | MinorActionOption | BonusActionAbility) => {
     const slot = actionSlots.find(s => s.id === slotId);
@@ -327,6 +343,10 @@ export function PlayerCombatPortal({
     // race against each other and the last one would overwrite the others.
     let updatedCharacter = { ...character };
 
+    const consumedItem = findConsumedItem(action.id);
+    const consumedInfo = consumedItem ? resolveInventoryItem(consumedItem) : null;
+    const itemResults: string[] = [];
+
     if (fpCost > 0) {
       const newFP = Math.max(0, character.resources.fp.current - fpCost);
       updatedCharacter = {
@@ -340,6 +360,42 @@ export function PlayerCombatPortal({
         ...updatedCharacter,
         resources: { ...updatedCharacter.resources, hp: { ...updatedCharacter.resources.hp, current: newHP } },
       };
+    }
+
+    // Drink / apply: restore the resolved amount and spend one from the stack.
+    if (consumedItem && consumedInfo) {
+      const hpRestore = consumedInfo.restoreHp ?? 0;
+      const fpRestore = consumedInfo.restoreFp ?? 0;
+
+      if (hpRestore > 0) {
+        const before = updatedCharacter.resources.hp.current;
+        const after = Math.min(updatedCharacter.resources.hp.max, before + hpRestore);
+        updatedCharacter = {
+          ...updatedCharacter,
+          resources: { ...updatedCharacter.resources, hp: { ...updatedCharacter.resources.hp, current: after } },
+        };
+        itemResults.push(`+${after - before} HP`);
+      }
+      if (fpRestore > 0) {
+        const before = updatedCharacter.resources.fp.current;
+        const after = Math.min(updatedCharacter.resources.fp.max, before + fpRestore);
+        updatedCharacter = {
+          ...updatedCharacter,
+          resources: { ...updatedCharacter.resources, fp: { ...updatedCharacter.resources.fp, current: after } },
+        };
+        itemResults.push(`+${after - before} FP`);
+      }
+
+      const remaining = consumedItem.quantity - 1;
+      const consumedIndex = character.inventory.items.indexOf(consumedItem);
+      const newItems = character.inventory.items
+        .map((item, index) => (index === consumedIndex ? { ...item, quantity: remaining } : item))
+        .filter(item => item.quantity > 0);
+      updatedCharacter = {
+        ...updatedCharacter,
+        inventory: { ...updatedCharacter.inventory, items: newItems },
+      };
+      itemResults.push(remaining > 0 ? `${remaining} left` : 'last one used');
     }
 
     // Resolve usedAbilityId for limited abilities
@@ -360,6 +416,13 @@ export function PlayerCombatPortal({
 
     onUpdateCharacter(updatedCharacter);
 
+    // Conjuration cast here spawns the real creature card, stats and all, so
+    // nobody has to transcribe a stat block mid-fight.
+    const summonRule = summonRuleFor(action.name);
+    const summon = summonRule
+      ? spawnSummon(summonRule.templateId, character.name, summonRule.duration)
+      : null;
+
     // Mark slot as used in local state
     setActionSlots(prev => prev.map(s =>
       s.id === slotId
@@ -372,9 +435,14 @@ export function PlayerCombatPortal({
     const costParts = [];
     if (fpCost > 0) costParts.push(`${fpCost} FP`);
     if (hpCost > 0) costParts.push(`${hpCost} HP`);
+    const actionSummary = [
+      costParts.length > 0 ? `Spent ${costParts.join(', ')}` : '',
+      summon ? `Summoned ${summon.name} (${summon.resources.hp?.max ?? '—'} HP)` : '',
+      ...itemResults,
+    ].filter(Boolean).join(' · ');
     toast({
       title: action.name,
-      description: costParts.length > 0 ? `Spent ${costParts.join(', ')}` : "Action used",
+      description: actionSummary || "Action used",
     });
   };
   
@@ -417,10 +485,14 @@ export function PlayerCombatPortal({
 
   // Reset turn
   const handleResetTurn = () => {
+    // A new turn starts here, so anything that fell last round rises now.
+    const risen = risePendingSummons(character.name);
     setActionSlots(initializeSlots());
     toast({
       title: "Turn Reset",
-      description: "All actions have been reset for a new turn.",
+      description: risen > 0
+        ? `${risen === 1 ? "A summon has" : `${risen} summons have`} risen for this turn.`
+        : "All actions have been reset for a new turn.",
     });
   };
   
@@ -428,7 +500,7 @@ export function PlayerCombatPortal({
   const getActionsForSlot = (slot: ActionSlot) => {
     switch (slot.type) {
       case 'major':
-        return getValidMajorActions(character);
+        return getValidMajorActions(character, powerAttackStacks);
       case 'minor':
         return getValidMinorActions(character);
       case 'bonus':
@@ -483,28 +555,8 @@ export function PlayerCombatPortal({
       ([school, spells]) => ({ school, spells })
     );
 
-    // Column 4 — Items: potions and poisons from inventory
-    const itemActions: MajorActionOption[] = character.inventory.items
-      .filter(item => {
-        const lc = (item.name ?? '').toLowerCase();
-        return (lc.includes('potion') || lc.includes('poison')) && item.quantity > 0;
-      })
-      .map(item => {
-        const lc = (item.name ?? '').toLowerCase();
-        const isPoison = lc.includes('poison');
-        const safeName = item.name ?? 'Unknown Item';
-        return {
-          id: `item-${safeName.toLowerCase().replace(/\s+/g, '-')}`,
-          name: safeName,
-          type: 'standard' as const,
-          description: isPoison
-            ? `Apply to your weapon. Qty: ${item.quantity}`
-            : `Consume to restore resources. Qty: ${item.quantity}`,
-          source: isPoison ? 'Poison' : 'Potion',
-        };
-      });
-
-    return { weaponColumns, tacticActions, magicColumns, itemActions };
+    // Potions and poisons are Minor Actions per the rulebook — they live in the Minor slot only.
+    return { weaponColumns, tacticActions, magicColumns };
   }
 
   const hpPercent = (character.resources.hp.current / character.resources.hp.max) * 100;
@@ -634,7 +686,10 @@ export function PlayerCombatPortal({
             </div>
           </div>
         </div>
-        
+
+        {/* Whatever is currently conjured, acting on your turn */}
+        <SummonStrip casterName={character.name} />
+
         {/* Action Stack */}
         <div className="flex-1 overflow-auto p-6">
           <div className="max-w-2xl mx-auto space-y-4">
@@ -684,10 +739,10 @@ export function PlayerCombatPortal({
                 </div>
               );
 
-              // MAJOR ACTION — Command Center Dialog (4-column layout)
+              // MAJOR ACTION — Command Center Dialog (3-column layout)
               if (slot.type === 'major') {
-                const { weaponColumns, tacticActions, magicColumns, itemActions } =
-                  buildMajorActionColumns(getValidMajorActions(character));
+                const { weaponColumns, tacticActions, magicColumns } =
+                  buildMajorActionColumns(getValidMajorActions(character, powerAttackStacks));
 
                 return (
                   <div key={slot.id}>
@@ -817,14 +872,23 @@ export function PlayerCombatPortal({
                           </div>
                         )}
 
-                        {/* 4-column grid — hidden while Improvise form is shown */}
-                        <div className={cn("flex-1 overflow-hidden grid grid-cols-4 divide-x divide-border", showImprovise && "hidden")}>
+                        {/* 3-column grid — hidden while Improvise form is shown */}
+                        <div className={cn("flex-1 overflow-hidden grid grid-cols-3 divide-x divide-border", showImprovise && "hidden")}>
                           {/* Column 1 — Weapons */}
                           <div className="flex flex-col overflow-hidden">
                             <div className="px-4 py-3 bg-muted/30 border-b border-border flex-shrink-0 flex items-center gap-2">
                               <Swords className="h-4 w-4 text-amber-500" />
                               <span className="font-semibold text-sm tracking-wide text-amber-500 uppercase">Weapons</span>
                             </div>
+                            <label className="px-3 py-2 text-xs text-muted-foreground border-b">
+                              Power Attack stacks (3 FP each)
+                              <Input aria-label="Power Attack stacks" type="number" min={1} step={1}
+                                value={powerAttackStacks}
+                                onChange={event => {
+                                  const value = Number(event.target.value);
+                                  setPowerAttackStacks(Number.isSafeInteger(value) && value > 0 ? value : 1);
+                                }} className="mt-1 h-8" />
+                            </label>
                             <ScrollArea className="flex-1 px-3 py-2">
                               {weaponColumns.length === 0 ? (
                                 <p className="text-sm text-muted-foreground italic py-4 text-center">Nothing available</p>
@@ -930,31 +994,7 @@ export function PlayerCombatPortal({
                             </ScrollArea>
                           </div>
 
-                          {/* Column 4 — Items */}
-                          <div className="flex flex-col overflow-hidden">
-                            <div className="px-4 py-3 bg-muted/30 border-b border-border flex-shrink-0 flex items-center gap-2">
-                              <FlaskConical className="h-4 w-4 text-green-400" />
-                              <span className="font-semibold text-sm tracking-wide text-green-400 uppercase">Items</span>
-                            </div>
-                            <ScrollArea className="flex-1 px-3 py-2">
-                              {itemActions.length === 0 ? (
-                                <p className="text-sm text-muted-foreground italic py-4 text-center">Nothing available</p>
-                              ) : (
-                                <div className="space-y-1.5">
-                                  {itemActions.map(action => (
-                                    <ActionCard
-                                      key={action.id}
-                                      action={action}
-                                      slotId={slot.id}
-                                      fpCurrent={character.resources.fp.current}
-                                      onUse={handleUseAction}
-                                    />
-                                  ))}
-                                </div>
-                              )}
-                            </ScrollArea>
-                          </div>
-                        </div>{/* end 4-column grid */}
+                        </div>{/* end 3-column grid */}
 
                         <div className="px-6 py-3 border-t border-border flex-shrink-0 flex items-center justify-between">
                           {/* Left: Improvise toggle */}

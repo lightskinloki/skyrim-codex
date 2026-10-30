@@ -62,6 +62,8 @@ export interface Companion {
   tier: string;
   race?: string;
   highConcept?: string;
+  /** Art plate filename under public/images/summons/ — set only where art exists. */
+  image?: string;
   /** Omit entirely (rather than guessing) when the source sheet doesn't give Target Numbers — e.g. a civilian NPC sheet that only lists HP/FP/DR. */
   stats?: CompanionStats;
   resources: CompanionResources;
@@ -72,5 +74,9 @@ export interface Companion {
   /** For summons: who called it and how long it lasts. Irrelevant for companions. */
   summonedBy?: string;
   duration?: string;
+  /** Template this card becomes when destroyed — the Revenant's Risen form. */
+  risesAs?: string;
+  /** Down and waiting to rise at the start of its next turn; cleared when it does. */
+  risePending?: boolean;
   notes?: string;
 }

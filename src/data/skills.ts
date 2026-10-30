@@ -22,7 +22,7 @@ export const skills: Skill[] = [
       {
         rank: "Adept",
         name: "Savage Strike",
-        description: "When you spend FP to make a Power Attack with a one-handed weapon, it deals +2 damage instead of +1."
+        description: "When you spend FP to make a Power Attack with a one-handed weapon, it deals +3 damage instead of +2."
       },
       {
         rank: "Expert",

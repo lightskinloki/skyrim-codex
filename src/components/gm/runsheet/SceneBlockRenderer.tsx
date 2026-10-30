@@ -47,8 +47,8 @@ function BlockView({ block: b, ctx }: { block: SceneBlock; ctx: RenderCtx }) {
         <div className="rs-gm-note">
           <span className="rs-gm-tag">{b.tag ?? "GM:"}</span>
           <Inline text={b.text} />
-          {b.items?.length ? (
-            <ul>{b.items.map((it, i) => <li key={i}><Inline text={it} /></li>)}</ul>
+          {b.items?.some((x) => x.trim()) ? (
+            <ul>{b.items.filter((x) => x.trim()).map((it, i) => <li key={i}><Inline text={it} /></li>)}</ul>
           ) : null}
         </div>
       );
@@ -57,8 +57,8 @@ function BlockView({ block: b, ctx }: { block: SceneBlock; ctx: RenderCtx }) {
         <div className="rs-gm-alert">
           <span className="rs-gm-tag">{b.tag ?? "GM:"}</span>
           <Inline text={b.text} />
-          {b.items?.length ? (
-            <ul>{b.items.map((it, i) => <li key={i}><Inline text={it} /></li>)}</ul>
+          {b.items?.some((x) => x.trim()) ? (
+            <ul>{b.items.filter((x) => x.trim()).map((it, i) => <li key={i}><Inline text={it} /></li>)}</ul>
           ) : null}
         </div>
       );
@@ -81,7 +81,7 @@ function BlockView({ block: b, ctx }: { block: SceneBlock; ctx: RenderCtx }) {
     case "quote":
       return (
         <>
-          {b.lines.map((l, i) => <div key={i} className="rs-anchor-line">"{l}"</div>)}
+          {b.lines.filter((l) => l.trim()).map((l, i) => <div key={i} className="rs-anchor-line">"{l}"</div>)}
         </>
       );
     case "heading":
@@ -91,9 +91,9 @@ function BlockView({ block: b, ctx }: { block: SceneBlock; ctx: RenderCtx }) {
         <>
           {b.title && <div className="rs-list-title">{b.title}</div>}
           {b.ordered ? (
-            <ol>{b.items.map((it, i) => <li key={i}><Inline text={it} /></li>)}</ol>
+            <ol>{b.items.filter((x) => x.trim()).map((it, i) => <li key={i}><Inline text={it} /></li>)}</ol>
           ) : (
-            <ul>{b.items.map((it, i) => <li key={i}><Inline text={it} /></li>)}</ul>
+            <ul>{b.items.filter((x) => x.trim()).map((it, i) => <li key={i}><Inline text={it} /></li>)}</ul>
           )}
         </>
       );
@@ -104,8 +104,8 @@ function BlockView({ block: b, ctx }: { block: SceneBlock; ctx: RenderCtx }) {
         <details className="rs-card" open={b.open}>
           <summary>{b.title}</summary>
           <div className="rs-card-body">
-            {b.items.length > 0 && <ul>{b.items.map((it, i) => <li key={i}><Inline text={it} /></li>)}</ul>}
-            {b.quotes?.map((q, i) => <div key={i} className="rs-anchor-line">"{q}"</div>)}
+            {b.items.some((x) => x.trim()) && <ul>{b.items.filter((x) => x.trim()).map((it, i) => <li key={i}><Inline text={it} /></li>)}</ul>}
+            {b.quotes?.filter((q) => q.trim()).map((q, i) => <div key={i} className="rs-anchor-line">"{q}"</div>)}
             {b.note && <p className="rs-small"><Inline text={b.note} /></p>}
           </div>
         </details>

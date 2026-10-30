@@ -619,14 +619,16 @@ export const enemyTemplates: EnemyTemplate[] = [
   },
   {
     id: 'jasper_avalon',
-    name: 'Jasper Avalon', // lieutenant, ~AP 10, Dunmer mage, The Atronach — RTF:1161
+    name: 'Jasper Avalon', // Dawn lieutenant, guest-player boss — sheet: JASPER_PLAYER_DASHBOARD.html / RTF:1161
     category: 'humanoid',
-    hp: 9,
-    fp: 16,
-    dr: 8,
+    hp: 1000, // Dawn Obsidian reservoir — life held inside him, NOT armor (JASPER_PLAYER_BRIEF)
+    fp: 30,
+    dr: 0, // base DR 0; Daedra Flesh + Mage Armor = 50 (51 vs spells), Dragonhide = 60 (61 vs spells)
     stats: { might: 4, agility: 6, magic: 19, guile: 12 },
     attacks: [
+      { name: 'Bound Needle', damage: 8, stat: 'magic', properties: '5 FP to summon swarm (Bonus), one needle per Major; lodges and pulls target 10ft' },
       { name: 'Incinerate', damage: 12, stat: 'magic', properties: '9 FP' },
+      { name: 'Daedra Flesh', damage: 0, stat: 'magic', properties: '25 FP, self: DR 50 (51 vs spells) until the encounter ends' },
       { name: 'Ash Shell', damage: 0, stat: 'magic', properties: '4 FP, Might roll or encased 2 rounds' },
       { name: 'Lightning Bolt', damage: 0, stat: 'magic', properties: '3 FP' },
     ],
@@ -635,6 +637,8 @@ export const enemyTemplates: EnemyTemplate[] = [
       "Ancestor's Wrath (Dunmer): 1/adventure fire aura",
       'Ash Rune: 10 FP',
       'Tide-shard graft: cheats Tempo',
+      'Hollow Heart: each enemy who begins a turn within 15ft loses 2 FP; all of it is added to his pool, no cap',
+      'Dawn Obsidian: his 1,000 HP is a second reservoir of life, not armor — DR still comes only from spells',
       'Fights to the end defending the ritual space — dies here, one-and-done',
     ],
     isBoss: true,
@@ -696,6 +700,59 @@ export const enemyTemplates: EnemyTemplate[] = [
     abilities: [
       'Frost Breath (Minor): +5 frost damage, can Slow target',
       'Roughly shoulder-height to a horse, eight feet at the shoulder, jaws built to fit around a grown man’s ribcage',
+    ],
+  },
+
+  // ── What the Giants Guard (oneshot) ────────────────────────────────────
+  // Five-player preset from the TABLE EDITION module: the guardian is one
+  // creature with two 300 HP bars, not two enemies. Run bar one at DR 14 and
+  // bar two at DR 10; the tracker in the module scene handles the transition.
+  {
+    id: 'giant-guardian',
+    name: 'Giant Guardian (Hearthfeld)', // Adept TL3 Boss — two 300 HP bars
+    category: 'humanoid',
+    hp: 600,
+    dr: 14,
+    stats: { might: 18, agility: 12, magic: 8, guile: 16 },
+    attacks: [
+      { name: 'Ironwood Club', damage: 26, stat: 'might', properties: 'crit 52' },
+      { name: 'Standing Stone (phase two)', damage: 32, stat: 'might', properties: 'crit 64, ignores 2 target DR' },
+    ],
+    abilities: [
+      'TWO BARS: 300 HP each. Discard the breaking hit\'s overflow; second bar starts at 300 with DR 10 and cleared statuses',
+      'Groundbreaker (Major): everyone within 5 feet rolls Standard Agility or is Prone + 13 physical, DR applies',
+      'Grief-Quake (Villain Action): end of every second PC turn, everyone within 20 feet rolls Hard Agility (-4) or is Prone + 8 physical. NPC turns never count',
+      'It guards the ring and never pursues to Whiterun. No treasure on the body',
+    ],
+    isBoss: true,
+  },
+  {
+    id: 'hrodulf',
+    name: 'Hrodulf the Bonepicker', // Adept TL2 — offers a split at 66 HP or less
+    category: 'humanoid',
+    hp: 200,
+    dr: 11,
+    stats: { might: 17, agility: 15, magic: 8, guile: 12 },
+    attacks: [
+      { name: 'Dwarven War-Pick', damage: 20, stat: 'might', properties: 'crit 40, ignores 2 target DR' },
+      { name: 'Bury the Lead', damage: 0, stat: 'guile', properties: 'target Hard Agility (-4) or Blinded: disadvantage on attacks until end of their next turn' },
+    ],
+    abilities: [
+      'At 66 HP or less, makes the split offer once. Honours accepted terms if the PCs stop attacking; no second phase or Villain Actions',
+      'Protects the haul. May throw dirt instead of attacking',
+    ],
+  },
+  {
+    id: 'barrow-picker',
+    name: 'Barrow-Picker', // Minion — four with Hrodulf
+    category: 'humanoid',
+    hp: 70,
+    dr: 7,
+    stats: { might: 16, agility: 14, magic: 8, guile: 12 },
+    attacks: [{ name: 'Steel Sword', damage: 13, stat: 'might', properties: 'crit 26' }],
+    abilities: [
+      'Four diggers, already present. They do not respawn to refill a thinned crew',
+      'Flee at two or fewer active',
     ],
   },
 ];

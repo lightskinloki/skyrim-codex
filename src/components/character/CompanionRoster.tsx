@@ -5,6 +5,7 @@
 import { useState, useEffect } from "react";
 import { Companion } from "@/types/companion";
 import { companionStorage } from "@/utils/companionStorage";
+import { COMPANIONS_CHANGED } from "@/utils/summoning";
 import { defaultCompanions } from "@/data/companions";
 import { CompanionCard } from "./CompanionCard";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,14 @@ export function CompanionRoster() {
 
   useEffect(() => {
     setCompanions(companionStorage.ensureSeeded(defaultCompanions));
+  }, []);
+
+  // A conjuration cast (from the sheet or the combat portal) writes the new
+  // summon straight to storage — pick it up here without a reload.
+  useEffect(() => {
+    const refresh = () => setCompanions(companionStorage.getAll());
+    window.addEventListener(COMPANIONS_CHANGED, refresh);
+    return () => window.removeEventListener(COMPANIONS_CHANGED, refresh);
   }, []);
 
   const updateCompanion = (updated: Companion) => {
