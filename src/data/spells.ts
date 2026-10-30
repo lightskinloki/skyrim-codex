@@ -664,7 +664,7 @@ export const spells: Spell[] = [
     school: "Conjuration", 
     tier: "Master", 
     fpCost: 30, 
-    description: "Reanimate a powerful dead humanoid that serves you until it is destroyed. You may equip your Thrall with any armor or weapons you give it. You can only have one Thrall of any kind active at a time." 
+    description: "Reanimate any dead humanoid that serves you until it is destroyed. You may equip your Thrall with any armor or weapons you give it. You can only have one Thrall of any kind active at a time." 
   },
   { 
     name: "Conjure Dremora Lord", 

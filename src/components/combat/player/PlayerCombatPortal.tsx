@@ -38,8 +38,10 @@ import {
 import { calculateTotalDR, updateCharacterResources } from "@/utils/characterCalculations";
 import { resolveInventoryItem } from "@/utils/itemLookup";
 import { useToast } from "@/hooks/use-toast";
-import { summonRuleFor, spawnSummon, risePendingSummons } from "@/utils/summoning";
+import { summonRuleFor, spawnSummon, risePendingSummons, summonCapacityError, summonLimitsFor, raiseThrall, thrallCapacityError } from "@/utils/summoning";
 import { SummonStrip } from "./SummonStrip";
+import { DeadThrallPicker } from "@/components/character/DeadThrallPicker";
+import { EnemyTemplate } from "@/data/enemies";
 
 interface ActionSlot {
   id: string;
@@ -126,6 +128,11 @@ export function PlayerCombatPortal({
   const [activeSlot, setActiveSlot] = useState<string | null>(null);
   const [powerAttackStacks, setPowerAttackStacks] = useState(1);
   const [openSchools, setOpenSchools] = useState<Set<string>>(new Set());
+  // Dead Thrall: which action asked for a corpse, held while the picker is open.
+  const [thrallPicker, setThrallPicker] = useState<{
+    slotId: string;
+    action: MajorActionOption | MinorActionOption | BonusActionAbility;
+  } | null>(null);
 
   const toggleSchool = (school: string) => {
     setOpenSchools(prev => {
@@ -312,9 +319,31 @@ export function PlayerCombatPortal({
   };
 
   // Use action from slot
-  const handleUseAction = (slotId: string, action: MajorActionOption | MinorActionOption | BonusActionAbility) => {
+  const handleUseAction = (
+    slotId: string,
+    action: MajorActionOption | MinorActionOption | BonusActionAbility,
+    thrallBody?: EnemyTemplate,
+  ) => {
     const slot = actionSlots.find(s => s.id === slotId);
     if (!slot) return;
+
+    // Dead Thrall needs a body first: choose the corpse, then come back through
+    // this same path with it, so the spend and the slot-marking stay identical.
+    if (action.name === 'Dead Thrall' && !thrallBody) {
+      const blocked = thrallCapacityError(character.name, summonLimitsFor(character));
+      if (blocked) {
+        toast({
+          title: blocked.reason === 'thrall_slot_taken' ? 'You already have a Thrall' : 'No free summon slot',
+          description: blocked.reason === 'thrall_slot_taken'
+            ? 'Only one Thrall of any kind can be active. Dismiss it first.'
+            : `You already hold ${blocked.active} of ${blocked.limit} summoned creatures.`,
+          variant: 'destructive',
+        });
+        return;
+      }
+      setThrallPicker({ slotId, action });
+      return;
+    }
 
     // Check FP cost
     const fpCost = 'fpCost' in action ? action.fpCost || 0 : 0;
@@ -325,6 +354,22 @@ export function PlayerCombatPortal({
         variant: "destructive",
       });
       return;
+    }
+
+    // Refuse a summoning cast up front so no FP is spent on a card the player
+    // has no room for.
+    const summonRule = summonRuleFor(action.name);
+    const summonLimits = summonLimitsFor(character);
+    if (summonRule) {
+      const blocked = summonCapacityError(character.name, summonLimits);
+      if (blocked) {
+        toast({
+          title: "No more can be held",
+          description: `You already hold ${blocked.active} of ${blocked.limit} summoned creatures. Dismiss one first — Twin Souls (Expert Conjuration) raises the limit to two.`,
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     // Check HP cost (custom abilities only)
@@ -418,10 +463,19 @@ export function PlayerCombatPortal({
 
     // Conjuration cast here spawns the real creature card, stats and all, so
     // nobody has to transcribe a stat block mid-fight.
-    const summonRule = summonRuleFor(action.name);
-    const summon = summonRule
-      ? spawnSummon(summonRule.templateId, character.name, summonRule.duration)
+    const spawned = summonRule
+      ? spawnSummon(summonRule.templateId, character.name, {
+          duration: summonRule.duration,
+          limits: summonLimits,
+        })
       : null;
+    const summon = spawned?.ok ? spawned.summon ?? null : null;
+
+    // Raised from the corpse the picker handed back.
+    const raised = action.name === 'Dead Thrall' && thrallBody
+      ? raiseThrall(thrallBody, character.name, { limits: summonLimits })
+      : null;
+    const thrall = raised?.ok ? raised.summon ?? null : null;
 
     // Mark slot as used in local state
     setActionSlots(prev => prev.map(s =>
@@ -438,11 +492,14 @@ export function PlayerCombatPortal({
     const actionSummary = [
       costParts.length > 0 ? `Spent ${costParts.join(', ')}` : '',
       summon ? `Summoned ${summon.name} (${summon.resources.hp?.max ?? '—'} HP)` : '',
+      thrall ? `Raised ${thrall.name} (${thrall.resources.hp?.max ?? '—'} HP, ${thrall.resources.dr} DR)` : '',
+      raised && !raised.ok ? 'Nothing rose' : '',
       ...itemResults,
     ].filter(Boolean).join(' · ');
     toast({
-      title: action.name,
+      title: thrall ? `Raised: ${thrall.name}` : action.name,
       description: actionSummary || "Action used",
+      ...(raised && !raised.ok ? { variant: 'destructive' as const } : {}),
     });
   };
   
@@ -689,6 +746,18 @@ export function PlayerCombatPortal({
 
         {/* Whatever is currently conjured, acting on your turn */}
         <SummonStrip casterName={character.name} />
+
+        <DeadThrallPicker
+          open={thrallPicker !== null}
+          onOpenChange={(open) => { if (!open) setThrallPicker(null); }}
+          casterName={character.name}
+          limits={summonLimitsFor(character)}
+          onPick={(body) => {
+            const pending = thrallPicker;
+            setThrallPicker(null);
+            if (pending) handleUseAction(pending.slotId, pending.action, body);
+          }}
+        />
 
         {/* Action Stack */}
         <div className="flex-1 overflow-auto p-6">

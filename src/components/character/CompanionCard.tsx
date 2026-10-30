@@ -105,7 +105,7 @@ export function CompanionCard({ companion, onUpdate, onRemove }: CompanionCardPr
           <div className="flex items-center gap-2 flex-wrap">
             <h3 className="font-cinzel text-lg font-bold text-primary">{companion.name}</h3>
             <Badge variant={companion.kind === 'summon' ? 'destructive' : 'secondary'}>
-              {companion.kind === 'summon' ? 'Summon' : 'Companion'}
+              {companion.thrall ? 'Thrall' : companion.kind === 'summon' ? 'Summon' : 'Companion'}
             </Badge>
             <Badge variant="outline">{companion.tier}</Badge>
           </div>

@@ -13,7 +13,13 @@ import { EquipmentModal } from "./EquipmentModal";
 import { ItemPickerModal } from "./ItemPickerModal";
 import { AbilityTracker } from "./AbilityTracker";
 import { PlayerCombatPortal } from "@/components/combat/player/PlayerCombatPortal";
-import { spawnSummon, summonRuleFor, risePendingSummons } from "@/utils/summoning";
+import { spawnSummon, summonRuleFor, risePendingSummons, summonCapacityError, summonLimitsFor, raiseThrall, thrallCapacityError } from "@/utils/summoning";
+import { DeadThrallPicker } from "./DeadThrallPicker";
+import { EnemyTemplate } from "@/data/enemies";
+import { spells } from "@/data/spells";
+
+/** Read from the spell list rather than hardcoding, so a cost change lands here too. */
+const DEAD_THRALL_COST = spells.find((s) => s.name === "Dead Thrall")?.fpCost ?? 30;
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -377,6 +383,10 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
     actionName: '',
     fpCost: 0
   });
+
+  // Dead Thrall: which corpse, chosen before the FP modal opens.
+  const [thrallPickerOpen, setThrallPickerOpen] = useState(false);
+  const [pendingThrallBody, setPendingThrallBody] = useState<EnemyTemplate | null>(null);
   
   // Equipment management state
   const [addingEquipment, setAddingEquipment] = useState(false);
@@ -538,6 +548,41 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
   };
 
   const handleSpendFP = (amount: number, actionName: string) => {
+    const spell = actionName.replace(/^Cast\s+/i, "");
+
+    // Dead Thrall raises a specific corpse, so the body is chosen first and the
+    // FP modal opens once we know what's being raised. Refuse early if the
+    // caster has no thrall slot or no free summon slot.
+    if (spell === "Dead Thrall") {
+      const blocked = thrallCapacityError(currentCharacter.name, summonLimitsFor(currentCharacter));
+      if (blocked) {
+        toast({
+          title: blocked.reason === "thrall_slot_taken" ? "You already have a Thrall" : "No free summon slot",
+          description: blocked.reason === "thrall_slot_taken"
+            ? "Only one Thrall of any kind can be active. Dismiss the one you have first."
+            : `You already hold ${blocked.active} of ${blocked.limit} summoned creatures.`,
+          variant: "destructive",
+        });
+        return;
+      }
+      setThrallPickerOpen(true);
+      return;
+    }
+
+    // Refuse any other summoning cast before the FP goes out the door, not after.
+    const rule = summonRuleFor(spell);
+    if (rule) {
+      const blocked = summonCapacityError(currentCharacter.name, summonLimitsFor(currentCharacter));
+      if (blocked) {
+        toast({
+          title: "No more can be held",
+          description: `You already hold ${blocked.active} of ${blocked.limit} summoned creatures. Dismiss one first — Twin Souls (Expert Conjuration) raises the limit to two.`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     setFpSpendModal({
       isOpen: true,
       actionName,
@@ -562,13 +607,46 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
     // A confirmed summoning cast drops a finished creature card onto the sheet,
     // with its guide stats already in place.
     const castSpell = fpSpendModal.actionName.replace(/^Cast\s+/i, "");
+
+    // A confirmed Dead Thrall cast raises the corpse chosen in the picker.
+    if (castSpell === "Dead Thrall" && pendingThrallBody) {
+      const result = raiseThrall(pendingThrallBody, currentCharacter.name, {
+        limits: summonLimitsFor(currentCharacter),
+      });
+      setPendingThrallBody(null);
+      if (result.ok && result.summon) {
+        toast({
+          title: `Raised: ${result.summon.name}`,
+          description: `${result.summon.resources.hp?.max ?? "—"} HP · DR ${result.summon.resources.dr} · Until destroyed. It's on your sheet and in the combat portal.`,
+        });
+      } else {
+        toast({
+          title: "Nothing rose",
+          description: result.reason === "thrall_slot_taken"
+            ? "Only one Thrall of any kind can be active."
+            : `You already hold ${result.active ?? "?"} of ${result.limit ?? "?"} summoned creatures.`,
+          variant: "destructive",
+        });
+      }
+      return;
+    }
+
     const summonRule = summonRuleFor(castSpell);
     if (summonRule) {
-      const summon = spawnSummon(summonRule.templateId, currentCharacter.name, summonRule.duration);
-      if (summon) {
+      const result = spawnSummon(summonRule.templateId, currentCharacter.name, {
+        duration: summonRule.duration,
+        limits: summonLimitsFor(currentCharacter),
+      });
+      if (result.ok && result.summon) {
         toast({
-          title: `Summoned: ${summon.name}`,
-          description: `${summon.resources.hp?.max ?? "—"} HP · ${summon.duration ?? "Duration of the encounter"}. It's on your sheet and in the combat portal.`,
+          title: `Summoned: ${result.summon.name}`,
+          description: `${result.summon.resources.hp?.max ?? "—"} HP · ${result.summon.duration ?? "Duration of the encounter"}. It's on your sheet and in the combat portal.`,
+        });
+      } else if (result.reason === "at_capacity") {
+        toast({
+          title: "No more can be held",
+          description: `You already hold ${result.active} of ${result.limit} summoned creatures.`,
+          variant: "destructive",
         });
       }
     }
@@ -1704,9 +1782,25 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
           onAdd={handleAddPickedItem}
         />
         
+        <DeadThrallPicker
+          open={thrallPickerOpen}
+          onOpenChange={setThrallPickerOpen}
+          casterName={currentCharacter.name}
+          limits={summonLimitsFor(currentCharacter)}
+          onPick={(body) => {
+            setPendingThrallBody(body);
+            setThrallPickerOpen(false);
+            setFpSpendModal({ isOpen: true, actionName: "Cast Dead Thrall", fpCost: DEAD_THRALL_COST });
+          }}
+        />
+
         <FPSpendModal
           isOpen={fpSpendModal.isOpen}
-          onClose={() => setFpSpendModal(prev => ({ ...prev, isOpen: false }))}
+          onClose={() => {
+            // Cancelling the spend cancels the raising too.
+            setPendingThrallBody(null);
+            setFpSpendModal(prev => ({ ...prev, isOpen: false }));
+          }}
           onConfirm={confirmSpendFP}
           actionName={fpSpendModal.actionName}
           fpCost={fpSpendModal.fpCost}

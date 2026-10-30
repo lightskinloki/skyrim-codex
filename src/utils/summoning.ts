@@ -1,15 +1,18 @@
 // Casting a summoning spell should hand the player a finished card, not a
 // blank one. This is the single place that knows which spell calls which
-// creature, and the single place that stamps a template into live state.
+// creature, how many may be held at once, and how a corpse becomes a thrall.
 //
 // Called from both cast surfaces — the character sheet's Known Spells (after
 // the FP-spend modal is confirmed) and the combat portal's action stack — so a
 // summon behaves the same whichever screen the player cast it from.
 
 import { Companion } from '@/types/companion';
+import { Character } from '@/types/character';
+import { EnemyTemplate } from '@/data/enemies';
 import { getSummonTemplate } from '@/data/summons';
 import { defaultCompanions } from '@/data/companions';
 import { companionStorage } from './companionStorage';
+import { thrallFromBody } from './thrallConversion';
 
 /** Fired on window whenever the roster changes, so open cards refresh live. */
 export const COMPANIONS_CHANGED = 'skyrimTTRPG:companions-changed';
@@ -23,8 +26,8 @@ export interface SummonRule {
 /**
  * Spell name -> creature. Names match `data/spells.ts` exactly.
  *
- * Deliberately absent: Dead Thrall. The guide gives its spell text but no stat
- * block of its own, so there's nothing honest to spawn from it yet.
+ * Dead Thrall is absent on purpose: it reanimates a *body*, not a species, so
+ * it goes through `raiseThrall()` and the conversion in thrallConversion.ts.
  */
 export const SUMMONS_BY_SPELL: Record<string, SummonRule> = {
   'Conjure Familiar': { templateId: 'summon_familiar' },
@@ -45,17 +48,87 @@ export const SUMMONS_BY_SPELL: Record<string, SummonRule> = {
 export const summonRuleFor = (spellName: string): SummonRule | undefined =>
   SUMMONS_BY_SPELL[spellName];
 
+// --- How many may be held at once -------------------------------------------
+
+export interface SummonLimits {
+  /** Active summoned/reanimated creatures at once. Base 1; Twin Souls makes it 2. */
+  active: number;
+  /** Of those, how many may be Thralls. "One Thrall of any kind" = 1. */
+  thralls: number;
+}
+
+/**
+ * The rules' own ceiling, read off the character:
+ *
+ *   base 1 creature — Twin Souls (Expert Conjuration) says "you may have two",
+ *                     which only means anything if everyone else has one.
+ *   thralls 1      — "You can only have one Thrall of any kind active."
+ *
+ * `override` is the seam for hosted play: when the GM screen can set encounter
+ * rules, it will raise these numbers on the fly (a GM running a looser table,
+ * or an NPC conjurer with their own allowance). Nothing else needs to change.
+ */
+export function summonLimitsFor(
+  character: Character | null,
+  override?: Partial<SummonLimits>,
+): SummonLimits {
+  const rank = character?.skills?.find((s) => s.skillId === 'conjuration')?.rank;
+  const twinSouls = rank === 'Expert' || rank === 'Master';
+
+  return {
+    active: override?.active ?? (twinSouls ? 2 : 1),
+    thralls: override?.thralls ?? 1,
+  };
+}
+
+export type SpawnFailure = 'unknown_template' | 'at_capacity' | 'thrall_slot_taken';
+
+export interface SpawnRefusal {
+  ok: false;
+  reason: SpawnFailure;
+  /** The ceiling that was hit, and how many are already held. */
+  limit?: number;
+  active?: number;
+}
+
+// A flat result rather than a discriminated union: this repo compiles with
+// strictNullChecks off, which quietly defeats boolean-literal narrowing.
+export interface SpawnResult {
+  ok: boolean;
+  summon?: Companion;
+  reason?: SpawnFailure;
+  limit?: number;
+  active?: number;
+}
+
+/** Would this caster's next summon be refused? Checkable before spending FP. */
+export function summonCapacityError(
+  casterName: string,
+  limits: SummonLimits,
+): SpawnRefusal | null {
+  const active = summonsFor(casterName);
+  if (active.length >= limits.active) {
+    return { ok: false, reason: 'at_capacity', limit: limits.active, active: active.length };
+  }
+  return null;
+}
+
 /**
  * Clone a template into a live summon: fresh HP/FP, every limited ability
- * restored, stamped with its caster. Returns null if the template is unknown.
+ * restored, stamped with its caster, and refused if the caster is already at
+ * their allowance.
  */
 export function spawnSummon(
   templateId: string,
   casterName: string,
-  durationOverride?: string,
-): Companion | null {
+  opts: { duration?: string; limits?: SummonLimits } = {},
+): SpawnResult {
   const template = getSummonTemplate(templateId);
-  if (!template) return null;
+  if (!template) return { ok: false, reason: 'unknown_template' };
+
+  const limits = opts.limits ?? { active: 1, thralls: 1 };
+  const blocked = summonCapacityError(casterName, limits);
+  if (blocked) return blocked;
 
   const summon: Companion = {
     ...template,
@@ -75,16 +148,47 @@ export function spawnSummon(
       used: false,
     })),
     summonedBy: casterName || undefined,
-    duration: durationOverride ?? template.duration,
+    duration: opts.duration ?? template.duration,
   };
 
-  // If this is the very first thing ever written to the roster, seed the party
-  // NPCs first — otherwise casting a summon before opening the roster would
-  // leave every companion card missing.
-  companionStorage.ensureSeeded(defaultCompanions);
-  companionStorage.save(summon);
-  announceCompanionsChanged();
-  return summon;
+  save(summon);
+  return { ok: true, summon };
+}
+
+/** Would a Dead Thrall cast be refused? Checkable before the picker opens. */
+export function thrallCapacityError(
+  casterName: string,
+  limits: SummonLimits,
+): SpawnRefusal | null {
+  const active = summonsFor(casterName);
+  const thralls = active.filter((s) => s.thrall).length;
+
+  if (thralls >= limits.thralls) {
+    return { ok: false, reason: 'thrall_slot_taken', limit: limits.thralls, active: thralls };
+  }
+  if (active.length >= limits.active) {
+    return { ok: false, reason: 'at_capacity', limit: limits.active, active: active.length };
+  }
+  return null;
+}
+
+/**
+ * Dead Thrall: reanimate a corpse you actually have. The body's own sheet is
+ * compressed by thrallConversion.ts, so a 1,000 HP boss binds to the same
+ * ceiling as a Dremora Lord rather than becoming a 1,000 HP tank.
+ */
+export function raiseThrall(
+  body: EnemyTemplate,
+  casterName: string,
+  opts: { limits?: SummonLimits } = {},
+): SpawnResult {
+  const limits = opts.limits ?? { active: 1, thralls: 1 };
+  const blocked = thrallCapacityError(casterName, limits);
+  if (blocked) return blocked;
+
+  const thrall = thrallFromBody(body, casterName);
+  save(thrall);
+  return { ok: true, summon: thrall };
 }
 
 /** Every active summon belonging to this caster (unattributed ones show for everyone). */
@@ -115,8 +219,7 @@ export function applySummonDamage(summon: Companion, delta: number): Companion {
     ...(next === 0 && summon.risesAs ? { risePending: true } : {}),
   };
 
-  companionStorage.save(updated);
-  announceCompanionsChanged();
+  save(updated);
   return updated;
 }
 
@@ -145,8 +248,7 @@ export function riseSummon(summon: Companion): Companion | null {
     risePending: false,
   };
 
-  companionStorage.save(risen);
-  announceCompanionsChanged();
+  save(risen);
   return risen;
 }
 
@@ -166,6 +268,15 @@ export function dismissSummon(id: string): void {
 }
 
 export function saveSummon(summon: Companion): void {
+  save(summon);
+}
+
+/** One write path, so the seed-before-first-save bug can't come back. */
+function save(summon: Companion): void {
+  // If this is the very first thing ever written to the roster, seed the party
+  // NPCs first — otherwise summoning before opening the roster would leave
+  // every companion card missing.
+  companionStorage.ensureSeeded(defaultCompanions);
   companionStorage.save(summon);
   announceCompanionsChanged();
 }

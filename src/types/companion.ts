@@ -74,6 +74,8 @@ export interface Companion {
   /** For summons: who called it and how long it lasts. Irrelevant for companions. */
   summonedBy?: string;
   duration?: string;
+  /** Raised by Dead Thrall: a body's own sheet, bound. One per caster at a time. */
+  thrall?: boolean;
   /** Template this card becomes when destroyed — the Revenant's Risen form. */
   risesAs?: string;
   /** Down and waiting to rise at the start of its next turn; cleared when it does. */
