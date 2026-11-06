@@ -13,6 +13,7 @@ import { EquipmentModal } from "./EquipmentModal";
 import { ItemPickerModal } from "./ItemPickerModal";
 import { AbilityTracker } from "./AbilityTracker";
 import { PlayerCombatPortal } from "@/components/combat/player/PlayerCombatPortal";
+import { TableSeatControl } from "./TableSeatControl";
 import { spawnSummon, summonRuleFor, risePendingSummons, summonCapacityError, summonLimitsFor, raiseThrall, thrallCapacityError } from "@/utils/summoning";
 import { DeadThrallPicker } from "./DeadThrallPicker";
 import { EnemyTemplate } from "@/data/enemies";
@@ -356,9 +357,11 @@ interface CharacterDashboardProps {
   onUpdateCharacter: (character: Character) => void;
   onCreateNewCharacter: () => void;
   onEndSession: () => void;
+  /** A room code from a scanned QR link: join the GM's table straight away. */
+  joinCode?: string | null;
 }
 
-export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCharacter, onEndSession }: CharacterDashboardProps) {
+export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCharacter, onEndSession, joinCode }: CharacterDashboardProps) {
   const [currentCharacter, setCurrentCharacter] = useState<Character>(character);
   const [activeTab, setActiveTab] = useState("sheet");
   const [mapRevealed, setMapRevealed] = useState(
@@ -1094,6 +1097,7 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
               <Download className="w-3.5 h-3.5 mr-1.5" />
               Export
             </Button>
+            <TableSeatControl character={currentCharacter} autoJoinCode={joinCode} />
             <Badge
               variant="outline"
               className={`text-xs flex-shrink-0 ${hasExportedThisSession

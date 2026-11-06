@@ -10,6 +10,7 @@ import { CombatManager, ObjectiveTracker } from "@/types/campaign";
 import { rollD20, tierFor } from "@/utils/sceneBlocks";
 import { useCampaign } from "../CampaignContext";
 import { useEncounter } from "@/hooks/useEncounter";
+import { initiativeTies } from "@/state/encounter";
 
 interface TrackerState { hp: Record<string, number>; down: Record<string, boolean>; }
 
@@ -37,6 +38,11 @@ export function CombatManagerView({ combat: c, blockId, ctx }: { combat: CombatM
   const { state: encounter, dispatch, reset } = useEncounter({
     blockId, moduleId: campaign.id, trackers: seedTrackers, fields: seedFields,
   });
+
+  // A tied initiative is rerolled at this table, never settled by Agility, so
+  // the app flags the tie and leaves the order alone
+  // (docs/TABLE-SYNC-DECISIONS.md).
+  const ties = useMemo(() => initiativeTies(encounter.combatants), [encounter.combatants]);
 
   // Merge in any tracker or field the module has gained since this fight began.
   const trackers = useMemo(() => {
@@ -105,6 +111,16 @@ export function CombatManagerView({ combat: c, blockId, ctx }: { combat: CombatM
 
       {c.objective && (
         <div className="rs-gm-alert"><span className="rs-gm-tag">OBJECTIVE:</span> <Inline text={c.objective} /></div>
+      )}
+
+      {ties.length > 0 && (
+        <div className="rs-gm-alert amber">
+          <span className="rs-gm-tag">INITIATIVE TIE:</span>{" "}
+          {ties
+            .map((t) => `${t.combatantIds.map((id) => encounter.combatants[id]?.name ?? id).join(" and ")} rolled ${t.initiative}`)
+            .join("; ")}{" "}
+          — reroll before they act.
+        </div>
       )}
 
       <div className="rs-status">

@@ -11,12 +11,14 @@ import { CombatState } from "@/types/combat";
 import { combatManager } from "@/lib/combatManager";
 import { enemyTemplates } from "@/data/enemies";
 import { CampaignProvider } from "./CampaignContext";
+import { TableProvider } from "./TableContext";
 import { CampaignHub } from "./hub/CampaignHub";
 import { ModuleBuilder } from "./builder/ModuleBuilder";
 import { LivePlay } from "./play/LivePlay";
 import { CombatView } from "./CombatView";
 import { UniversalCompendium } from "./compendium/UniversalCompendium";
 import { AlchemyWorkbench } from "./alchemy/AlchemyWorkbench";
+import { TableBadge } from "./TableBadge";
 
 interface GMDashboardProps {
   onExit: () => void;
@@ -66,9 +68,12 @@ function GMDashboardInner({ onExit }: GMDashboardProps) {
               <h1 className="font-cinzel text-xl font-bold">GM Campaign Suite</h1>
             </div>
           </div>
-          {combatState.active && (
-            <Badge variant="outline" className="text-amber-500 border-amber-500">Combat · Round {combatState.round}</Badge>
-          )}
+          <div className="flex items-center gap-2">
+            {combatState.active && (
+              <Badge variant="outline" className="text-amber-500 border-amber-500">Combat · Round {combatState.round}</Badge>
+            )}
+            <TableBadge />
+          </div>
         </div>
       </header>
 
@@ -101,7 +106,9 @@ function GMDashboardInner({ onExit }: GMDashboardProps) {
 export function GMDashboard({ onExit }: GMDashboardProps) {
   return (
     <CampaignProvider>
-      <GMDashboardInner onExit={onExit} />
+      <TableProvider>
+        <GMDashboardInner onExit={onExit} />
+      </TableProvider>
     </CampaignProvider>
   );
 }

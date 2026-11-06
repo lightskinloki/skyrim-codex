@@ -41,7 +41,7 @@ export interface Combatant {
   dr: number;
   /** Rolled at the start of the fight; only unattached combatants need one. */
   initiative?: number;
-  /** Tie-breaker for initiative. */
+  /** Carried for the sheet's display; never used to settle a tied initiative. */
   agility?: number;
   conditions: Condition[];
   pos: { x: number; y: number };
@@ -85,6 +85,8 @@ export interface EncounterState {
   sceneId?: string;
   /** The combat block this encounter was opened from. */
   blockId: string;
+  /** Display name for the lobby and the join screen — not rules state. */
+  title: string;
   round: number;
   /** Increments on every applied mutation; used to detect gaps across a wire. */
   seq: number;
@@ -104,6 +106,7 @@ export interface EncounterState {
 
 export interface EncounterInit {
   blockId: string;
+  title?: string;
   moduleId?: string;
   sceneId?: string;
   round?: number;
@@ -118,6 +121,7 @@ export function createEncounter(init: EncounterInit): EncounterState {
     moduleId: init.moduleId,
     sceneId: init.sceneId,
     blockId: init.blockId,
+    title: init.title ?? 'Combat',
     round: init.round ?? 1,
     seq: 0,
     ended: false,
@@ -135,20 +139,44 @@ export function createEncounter(init: EncounterInit): EncounterState {
 
 // ---------------------------------------------------------------- selectors
 
-/** Turn order: unattached combatants only, highest initiative first. */
+/**
+ * Turn order: unattached combatants only, lowest initiative first — this
+ * system's universal rule (a nat 1 is the best result, a nat 20 the worst;
+ * confirmed directly against the Freebuff session transcript). A previous
+ * pass wrote this descending, which the old `InitiativeEditor.tsx` tracker
+ * ("ascending — lowest first") and this corrected version both disagree with.
+ *
+ * Ties are left in the order the combatants were added and reported by
+ * `initiativeTies` — this table rerolls a tie rather than resolving it, so the
+ * app must not invent a winner from Agility or a name sort
+ * (docs/TABLE-SYNC-DECISIONS.md).
+ */
 export function computeOrder(combatants: Record<string, Combatant>): TurnSlot[] {
   return Object.values(combatants)
     .filter((c) => !c.actsOn)
-    .sort((a, b) => {
-      const ai = initiativeOf(a);
-      const bi = initiativeOf(b);
-      if (bi !== ai) return bi - ai;
-      const aa = agilityOf(a);
-      const ba = agilityOf(b);
-      if (ba !== aa) return ba - aa;
-      return a.name.localeCompare(b.name);
-    })
+    .sort((a, b) => initiativeOf(a) - initiativeOf(b))
     .map((c) => ({ combatantId: c.id, initiative: initiativeOf(c), done: false }));
+}
+
+/**
+ * Combatants sharing an initiative value, so the GM screen can ask for the
+ * reroll the rules require. Unattached combatants that have not rolled yet are
+ * not a tie.
+ */
+export function initiativeTies(
+  combatants: Record<string, Combatant>,
+): { initiative: number; combatantIds: string[] }[] {
+  const byInitiative = new Map<number, string[]>();
+  for (const c of Object.values(combatants)) {
+    if (c.actsOn || c.initiative === undefined || c.initiative === null) continue;
+    const ids = byInitiative.get(c.initiative) ?? [];
+    ids.push(c.id);
+    byInitiative.set(c.initiative, ids);
+  }
+  return [...byInitiative.entries()]
+    .filter(([, ids]) => ids.length > 1)
+    .sort(([a], [b]) => a - b)
+    .map(([initiative, combatantIds]) => ({ initiative, combatantIds }));
 }
 
 /** Attached NPCs (summons, companions) that resolve on this combatant's turn. */
@@ -168,10 +196,6 @@ function initiativeOf(c: Combatant): number {
   return c.initiative ?? 0;
 }
 
-function agilityOf(c: Combatant): number {
-  return c.agility ?? 0;
-}
-
 // ------------------------------------------------------------------ actions
 
 export type EncounterAction =
@@ -186,6 +210,7 @@ export type EncounterAction =
   | { type: 'log.set'; text: string }
   | { type: 'combatant.add'; combatant: Combatant }
   | { type: 'combatant.remove'; id: string }
+  | { type: 'combatant.setInitiative'; id: string; initiative: number }
   | { type: 'combatant.damage'; id: string; amount: number; bypassDr?: boolean }
   | { type: 'combatant.heal'; id: string; amount: number }
   | { type: 'condition.add'; id: string; label: string; rounds?: number }
@@ -310,6 +335,15 @@ export function encounterReducer(
         activeIndex: Math.min(state.activeIndex, Math.max(0, order.length - 1)),
         entries: withEntry(state, { kind: 'note', combatantId: action.id, text: `${gone.name} leaves the encounter.` }),
       });
+    }
+
+    case 'combatant.setInitiative': {
+      const c = state.combatants[action.id];
+      if (!c) return state;
+      const combatants = { ...state.combatants, [action.id]: { ...c, initiative: action.initiative } };
+      // Re-sort: a corrected initiative can change who's up, not just the number shown.
+      const order = c.actsOn ? state.order : computeOrder(combatants);
+      return apply(state, { combatants, order });
     }
 
     case 'combatant.damage': {

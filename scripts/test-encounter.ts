@@ -7,6 +7,7 @@ import {
   encounterReducer,
   activeCombatant,
   attachedTo,
+  initiativeTies,
 } from '@/state/encounter';
 
 let passed = 0;
@@ -69,15 +70,45 @@ function seed(): EncounterState {
 // --- order ----------------------------------------------------------------
 {
   let s = seed();
-  check('order is highest initiative first',
-    s.order.map((o) => o.combatantId).join(',') === 'saijah,krusp,orion',
+  check('order is lowest initiative first',
+    s.order.map((o) => o.combatantId).join(',') === 'orion,krusp,saijah',
     s.order.map((o) => o.combatantId).join(','));
-  check('active combatant is the first slot', activeCombatant(s)?.id === 'saijah');
+  check('active combatant is the first slot', activeCombatant(s)?.id === 'orion');
 
   s = encounterReducer(s, { type: 'combatant.add', combatant: summon('flame-atronach', 'saijah', 3) });
   check('an attached summon gets no turn slot', s.order.length === 3);
   check('the summon resolves on its owner', attachedTo(s, 'saijah').map((c) => c.id).join(',') === 'flame-atronach');
   check('the summon is still a combatant', !!s.combatants['flame-atronach']);
+}
+
+// --- initiative ties ------------------------------------------------------
+// This system rerolls a tie; the app reports it and leaves order alone.
+{
+  let s = createEncounter({ blockId: 'test-ties' });
+  s = encounterReducer(s, { type: 'combatant.add', combatant: pc('saijah', 12, 18) });
+  s = encounterReducer(s, { type: 'combatant.add', combatant: pc('orion', 12, 6) });
+  s = encounterReducer(s, { type: 'combatant.add', combatant: pc('krusp', 7, 10) });
+
+  check('a tie keeps the order they were added in, not Agility',
+    s.order.map((o) => o.combatantId).join(',') === 'krusp,saijah,orion',
+    s.order.map((o) => o.combatantId).join(','));
+  const ties = initiativeTies(s.combatants);
+  check('the tie is reported', ties.length === 1 && ties[0].initiative === 12, JSON.stringify(ties));
+  check('the tie names both combatants', ties[0]?.combatantIds.join(',') === 'saijah,orion');
+
+  s = encounterReducer(s, { type: 'combatant.setInitiative', id: 'saijah', initiative: 20 });
+  check('rerolling clears the tie', initiativeTies(s.combatants).length === 0);
+  check('the reroll re-sorts the order',
+    s.order.map((o) => o.combatantId).join(',') === 'krusp,orion,saijah',
+    s.order.map((o) => o.combatantId).join(','));
+
+  const unrolled = createEncounter({ blockId: 'test-unrolled' });
+  const noRoll = encounterReducer(unrolled, { type: 'combatant.add', combatant: { ...pc('ghost', 0, 10), initiative: undefined } });
+  check('a combatant with no roll is not a tie', initiativeTies(noRoll.combatants).length === 0);
+
+  // Same initiative as its owner, but attached combatants never take a turn.
+  s = encounterReducer(s, { type: 'combatant.add', combatant: { ...summon('wolf', 'krusp', 2), initiative: 7 } });
+  check('an attached summon never joins a tie', initiativeTies(s.combatants).every((t) => !t.combatantIds.includes('wolf')));
 }
 
 // --- turn cycle -----------------------------------------------------------

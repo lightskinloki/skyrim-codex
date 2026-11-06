@@ -8,8 +8,23 @@ import { Character } from "@/types/character";
 import { characterStorage } from "@/utils/characterStorage";
 import { useToast } from "@/hooks/use-toast";
 
+// A scanned QR link (`/?join=CODE`) goes straight to Player Mode and joins the
+// table once a character is loaded. The code is taken out of the address bar so
+// a later reload doesn't rejoin without the player asking.
+function takeJoinCode(): string | null {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('join');
+  if (code) {
+    params.delete('join');
+    const rest = params.toString();
+    window.history.replaceState(null, '', window.location.pathname + (rest ? `?${rest}` : ''));
+  }
+  return code;
+}
+
 const Index = () => {
-  const [appMode, setAppMode] = useState<'select' | 'player' | 'gm'>('select');
+  const [joinCode] = useState(takeJoinCode);
+  const [appMode, setAppMode] = useState<'select' | 'player' | 'gm'>(joinCode ? 'player' : 'select');
   const [currentCharacter, setCurrentCharacter] = useState<Character | null>(null);
   const [showWelcome, setShowWelcome] = useState(true);
   const [showLoadModal, setShowLoadModal] = useState(false);
@@ -106,6 +121,7 @@ const Index = () => {
       onUpdateCharacter={handleUpdateCharacter}
       onCreateNewCharacter={handleCreateNewFromDashboard}
       onEndSession={handleEndSession}
+      joinCode={joinCode}
     />
   );
 };

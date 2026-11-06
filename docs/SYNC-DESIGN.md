@@ -7,6 +7,11 @@ player portal and GM tracker as duplicates, and argued against a battle map. All
 three were wrong. This version has physical dice as the default, the combat-mode
 declaration as the trigger, and a map.
 
+**6 Nov 2026:** the board was re-specced. Movement has no distance budget, so the
+map resolves a **3D path** rather than policing a drag. `BATTLEMAP-SPEC.md` is now
+authoritative for the board; the map section below keeps only the rationale that
+still holds.
+
 ## The switch
 
 The adoption problem was never the software. It was that nobody opens a second
@@ -115,9 +120,10 @@ type Encounter = {
   combatants: Record<string, Combatant>;
   bars: BossBar[];
   log: LogEntry[];
-  map: { imageId?: string; cols: number; rows: number; scale: number };
+  map: MapState;                     // floors, blocks, zones — BATTLEMAP-SPEC §4
 };
 
+// Attack = { id, name, reachFt, rangeFt?, damage } — COMBAT-SYNC-SPEC §4
 type Combatant = {
   id: string;
   name: string;
@@ -127,15 +133,18 @@ type Combatant = {
   maxHp: number;
   dr: number;
   conditions: Condition[];
-  pos: { x: number; y: number };
-  move: number;                      // squares this turn
-  actionsLeft: { major: number; minor: number };
+  pos: Vec3;                         // squares; z in feet
+  modes: MoveMode[];                 // walk | climb | fly | swim | jump
+  attacks: Attack[];                 // reachFt lives here, not on the creature
+  bodyReachFt?: number;              // band for a threat with no attack row
+  actionsLeft: { major: number; minor: number };   // no movement budget
 };
 ```
 
 **Intents** (client → host): `tier.report` (tier id + `source`), optional
 `roll.result` for tables that need the margin, `damage`, `heal`, `condition.add`,
-`condition.clear`, `resource.spend`, `move`, `turn.end`.
+`condition.clear`, `resource.spend`, `move` (mode, shape, anchors, `suppress?` —
+the anchors travel, the host resamples), `turn.end`.
 **Truth** (host → all): `snapshot`, then `patch` carrying `seq`.
 **World** (GM only): `boss.action`, `scene.advance`, `complication`.
 
@@ -153,21 +162,26 @@ The common failure at a real table is a phone locking mid-fight.
 
 Never block the table on a phone.
 
-## The map, v1
+## The map (rewritten 6 Nov 2026)
 
-A real battle map, deliberately small in scope:
+The earlier version of this section said "drag-with-budget" and described the
+readout as *when*, not *how far*. Both assumed a squares-per-turn stat that does
+not exist. One Minor moves any distance, so the map's job is not to bound the
+move — it is to **price the route**.
 
-- **In:** one map image per scene, square grid, tokens with name, HP ring and
-  condition dots, drag for the GM, drag-with-budget for the owner, hide/reveal a
-  token, and a reach readout ("can reach this turn" / "next turn").
-- **Out for v1:** walls, line of sight, lighting, vision cones, terrain cost,
-  measured templates, multi-level maps.
+- **In:** one map image per scene, square grid, tokens with name, HP ring,
+  condition dots and an elevation chip, authored floors/blocks/zones, a drawn
+  path (straight, polyline or arc) resolved before it commits, reach as a
+  volume drawn at the enemy's own height, per-viewer camera, hide/reveal.
+- **Out:** line of sight, vision cones, lighting, cover maths, terrain cost
+  (there is nothing to charge), templates, tilt, pathfinding.
 
-Reach is computed from the grid, so the earlier "engaged / near / far" idea
-survives as a **readout**, not as a replacement for the map: the square count is
-converted into the sentence the GM actually needs, which is *when*, not *how far*.
+The rationale that survives from this version: the readout is the product, not
+the map. It is a different sentence now — not *when*, not *how far*, but **what
+it costs to pass through here**.
 
-The empty `src/components/table/` directory is the obvious home for it.
+Rules, geometry and acceptance: `BATTLEMAP-SPEC.md`. The empty
+`src/components/table/` directory is still the obvious home for it.
 
 ## Build order
 
@@ -182,7 +196,8 @@ persistence. No visible change except that a reload stops erasing the fight.
 **Phase 2 — the room.** Host server, QR join, roster claim, SSE.
 *Proves: phones at the table, one build, nobody asking how to open it.*
 
-**Phase 3 — the map.** Grid, tokens, drag, reach readout.
+**Phase 3 — the map.** Board, paths, reach, elevation, hazards, sync — cut into
+3a–3e in `BATTLEMAP-SPEC.md` §12.
 *Proves: the spatial questions stop being asked out loud.*
 
 **Phase 4 — the world's answers.** Authored complications and a beat line on the

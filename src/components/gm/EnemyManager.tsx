@@ -23,7 +23,7 @@ import {
 import { CombatState } from "@/types/combat";
 import { enemyTemplates, EnemyTemplate } from "@/data/enemies";
 import { combatManager } from "@/lib/combatManager";
-import { characterStorage } from "@/utils/characterStorage";
+import { useTable } from "./TableContext";
 
 interface EnemyManagerProps {
   combatState: CombatState;
@@ -105,49 +105,37 @@ export function EnemyManager({ combatState, onUpdateState }: EnemyManagerProps) 
     });
   };
 
-  const handleLoadCharacter = () => {
-    const characters = characterStorage.getCharacterSummaries();
-    if (characters.length === 0) {
-      return;
-    }
-
-    // For now, add all saved characters as players
-    characters.forEach(summary => {
-      const character = characterStorage.getCharacter(summary.id);
-      if (character) {
-        const combatant = combatManager.createCombatantFromCharacter(character);
-        onUpdateState(prev => combatManager.addCombatant(prev, combatant));
-      }
-    });
-  };
-
-  const savedCharacters = characterStorage.getCharacterSummaries();
+  // The fight list is the GM's table, not the GM's own saved characters: each
+  // player's device sends the character it plays when it joins
+  // (docs/TABLE-SYNC-DECISIONS.md).
+  const { code, members } = useTable();
 
   return (
     <div className="space-y-4">
-      {/* Load Saved Characters */}
+      {/* Players at the table */}
       <Card className="p-3">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="font-semibold text-sm">Player Characters</h3>
-          <Badge variant="outline">{savedCharacters.length} saved</Badge>
+          <h3 className="font-semibold text-sm">Players at the table</h3>
+          <Badge variant="outline">{members.length} joined</Badge>
         </div>
-        {savedCharacters.length > 0 ? (
+        {members.length > 0 ? (
           <div className="space-y-2">
-            {savedCharacters.map(char => {
-              const isInCombat = combatState.combatants.some(c => c.characterId === char.id);
+            {members.map(member => {
+              const character = member.character;
+              const isInCombat = combatState.combatants.some(c => c.characterId === character.id);
               return (
-                <div key={char.id} className="flex items-center justify-between text-sm">
-                  <span>{char.name} ({char.race})</span>
+                <div key={member.peerId} className="flex items-center justify-between text-sm">
+                  <span>
+                    {character.name} ({character.race.name})
+                    {!member.connected && <span className="text-xs text-muted-foreground"> · away</span>}
+                  </span>
                   <Button
                     size="sm"
                     variant={isInCombat ? "secondary" : "outline"}
                     disabled={isInCombat}
                     onClick={() => {
-                      const character = characterStorage.getCharacter(char.id);
-                      if (character) {
-                        const combatant = combatManager.createCombatantFromCharacter(character);
-                        onUpdateState(prev => combatManager.addCombatant(prev, combatant));
-                      }
+                      const combatant = combatManager.createCombatantFromCharacter(character);
+                      onUpdateState(prev => combatManager.addCombatant(prev, combatant));
                     }}
                   >
                     {isInCombat ? "In Combat" : "Add"}
@@ -157,7 +145,10 @@ export function EnemyManager({ combatState, onUpdateState }: EnemyManagerProps) 
             })}
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">No saved characters found</p>
+          <p className="text-sm text-muted-foreground">
+            Nobody has joined yet. Players enter the room code{code ? ` (${code})` : ""} from the GM header
+            under "Join Table" on their character sheet.
+          </p>
         )}
       </Card>
 

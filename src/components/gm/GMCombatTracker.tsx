@@ -34,12 +34,13 @@ export function GMCombatTracker({ combatState, onUpdateState }: GMCombatTrackerP
     ? Math.min(...enemies.map(e => e.stats.agility))
     : 0;
 
-  // Sort players/allies by initiative (ascending - lowest first)
+  // Sort players/allies by initiative (ascending - lowest first). A tie keeps
+  // the existing order: the table rerolls a tied initiative, so Agility must
+  // not silently decide it (InitiativeEditor's rules note says the same).
   const sortedPlayersAndAllies = [...playersAndAllies].sort((a, b) => {
     const initA = a.initiative ?? 999;
     const initB = b.initiative ?? 999;
-    if (initA !== initB) return initA - initB;
-    return a.stats.agility - b.stats.agility;
+    return initA - initB;
   });
 
   // Build display order
