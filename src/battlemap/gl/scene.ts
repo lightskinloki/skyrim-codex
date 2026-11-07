@@ -49,6 +49,12 @@ export type Tri = {
   receives: boolean;
   /** Wall coping: weathered, and a step under the flagstones. */
   cap?: boolean;
+  /**
+   * Self-lit, in ramp steps per vertex. A flame does not take the sun: its
+   * brightness is a property of the vertex, not of where the light rig is. This
+   * is the whole emissive path — no second renderer, no additive blend.
+   */
+  emit?: Vec3;
 };
 
 export type Collider = {
@@ -421,8 +427,10 @@ function buildProp(
       addCylinder(tris, cx, cz, 0.075, 0.075, 0.045, 0.2, M_METAL, tex.metal, 10, false);
       addCylinder(tris, cx, cz, 0.12, 0.29, 0.2, 0.34, M_METAL, tex.metal, 14, false);
       addCylinder(tris, cx, cz, 0.29, 0.29, 0.325, 0.36, M_METAL, tex.metal, 14, false);
-      fires.push({ x: cx, y: 0.36, z: cz });
+      // A brazier that is not lit has no fire and no coals — the flame used to
+      // be pushed regardless, so an unlit bowl burned anyway.
       if (p.lit) {
+        fires.push({ x: cx, y: 0.36, z: cz });
         lights.push({ x: cx, y: 0.5, z: cz, radius: 3.0, intensity: 6.2, flicker: 0.35 });
       }
       addCollider(colliders, x0, z0, x0 + d, z0 + d, 0.36);

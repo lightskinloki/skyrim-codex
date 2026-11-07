@@ -1,15 +1,18 @@
-import { COLOUR_OF, M_INK, M_WOOD_PROP, RAMP_LEN } from '../surface';
+import { COLOUR_OF, M_FLOOR, M_INK, M_WOOD_PROP, RAMP_LEN } from '../surface';
 import { CELL } from '../paint';
 import { BAYER4, clamp, fbm1, mottle } from '../rng';
 import { LightRig, exposureOf, sunAbove, sunVector } from '../light';
 import { BODY_H, BODY_W, renderBody } from '@/characters/body';
 import type { Facing } from '../room';
-import { Scene, Vec3, WALL_H, ambientAt, buildScene, solidAt } from './scene';
-import { Sprite, fireSprite, shadowSprite } from './texture';
+import { Scene, Tri, Vec3, WALL_H, ambientAt, buildScene, solidAt } from './scene';
+import { Sprite } from './texture';
+import { flameTris } from './flame';
 
 /**
- * A real 3D board: orthographic camera, z-buffered triangles, billboard
- * tokens. See docs/BATTLEMAP-SPEC.md §17.
+ * A real 3D board: orthographic camera, z-buffered triangles, and the only
+ * sprites in the scene — the character tokens. Fire is emissive geometry too
+ * (see `gl/flame.ts`), so nothing but a body is a card. See
+ * docs/BATTLEMAP-SPEC.md §17.
  *
  * This replaces the painter's algorithm. The old board decided what covered
  * what by a `front` row and a sprite rotation, so a prop and its footprint could
@@ -429,20 +432,34 @@ export function renderFrame(
 
   renderStats.shadow = performance.now() - tMark;
   tMark = performance.now();
-  for (let t = 0; t < tris.length; t++) {
-    const T = tris[t];
+
+  const paintTri = (T: Tri) => {
     const n = T.n;
     // Face-away culling. A tall stack of boxes hides half its triangles; the
     // z-buffer would discard them anyway, but after the fill.
-    if (n[0] * b.fx + n[1] * b.fy + n[2] * b.fz >= 0) continue;
+    if (n[0] * b.fx + n[1] * b.fy + n[2] * b.fz >= 0) return;
 
-    const ndl = n[0] * sunW.x + n[1] * sunW.y + n[2] * sunW.z;
-    const vertical = Math.abs(n[1]) < 0.5;
-    const sunTerm =
-      exposure +
-      (vertical ? VERTICAL_LIFT : 0) +
-      (ndl - flat) * sunI * (vertical ? RELIEF_VERT : RELIEF) -
-      (T.cap ? CAP_DROP : 0);
+    let l0: number;
+    let l1: number;
+    let l2: number;
+    if (T.emit) {
+      // Emissive: the vertex is the light. A flame must not go out at midnight
+      // and must not take a bright step at noon, so the rig is not consulted.
+      l0 = T.emit[0];
+      l1 = T.emit[1];
+      l2 = T.emit[2];
+    } else {
+      const ndl = n[0] * sunW.x + n[1] * sunW.y + n[2] * sunW.z;
+      const vertical = Math.abs(n[1]) < 0.5;
+      const sunTerm =
+        exposure +
+        (vertical ? VERTICAL_LIFT : 0) +
+        (ndl - flat) * sunI * (vertical ? RELIEF_VERT : RELIEF) -
+        (T.cap ? CAP_DROP : 0);
+      l0 = lightAt(T.p0[0], T.p0[1], T.p0[2], n, sunTerm);
+      l1 = lightAt(T.p1[0], T.p1[1], T.p1[2], n, sunTerm);
+      l2 = lightAt(T.p2[0], T.p2[1], T.p2[2], n, sunTerm);
+    }
 
     const p0 = T.p0;
     const p1 = T.p1;
@@ -476,11 +493,13 @@ export function renderFrame(
       T.v1,
       T.u2,
       T.v2,
-      lightAt(p0[0], p0[1], p0[2], n, sunTerm),
-      lightAt(p1[0], p1[1], p1[2], n, sunTerm),
-      lightAt(p2[0], p2[1], p2[2], n, sunTerm),
+      l0,
+      l1,
+      l2,
     );
-  }
+  };
+
+  for (let t = 0; t < tris.length; t++) paintTri(tris[t]);
 
   renderStats.tris = performance.now() - tMark;
   tMark = performance.now();
@@ -518,6 +537,15 @@ export function renderFrame(
   tMark = performance.now();
   if (opts.showPath) drawPath(frame, scene, b, pix, offX, offY);
 
+  // Fire after the ink sweep on purpose. The sweep reads depth only, so it
+  // would ink the seam between two overlapping tongues — on a tongue two pixels
+  // wide that line *is* the tongue. A flame is light; it gets no outline.
+  // Built for this instant, so it cannot live in the cached scene.
+  const flame = flameTris(scene.fires, time, scene.seed);
+  for (let t = 0; t < flame.length; t++) paintTri(flame[t]);
+  renderStats.flame = performance.now() - tMark;
+  tMark = performance.now();
+
   drawSprites(frame, scene, camera, b, exposure, flat, sunI, sunW, lights, opts);
   renderStats.sprites = performance.now() - tMark;
 
@@ -542,12 +570,16 @@ function firePass(frame: Frame, b: Basis, pix: number, lights: FireLight[]) {
     if (!(L.flicker > 0) || L.intensity < 2) continue;
     const cx = projectX(b, L.x, L.z) * pix + offX;
     const cy = projectY(b, L.x, 0, L.z) * pix + offY;
-    const rx = L.radius * pix;
+    // The visible pool is tighter than the light's own reach: past about two
+    // cells the amber dither stops reading as light and starts reading as a
+    // different floor.
+    const pool = L.radius * 0.72;
+    const rx = pool * pix;
     const x0 = Math.max(0, Math.floor(cx - rx));
     const x1 = Math.min(w - 1, Math.ceil(cx + rx));
     const y0 = Math.max(0, Math.floor(cy - rx));
     const y1 = Math.min(h - 1, Math.ceil(cy + rx));
-    const r2 = L.radius * L.radius;
+    const r2 = pool * pool;
     for (let py = y0; py <= y1; py++) {
       const sy = (py + 0.5 - offY) / pix;
       const row = (py & 3) << 2;
@@ -560,15 +592,22 @@ function firePass(frame: Frame, b: Basis, pix: number, lights: FireLight[]) {
         const d2 = dx * dx + dz * dz;
         if (d2 > r2) continue;
         const i = py * w + px;
-        // Only the floor: a wall or a crate in front of the light is not lit
-        // by a pool drawn on the ground plane.
-        if (Math.abs(depth[i] - (wx * b.fx + wz * b.fz)) > 0.2) continue;
-        const fall = 1 - Math.sqrt(d2) / L.radius;
-        // The vertex light already lifts the floor here; this pass only has to
-        // put the hue back, so it stays a hint rather than a second pool.
-        const t = Math.min(0.4, fall * fall * L.intensity * 0.055);
+        // Only bare flagstones: the lamp lights a wall or a crate in front of
+        // it, but not through a pool drawn on the ground plane — and a rug is
+        // cloth, so tinting it with oak steps turns the weave into orange dirt.
+        if (Math.abs(depth[i] - (wx * b.fx + wz * b.fz)) > 0.003) continue;
+        const fall = 1 - Math.sqrt(d2) / pool;
+        // Coverage, not a flat wash: solid at the bowl, dithered only at the
+        // rim. The dither *is* the blend between amber and flagstone, so it has
+        // to stay at pixel scale; blocky 2 x 2 cells read as dirt.
+        const t = fall * fall * 0.82;
         if (t <= BAYER4[row | (px & 3)]) continue;
-        const step = clamp(Math.round(7 + fall * 4), 6, 11);
+        // Keep the flagstone's own relief: the ramp step comes from what is
+        // already on the floor, so seams and mottling survive the tint instead
+        // of being replaced by a flat wash.
+        const c = col[i];
+        const lum = (((c & 255) * 77 + ((c >>> 8) & 255) * 151 + ((c >>> 16) & 255) * 28) >> 8);
+        const step = clamp(3 + (lum >> 5) + Math.round(fall * 2.2), 4, 12);
         col[i] = COLOUR_OF[(M_WOOD_PROP << 4) + step];
       }
     }
@@ -629,19 +668,20 @@ function drawPath(frame: Frame, scene: Scene, b: Basis, pix: number, offX: numbe
 }
 
 /* ---------------------------------------------------------------- sprites */
+/**
+ * The one sprite in the scene: a token. A body has an authored facing, and a
+ * card is how four facings become one draw. Everything else — walls, props,
+ * coals, flames — is geometry, so an orbit cannot disagree with it.
+ */
 type Billboard = {
   depth: number;
   sprite: Sprite;
   left: number;
   top: number;
   d: number;
-  /** Erase the floor under a contact shadow with a straight multiply-free dark. */
-  kind: 'token' | 'fire' | 'shadow';
 };
 
 const spriteCache = new Map<string, { w: number; h: number; rgba: Uint32Array }>();
-const fireFrames = [fireSprite(0), fireSprite(1), fireSprite(2), fireSprite(3)];
-let shadow: Sprite | null = null;
 
 function bodySprite(spec: Scene['tokens'][number]['spec'], facing: Facing, shift: number) {
   const key = `${spec.id}|${facing}|${shift}`;
@@ -668,6 +708,52 @@ function facingFor(dir: Facing, b: Basis): Facing {
   if (toward > Math.abs(side)) return 0;
   if (-toward > Math.abs(side)) return 1;
   return side > 0 ? 3 : 2;
+}
+
+/**
+ * A token's contact shadow, on the floor rather than on the screen.
+ *
+ * A sprite ellipse is a circle pasted on the picture: at a 55° camera it sits
+ * at the wrong angle, and at 84° it lies on a floor that has become a sliver.
+ * This walks the floor under the token the way the fire pool does — invert the
+ * pixel back to a world point, test the distance there — so the shadow is
+ * foreshortened by the same projection as the flagstones, and a crate standing
+ * on it keeps its own pixels.
+ */
+function groundShadow(frame: Frame, b: Basis, pix: number, x: number, z: number, radius: number) {
+  const { w, h, col, depth, offX, offY } = frame;
+  const det = b.rx * b.uz - b.rz * b.ux;
+  if (Math.abs(det) < 1e-6) return;
+  const inv = 1 / det;
+  const cx = projectX(b, x, z) * pix + offX;
+  const cy = projectY(b, x, 0, z) * pix + offY;
+  const r = radius * pix;
+  const x0 = Math.max(0, Math.floor(cx - r));
+  const x1 = Math.min(w - 1, Math.ceil(cx + r));
+  const y0 = Math.max(0, Math.floor(cy - r));
+  const y1 = Math.min(h - 1, Math.ceil(cy + r));
+  const core = COLOUR_OF[(M_FLOOR << 4) + 3];
+  const rim = COLOUR_OF[(M_FLOOR << 4) + 5];
+  for (let py = y0; py <= y1; py++) {
+    const sy = (py + 0.5 - offY) / pix;
+    const row = (py & 3) << 2;
+    for (let px = x0; px <= x1; px++) {
+      const sx = (px + 0.5 - offX) / pix;
+      const wx = (b.uz * sx + b.rz * sy) * inv;
+      const wz = (-b.ux * sx - b.rx * sy) * inv;
+      const dx = (wx - x) / radius;
+      const dz = (wz - z) / radius;
+      const d2 = dx * dx + dz * dz;
+      if (d2 > 1) continue;
+      const i = py * w + px;
+      // Flagstones only. A rug is cloth under the feet, not stone, and painting
+      // a stone shadow on it turns the weave into a hole.
+      if (Math.abs(depth[i] - (wx * b.fx + wz * b.fz)) > 0.003) continue;
+      const solid = d2 < 0.4;
+      if (!solid && BAYER4[row | (px & 3)] > (1 - Math.sqrt(d2)) * 2.6) continue;
+      col[i] = solid ? core : rim;
+    }
+  }
 }
 
 function drawSprites(
@@ -703,50 +789,22 @@ function drawSprites(
     return clamp(Math.round(f), -6, 6);
   };
 
-  if (!shadow) shadow = shadowSprite();
-
   for (const tok of scene.tokens) {
     const sx = Math.round(projectX(b, tok.x, tok.z) * pix + frame.offX);
     const sy = Math.round(projectY(b, tok.x, 0.01, tok.z) * pix + frame.offY);
-    const d = depthOf(b, tok.x, 0.01, tok.z);
 
-    list.push({
-      kind: 'shadow',
-      depth: d,
-      sprite: shadow,
-      left: sx - Math.round(shadow.w / 2),
-      top: sy - Math.round(shadow.h / 2),
-      d: d - 0.012,
-    });
+    groundShadow(frame, b, pix, tok.x, tok.z, 0.34);
 
     const facing = facingFor(tok.facing, b);
     const shift = shiftAt(tok.x, 0.7, tok.z);
     const sprite = bodySprite(tok.spec, facing, shift);
     const anchor = depthOf(b, tok.x, 0.02, tok.z);
     list.push({
-      kind: 'token',
       depth: anchor,
       sprite,
       left: Math.round(sx - sprite.w / 2),
       top: Math.round(sy - sprite.h + 1),
       d: anchor - 0.05,
-    });
-  }
-
-  const fire = fireFrames[(Math.floor((opts.time ?? 0) * 7) % fireFrames.length + fireFrames.length) % fireFrames.length];
-  for (const f of scene.fires) {
-    const sx = Math.round(projectX(b, f.x, f.z) * pix + frame.offX);
-    const sy = Math.round(projectY(b, f.x, f.y, f.z) * pix + frame.offY);
-    const d = depthOf(b, f.x, f.y, f.z);
-    list.push({
-      kind: 'fire',
-      depth: d,
-      sprite: fire,
-      left: sx - Math.round(fire.w / 2),
-      // The sprite's own ember bed sits at its bottom, so the flame is placed
-      // with its feet on the bowl rather than around it.
-      top: sy - fire.h + 2,
-      d: d - 0.03,
     });
   }
 
@@ -770,8 +828,6 @@ function drawSprites(
         col[k] = c;
       }
     }
-
-    if (s.kind === 'token') continue;
   }
   // Selection chevron, drawn after every sprite so nothing covers it.
   const selected = opts.selectedToken;

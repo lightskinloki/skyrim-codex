@@ -1,4 +1,3 @@
-import { RAMP_PACKED, packRGB } from '../palette';
 import { clamp, hf } from '../rng';
 
 /**
@@ -283,87 +282,20 @@ export function rugTexture(cellsX: number, cellsY: number, navy: boolean): Tex {
   return t;
 }
 
-/* ------------------------------------------------------------------- fire */
+/* ---------------------------------------------------------------- sprites */
+/**
+ * A token body, and the only sprite left in the scene.
+ *
+ * Fire used to live here as a 24 x 32 animated flame, and the contact shadow as
+ * a stamped ellipse. Both are geometry now — `gl/flame.ts` and the floor-plane
+ * shadow in `gl/render.ts` — because a card has a position but no body, and an
+ * orbit can always be made to disagree with it. A character is the one thing
+ * that *should* turn to face the camera: it has an authored facing, and a card
+ * is how four facings become one draw.
+ */
 export type Sprite = {
   w: number;
   h: number;
   /** Packed RGBA; alpha 0 is transparent. */
   rgba: Uint32Array;
 };
-
-/**
- * An animated flame: two frames is enough at eight frames a second. Drawn as a
- * screen-facing billboard above the bowl, so it never turns edge-on and never
- * needs a second quad.
- */
-export function fireSprite(frame: number): Sprite {
-  const w = 24;
-  const h = 32;
-  const rgba = new Uint32Array(w * h);
-  const ramp = RAMP_PACKED.fire;
-  const put = (x: number, y: number, idx: number) => {
-    if (x < 0 || y < 0 || x >= w || y >= h) return;
-    rgba[y * w + x] = ramp[clamp(idx, 0, ramp.length - 1)];
-  };
-
-  // Embers: a wide, low bed, brightest in the middle.
-  for (let y = h - 5; y < h - 1; y++) {
-    for (let x = 4; x < w - 4; x++) {
-      const dx = (x - w / 2) / 8;
-      const dy = (y - (h - 3)) / 2.2;
-      if (dx * dx + dy * dy > 1) continue;
-      put(x, y, dx * dx + dy * dy < 0.35 ? 9 : 6);
-    }
-  }
-
-  // The main lick, and a shorter one leaning the other way.
-  for (let n = 0; n < 2; n++) {
-    const lean = n === 0 ? 0 : -3.2;
-    const height = n === 0 ? h - 8 : h - 16;
-    for (let j = 0; j < height; j++) {
-      const t = j / height;
-      const half = Math.max(0.6, (1 - t) * (1 - t) * 4.6 + 0.7);
-      const cx = w / 2 + lean * t + Math.sin(t * 5.4 + frame * 1.7 + n) * (0.4 + t * 1.4);
-      for (let dx = -half; dx <= half; dx += 0.5) {
-        const x = Math.round(cx + dx);
-        const y = h - 5 - j;
-        const outer = Math.abs(dx) / half;
-        let idx = 11 - Math.round(t * 5.4) - (outer > 0.66 ? 2 : outer > 0.33 ? 1 : 0);
-        if (j < 3) idx = 12 - Math.round(t * 2);
-        put(x, y, idx);
-      }
-    }
-  }
-
-  // A couple of sparks, hashed per frame so they move.
-  for (let k = 0; k < 4; k++) {
-    const x = 6 + Math.floor(hf(0x9e3, k, frame) * 12);
-    const y = 4 + Math.floor(hf(0x51b, k, frame + 7) * 12);
-    put(x, y, 11);
-  }
-
-  return { w, h, rgba };
-}
-
-/** A soft, dither-edged ellipse on the floor: the token's contact shadow. */
-export function shadowSprite(): Sprite {
-  const w = 24;
-  const h = 10;
-  const rgba = new Uint32Array(w * h);
-  // The floor's own second step, not black: a shadow is a darkening of stone,
-  // and a black ellipse reads as a hole in the board.
-  const dark = packRGB(23, 20, 35);
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const dx = (x + 0.5 - w / 2) / (w / 2);
-      const dy = (y + 0.5 - h / 2) / (h / 2);
-      const d = dx * dx + dy * dy;
-      if (d > 1) continue;
-      // Ordered edge, not a feathered blur: one extra ring of pixels.
-      const rim = d > 0.72;
-      if (rim && ((x + y) & 1) === 0) continue;
-      rgba[y * w + x] = (255 << 24) | (dark & 0x00ffffff);
-    }
-  }
-  return { w, h, rgba };
-}

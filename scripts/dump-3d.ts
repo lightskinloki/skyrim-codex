@@ -1,6 +1,6 @@
 import { deflateSync } from 'node:zlib';
 import { writeFileSync } from 'node:fs';
-import { makeDemoRoom } from '@/battlemap/room';
+import { MOODS, makeDemoRoom } from '@/battlemap/room';
 import { buildScene } from '@/battlemap/gl/scene';
 import { renderFrame, renderStats } from '@/battlemap/gl/render';
 
@@ -61,10 +61,13 @@ function writePng(path: string, w: number, h: number, col: Uint32Array) {
 const room = makeDemoRoom();
 const yaw = Number(process.argv[2] ?? 32);
 const pitch = Number(process.argv[3] ?? 55);
+const mood = MOODS.find((m) => m.id === process.argv[4]);
+if (mood) room.rig = { ...room.rig, ...mood.rig };
+const tag = mood ? `-${mood.id}` : '';
 const scene = buildScene(room, yaw);
 const opts = { showPath: true, selectedToken: "pc-1", time: 1 };
 const f = renderFrame(scene, { yaw, pitch, pix: 32 }, room.rig, opts);
-writePng(`screenshots/gl-yaw${yaw}-p${pitch}.png`, f.w, f.h, f.col);
+writePng(`screenshots/gl-yaw${yaw}-p${pitch}${tag}.png`, f.w, f.h, f.col);
 
 // Steady-state cost: buffers are reused the way Board3D reuses them.
 let fr = renderFrame(scene, { yaw, pitch, pix: 32 }, room.rig, opts);
@@ -92,8 +95,7 @@ console.log(
     size: [f.w, f.h],
     tris: scene.tris.length,
     colliders: scene.colliders.length,
-    lights: scene.lights.length + room.rig.points.length,
-    file: `screenshots/gl-yaw${yaw}-p${pitch}.png`,
+    lights: scene.lights.length + room.rig.points.length,        file: `screenshots/gl-yaw${yaw}-p${pitch}${tag}.png`,
   }),
 );
 

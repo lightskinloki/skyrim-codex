@@ -778,10 +778,18 @@ footprint — is the reason the renderer was replaced. **§17 is what ships.**
 
 **R1. The room is geometry, and the camera is a projection.** Walls, floors,
 steps, rugs and props are triangles in cell space (`src/battlemap/gl/scene.ts`).
-An orthographic camera turns them, `depthOf` gives every vertex a depth, and the
-raster writes the nearest surface per pixel. There is no paint order, no front
-buffer and no per-face sprite offsets, so there is nothing to get wrong when the
-camera moves: a prop cannot slide, and a wall cannot be painted behind a token.
+A prop is a volume, not a picture of one: a barrel is a twelve-sided prism with
+iron hoops, a bench is a slab on two end panels, a shelf is a back, two sides and
+four boards. An orthographic camera turns them, `depthOf` gives every vertex a
+depth, and the raster writes the nearest surface per pixel. There is no paint
+order, no front buffer and no per-face sprite offsets, so there is nothing to get
+wrong when the camera moves: a prop cannot slide, and a wall cannot be painted
+behind a token.
+
+**R1a. The only card in the scene is a body.** Walls, props, coals and flames are
+all triangles. Tokens are the deliberate exception: a character has an authored
+facing and a four-facing sprite sheet, and a billboard is how four facings become
+one draw. Nothing else may be one, because a card has a position but no body.
 
 **R2. One camera, free orbit.** Yaw is continuous (0–360°), tilt 20–84°, zoom
 0.4–4×, pan in screen pixels. Drag orbits, shift-drag pans, the wheel zooms. The
@@ -809,8 +817,13 @@ floor is still stone.
 **R5. Firelight is a screen-space pass, not vertex light.** A point light is
 smaller than a cell, so corner-interpolated light averages the pool away. After
 the solids, each brazier's floor footprint is walked in screen space, the inverse
-projection recovers the world point, the depth buffer proves the pixel is floor,
-and an amber dither from the oak ramp is laid over it. ~1.4 ms for three braziers.
+projection recovers the world point, and the depth buffer proves the pixel is
+floor (not a rug, a crate or a path dot). Coverage is solid at the bowl and
+dithered only at the rim, and the ramp step is derived from the flagstone's own
+luminance, so seams and mottling survive the tint instead of being replaced by a
+flat wash. The visible pool is 0.72× the light's own reach: past about two cells
+the amber dither stops reading as light and starts reading as a different floor.
+~0.6 ms for three braziers.
 
 **R6. Ink is a depth cliff, with a threshold that knows the difference between a
 cliff and a slope.** The silhouette pass inks a pixel when its neighbour is more
@@ -818,11 +831,28 @@ than 0.28 deeper. At 0.055 a wall face's own perspective gradient inked whole
 triangles black — the exact bug that made every box read as a hole. The threshold
 is above any legitimate surface gradient in this scene and below a real wall edge.
 
+**R7. Fire is geometry, not a sprite** (`src/battlemap/gl/flame.ts`). A painted
+flame has a position but no body: from a low camera it thins to a line, and from
+a high one it lies on the floor it is meant to burn above. Each brazier instead
+gets a coal bed, three coals and five tapered tongues, plus four rising embers —
+triangles like every other prop, built for the current instant so they can
+flicker, and depth-tested like anything else. Their vertices are **emissive**:
+a flame does not take the sun, so it stays lit at midnight and does not take a
+bright step at noon. The ink sweep runs before them on purpose — it reads depth
+only, and would otherwise ink the seam between two overlapping tongues, which on
+a two-pixel tongue is the whole tongue. ~0.5 ms for three braziers.
+
+**R8. A contact shadow is a floor decal, not a screen sticker.** A sprite ellipse
+is a circle pasted on the picture; at 84° it lies on a floor that has become a
+sliver. Each token's shadow is walked in the floor plane the same way the fire
+pool is, so the camera foreshortens it like the flagstones, and a crate standing
+on it keeps its own pixels. Flagstones only: a rug is cloth under the feet, and a
+stone shadow on cloth turns the weave into a hole.
+
 **Still being perfected.** The wall coping texture reads busier at 1:1 than the
-flagstones; the brazier bowl is still a stack of cylinders with a billboard flame;
-tokens remain flat billboards (the character creator's spec is the intended
-source for extruded bodies). Character faces are the other open item — see
-PIXEL-ART-SPEC §3.
+flagstones. Tokens remain flat billboards by design (R1a): the character
+creator's spec is the source for their four facings. Character faces are the
+other open item — see PIXEL-ART-SPEC §3.
 
 **Budget.** ~3.4k triangles, 1082×880 at 32 px/cell, 30 fps target. Section costs
 are recorded in `renderStats` and dumped by `scripts/dump-3d.ts`, which writes a
