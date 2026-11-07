@@ -222,11 +222,21 @@ function maskFor(spec: CharacterSpec, facing: Facing): PartMask {
 
 /** The silhouette, stamped with its outline. Shared by the board and by the
  *  character screen, so a token in play and a preview card cannot drift. */
-type CanvasLike = { w: number; h: number; col: Uint32Array };
+type CanvasLike = { w: number; h: number; col: Uint32Array; front?: Int16Array };
 
-function paintMask(s: CanvasLike, m: PartMask, px: number, py: number, shift: number) {
+function paintMask(s: CanvasLike, m: PartMask, px: number, py: number, shift: number, base = 0) {
   const partAt = (x: number, y: number): number =>
     x < 0 || y < 0 || x >= m.w || y >= m.h ? EMPTY : m.data[y * m.w + x];
+
+  // Where the body stands, against what the ground already knows. A body behind
+  // a wall loses its pixels to the wall exactly as a prop does, and a body in
+  // front of one paints over the face.
+  const put = (x: number, y: number, colour: number) => {
+    const i = y * s.w + x;
+    if (s.front && s.front[i] > base) return;
+    s.col[i] = colour;
+    if (s.front) s.front[i] = base;
+  };
 
   for (let j = -1; j <= m.h; j++) {
     for (let i = -1; i <= m.w; i++) {
@@ -237,7 +247,7 @@ function paintMask(s: CanvasLike, m: PartMask, px: number, py: number, shift: nu
       if (part !== EMPTY) {
         const mat = part >> 4;
         const idx = clamp((part & 15) + shift, 0, RAMP_LEN[mat] - 1);
-        s.col[y * s.w + x] = COLOUR_OF[(mat << 4) + idx];
+        put(x, y, COLOUR_OF[(mat << 4) + idx]);
         continue;
       }
       if (
@@ -246,7 +256,7 @@ function paintMask(s: CanvasLike, m: PartMask, px: number, py: number, shift: nu
         partAt(i, j - 1) !== EMPTY ||
         partAt(i, j + 1) !== EMPTY
       ) {
-        s.col[y * s.w + x] = COLOUR_OF[INK];
+        put(x, y, COLOUR_OF[INK]);
       }
     }
   }
@@ -267,12 +277,20 @@ export function drawBody(
   shift: number,
   bobPhase: number,
   selected: boolean,
+  margin = 0,
 ) {
   const cellX = Math.round(at[0]);
   const cellY = Math.round(at[1]);
   const bob = Math.sin(bobPhase) > 0.86 ? -1 : 0;
   const px = cellX * CELL + Math.floor((CELL - BODY_W) / 2);
-  const py = cellY * CELL + CELL - BODY_H - 1 + bob;
+  const py = margin + cellY * CELL + CELL - BODY_H - 1 + bob;
+  const base = py + BODY_H - 1;
+
+  const put = (x: number, y: number, colour: number) => {
+    if (s.front[y * s.w + x] > base) return;
+    s.col[y * s.w + x] = colour;
+    s.front[y * s.w + x] = base;
+  };
 
   const shadow = COLOUR_OF[(2 << 4) + clamp(2 + shift, 0, RAMP_LEN[2] - 1)];
   for (let j = 0; j < 5; j++) {
@@ -283,22 +301,22 @@ export function drawBody(
       const x = px + 4 + i;
       const y = py + BODY_H - 3 + j;
       if (x < 0 || y < 0 || x >= s.w || y >= s.h) continue;
-      s.col[y * s.w + x] = shadow;
+      put(x, y, shadow);
     }
   }
 
-  paintMask(s, maskFor(spec, facing), px, py, shift);
+  paintMask(s, maskFor(spec, facing), px, py, shift, base);
 
   if (selected) {
     const sx = cellX * CELL + 11;
-    const sy = cellY * CELL - 6;
+    const sy = margin + cellY * CELL - 6;
     for (let i = 0; i < 9; i++) {
       const w = i < 4 ? i + 1 : 10 - i;
       for (let k = 0; k < w; k++) {
         const x = sx + i;
         const y = sy + k;
         if (x < 0 || y < 0 || x >= s.w || y >= s.h) continue;
-        s.col[y * s.w + x] = COLOUR_OF[(9 << 4) + 9];
+        put(x, y, COLOUR_OF[(9 << 4) + 9]);
       }
     }
   }

@@ -1,4 +1,4 @@
-import { M_FLOOR, M_INK, M_WALL, Surface, TAG } from './surface';
+import { FACE, M_FLOOR, M_INK, M_WALL, RAMP_LEN, Surface, TAG } from './surface';
 import { bayer, hf, mottle } from './rng';
 
 /**
@@ -82,15 +82,17 @@ const ditherStep = (amount: number, x: number, y: number): number => {
 
 /* ------------------------------------------------------------------ floors */
 
-const paintFloorCell = (s: Surface, g: RoomGrid, cx: number, cy: number, wash: Wash) => {
+const paintFloorCell = (s: Surface, g: RoomGrid, cx: number, cy: number, wash: Wash, margin: number) => {
   const x0 = cx * CELL;
-  const y0 = cy * CELL;
+  const y0 = margin + cy * CELL;
   const seed = g.seed;
 
-  // A cell's own variant: four tiles in five sit level, the rest are a step
-  // proud or a step worn. Never two identical neighbours, which is what
-  // protects the seam from reading as a printed grid.
-  const variant = Math.round((hf(seed ^ 0x51ed, cx, cy) - 0.45) * 2);
+  // A cell's own variant: six tiles in seven sit level, the rest are a step
+  // proud or a step worn. A broader spread turns the floor into a quilt of
+  // 32 px squares — the grid is already drawn, so the tiles do not have to
+  // shout it as well.
+  const v = hf(seed ^ 0x51ed, cx, cy);
+  const variant = v > 0.87 ? 1 : v < 0.07 ? -1 : 0;
 
   // One cell in six is cut in half, so tile sizes vary along a run.
   const cut = hf(seed ^ 0x7a3, cx, cy);
@@ -106,7 +108,12 @@ const paintFloorCell = (s: Surface, g: RoomGrid, cx: number, cy: number, wash: W
       const seamN = j === 0 && isFloor(g, cx, cy - 1);
       const seamW = i === 0 && isFloor(g, cx - 1, cy);
       const seamCut = (cutH && j === 16) || (cutV && i === 16);
-      if (seamN || seamW || seamCut) step = 4 + variant - 1;
+      // The grid is a drawn line, not a bevel, and it is the *same* line from
+      // tile to tile: keying the joint to each cell's own variant broke it into
+      // dashes wherever two neighbours differed, which reads as a patchwork
+      // rather than as flagstones. A groove with real height is worse still —
+      // it makes every cell a raised tile, and a turn of the sun exposes it.
+      if (seamN || seamW || seamCut) step = 3;
 
       // Grain: two or three speckles per cell, hashed by position so no two
       // cells ever repeat (P7).
@@ -117,8 +124,7 @@ const paintFloorCell = (s: Surface, g: RoomGrid, cx: number, cy: number, wash: W
       // The wash, dithered, so the floor breathes instead of marching.
       step += ditherStep(wash.at(x, y), x, y);
 
-      const groove = seamN || seamW || seamCut;
-      s.set(x, y, M_FLOOR, step, groove ? -1 : 0, 0, TAG.FLOOR);
+      s.set(x, y, M_FLOOR, step, seamN || seamW || seamCut ? -1 : 0, 0, TAG.FLOOR);
     }
   }
 
@@ -145,87 +151,242 @@ const paintFloorCell = (s: Surface, g: RoomGrid, cx: number, cy: number, wash: W
 
 /* ------------------------------------------------------------------- walls */
 
-const paintWallCell = (s: Surface, g: RoomGrid, cx: number, cy: number, wash: Wash) => {
-  const x0 = cx * CELL;
-  const y0 = cy * CELL;
+/**
+ * A wall is a block with height, projected obliquely. Three surfaces are
+ * visible: the top (a full cell, displaced up by WALL_H and right by
+ * WALL_SLANT), the south face (WALL_H tall, sheared to meet the top) and the
+ * west side (a narrow parallelogram, lit because the sun is in the north-west).
+ * The north and east faces are behind the block and never drawn.
+ *
+ * The first pass painted a wall *texture* inside the flat cell, which reads as
+ * a floor plan with dark rugs on it. The second pass built the block but gave
+ * every cell its own bevelled slab, so a run of wall read as a row of tiles and
+ * the top was the same gramar as the floor. This pass does the opposite:
+ *
+ *   - the top is continuous brickwork in absolute coordinates, with a joint
+ *     pattern shared by every cell in the run and a silhouette only on the
+ *     edges that actually end over floor;
+ *   - the face is one masonry plane per run, its courses also absolute, so
+ *     no two cells meet at a seam;
+ *   - the cap and the face are separated by a real coping, and the face meets
+ *     the floor at an ink base line and a dithered contact shadow.
+ *
+ * Every value here is an authored ramp step; the light pass adds the sun.
+ */
+
+export const WALL_H = 36;
+export const WALL_SLANT = 8;
+export const TOP_MARGIN = WALL_H + 4;
+/** The cap overhangs the last cell by WALL_SLANT and its ink edge by one more. */
+export const RIGHT_MARGIN = WALL_SLANT + 2;
+/** Room below the last cell for the contact shadow. */
+export const BOTTOM_MARGIN = 16;
+
+/** Darken a floor pixel by `drop` steps, keeping the grain and the wash it
+ *  already has — a flat stamped band is worse than no shadow at all. */
+const wearFloor = (s: Surface, x: number, y: number, drop: number) => {
+  const i = y * s.w + x;
+  if (s.tag[i] !== TAG.FLOOR) return;
+  s.set(x, y, M_FLOOR, Math.max(0, s.idx[i] - drop), s.height[i], s.spec[i], TAG.FLOOR);
+};
+
+/** The top: one continuous run of brickwork, not a tile with a border. */
+const paintWallCap = (
+  s: Surface,
+  g: RoomGrid,
+  cx: number,
+  cy: number,
+  wash: Wash,
+  capX: number,
+  capY: number,
+) => {
   const seed = g.seed;
-
-  // Coursing is staggered per cell, not per tile: a wall run must not repeat
-  // its joint pattern every 32 px or the masonry reads as wallpaper.
-  const rowOff = Math.floor(hf(seed ^ 0x1b7, cx, cy >> 3) * 16);
-  const variant = Math.round((hf(seed ^ 0x51ed, cx + 31, cy + 17) - 0.45) * 2);
-  const blockH = 8 + (Math.floor(hf(seed ^ 0x2c5, cx, cy) * 3) - 1) * 2;
-
-  for (let j = 0; j < CELL; j++) {
-    const y = y0 + j;
-    const row = Math.floor(j / blockH);
-    for (let i = 0; i < CELL; i++) {
-      const x = x0 + i;
-      let step = 5 + variant;
-
-      // Mortar: a course line every block, joints every 16 px, staggered.
-      if (j % blockH === 0) step = 4 + variant;
-      else if ((i + rowOff + (row % 2) * 8) % 16 === 0) step = 4 + variant;
-      else if (hf(seed, x, y) > 0.968) step = 6 + variant;
-
-      step += ditherStep(wash.at(x, y) * 0.7, x, y);
-
-      // A block is a plate: its lip catches the sun, and the normal pass turns
-      // that into a bevel. Height is per course, so a seven-block wall has
-      // seven shelves for the light to rake over.
-      const lip = j % blockH === 1 || (i + rowOff + (row % 2) * 8) % 16 === 1;
-      s.set(x, y, M_WALL, step, lip ? 3 : 2, lip ? 26 : 8, TAG.WALL);
-    }
-  }
-
-  const north = !isWall(g, cx, cy - 1) && !isWall(g, cx, cy - 2);
-  const south = !isWall(g, cx, cy + 1);
+  const north = !isWall(g, cx, cy - 1);
   const west = !isWall(g, cx - 1, cy);
   const east = !isWall(g, cx + 1, cy);
+  const south = !isWall(g, cx, cy + 1);
 
-  // Cap: the 1 px lip on the north edge is what the normal pass picks up. It is
-  // the whole reason a top-down wall reads as raised (P3 rule 3).
-  if (north) {
+  for (let j = 0; j < CELL; j++) {
+    const y = capY + j;
+    // 8 x 4 bricks, running bond, keyed to the board rather than the cell, so
+    // the courses cross cell boundaries without a break.
+    const course = (y + 4096) >> 2;
+    const stagger = (course & 1) * 4;
     for (let i = 0; i < CELL; i++) {
-      s.set(x0 + i, y0, M_WALL, 10, 3, 24, TAG.WALL);
-      s.set(x0 + i, y0 + 1, M_WALL, 8, 3, 16, TAG.WALL);
+      const x = capX + i;
+      const bx = (x + 4096 + stagger) & 7;
+      const by = (y + 4096) & 3;
+      let step = 6;
+      if (by === 3) step = 3; // horizontal joint
+      else if (bx === 7) step = 2; // vertical joint
+      else {
+        const n = hf(seed ^ 0x3c1f, x, y);
+        if (n > 0.97) step += 1;
+        else if (n < 0.015) step -= 1;
+        step += ditherStep(wash.at(x, y) * 0.5, x, y);
+      }
+
+      // The rim of the top: the west arris is the sun side, the east is the
+      // far side, and the north edge is the lip the eye reads as height.
+      if (west && i === 0) step = 8;
+      else if (west && i === 1) step = 6;
+      if (east && i === CELL - 1) step = 2;
+      else if (east && i === CELL - 2) step = 3;
+      if (north && j === 0) step = 6;
+      else if (north && j === 1) step = 5;
+
+      // The far edge of the top meets the face: a groove, so the copng reads
+      // as standing proud of both planes. Hidden inside a thick wall, where
+      // the next cell's top starts, so only exposed south edges get it.
+      if (south && j === CELL - 1) step = 2;
+
+      s.set(x, y, M_WALL, step, 12, 8, TAG.WALL);
     }
   }
 
-  // Outline, drawn on the wall's own edge where it faces open space.
-  if (north) for (let i = 0; i < CELL; i++) s.set(x0 + i, y0, M_INK, 0, 3, 0, TAG.WALL);
-  if (west) for (let j = 0; j < CELL; j++) s.set(x0, y0 + j, M_INK, 0, 2, 0, TAG.WALL);
-  if (east) for (let j = 0; j < CELL; j++) s.set(x0 + CELL - 1, y0 + j, M_INK, 0, 2, 0, TAG.WALL);
-  if (south) for (let i = 0; i < CELL; i++) s.set(x0 + i, y0 + CELL - 1, M_INK, 0, 2, 0, TAG.WALL);
+  // Silhouette. One ink line is the whole difference between a raised block
+  // and a stain on the floor.
+  if (north) for (let i = 0; i < CELL; i++) s.set(capX + i, capY - 1, M_INK, 0, 12, 0, TAG.WALL);
+  if (west) for (let j = 0; j < CELL; j++) s.set(capX - 1, capY + j, M_INK, 0, 12, 0, TAG.WALL);
+  if (east) for (let j = 0; j < CELL; j++) s.set(capX + CELL, capY + j, M_INK, 0, 12, 0, TAG.WALL);
+};
 
-  // Shadow: a hard 2–3 px band on the floor to the south. Straight down, no
-  // blur, no dither — it is a shape, not a gradient (P3 rule 4, P13).
+/**
+ * The south face. Courses of six pixels, running bond, sheared so the top row
+ * sits WALL_SLANT to the right of the bottom one — the same lean as the cap.
+ * The coping is the two lit rows at the top; the shadow under it is what makes
+ * the plane turn away from the sky.
+ */
+const paintWallFace = (
+  s: Surface,
+  g: RoomGrid,
+  cx: number,
+  cy: number,
+  x0: number,
+  faceY: number,
+  west: boolean,
+  east: boolean,
+) => {
+  const seed = g.seed;
+  const COURSE = 6;
+  const maxStep = RAMP_LEN[M_WALL] - 1;
+
+  for (let j = 0; j < WALL_H; j++) {
+    const y = faceY + j;
+    const off = Math.round((WALL_SLANT * (WALL_H - 1 - j)) / (WALL_H - 1));
+    const start = x0 + off;
+    const band = j - 3;
+    const course = Math.floor(band / COURSE);
+    const jointH = band >= 0 && band % COURSE === COURSE - 1;
+
+    for (let i = 0; i < CELL; i++) {
+      const x = start + i;
+      const jointV = band >= 0 && (x + (course & 1) * 6) % 12 === 0;
+      let step = 8;
+
+      if (jointH || jointV) step = 5;
+      else if (hf(seed ^ 0x6a1d, x, y) > 0.96) step += 1;
+
+      if (j === 0) step = 11; // coping, catching the sky
+      else if (j === 1) step = 9;
+      else if (j === 2) step = 3; // the shadow the coping throws down
+      else if (band % COURSE === 0) step = Math.min(maxStep, step + 1);
+      else if (j > WALL_H - 4) step = Math.max(0, step - 1);
+
+      // Only a run's *ends* turn away. Doing this per cell drew a black
+      // stripe every 32 px down an unbroken wall, which reads as a fence of
+      // separate blocks rather than as one masonry plane.
+      if (west && i === 0) step = 1;
+      else if (east && i === CELL - 1) step = 2;
+
+      s.set(x, y, M_WALL, step, j < 2 ? 12 : 4, j < 2 ? 16 : 4, TAG.WALL);
+      if (j >= 2) s.setFace(x, y, FACE.SOUTH);
+    }
+  }
+
+  // A hard base line at the foot of the face; the floor below carries the
+  // contact shadow, so the block is planted rather than floating.
+  for (let i = 0; i < CELL; i++) s.set(x0 + i, faceY + WALL_H - 1, M_INK, 0, 2, 0, TAG.WALL);
+};
+
+/** The west side: a narrow parallelogram, from the base edge up to the top. */
+const paintWallWest = (s: Surface, g: RoomGrid, cx: number, cy: number, x0: number, y0: number) => {
+  const seed = g.seed;
+
+  for (let i = 0; i < WALL_SLANT; i++) {
+    const x = x0 + i;
+    const shift = Math.round((WALL_H * i) / WALL_SLANT);
+    const yTop = y0 - shift;
+    const yBottom = y0 + CELL - shift;
+    for (let y = yTop; y < yBottom; y++) {
+      const joint = (y + 4096) % 6 === 5;
+      let step = 6;
+      if (joint) step = 2;
+      else if (hf(seed ^ 0x2d91, x, y) > 0.96) step = 7;
+      // The outer column is the silhouette; the inner one hands over to the
+      // cap, one px of lighter stone.
+      if (i === 0) step = 2;
+      else if (i === WALL_SLANT - 1) step = 7;
+      s.set(x, y, M_WALL, step, 4, 3, TAG.WALL);
+      s.setFace(x, y, FACE.WEST);
+    }
+  }
+};
+
+const paintWallCell = (s: Surface, g: RoomGrid, cx: number, cy: number, wash: Wash, margin: number) => {
+  const x0 = cx * CELL;
+  const y0 = margin + cy * CELL;
+  const south = !isWall(g, cx, cy + 1);
+  const west = !isWall(g, cx - 1, cy);
+
+  // The top is always drawn: it is what occludes the floor behind the wall.
+  paintWallCap(s, g, cx, cy, wash, x0 + WALL_SLANT, y0 - WALL_H);
+  // Sides before the face, so the face's sheared edge covers the part of the
+  // side that has turned out of view.
+  if (west) paintWallWest(s, g, cx, cy, x0, y0);
+  if (south) paintWallFace(s, g, cx, cy, x0, y0 + CELL - WALL_H, west, !isWall(g, cx + 1, cy));
+
+  // Contact shadow on the playable floor, as geometry: hard rows at the base,
+  // two dithered rows at the edge, no blur.
   if (south && isFloor(g, cx, cy + 1)) {
     for (let i = 0; i < CELL; i++) {
-      s.set(x0 + i, y0 + CELL, M_FLOOR, 2, -1, 0, TAG.FLOOR);
-      s.set(x0 + i, y0 + CELL + 1, M_FLOOR, 3, 0, 0, TAG.FLOOR);
-      s.set(x0 + i, y0 + CELL + 2, M_FLOOR, 4, 0, 0, TAG.FLOOR);
+      wearFloor(s, x0 + i, y0 + CELL, 7);
+      wearFloor(s, x0 + i, y0 + CELL + 1, 6);
+      wearFloor(s, x0 + i, y0 + CELL + 2, 4);
+      if (hf(g.seed, x0 + i, cy + 3) > 0.3) wearFloor(s, x0 + i, y0 + CELL + 3, 3);
+      if (hf(g.seed, x0 + i, cy + 5) > 0.55) wearFloor(s, x0 + i, y0 + CELL + 4, 2);
     }
   }
   if (west && isFloor(g, cx - 1, cy)) {
-    for (let j = 2; j < CELL; j++) s.set(x0 - 1, y0 + j, M_FLOOR, 3, 0, 0, TAG.FLOOR);
+    for (let j = 3; j < CELL - 3; j++) {
+      wearFloor(s, x0 - 1, y0 + j, 5);
+      if (hf(g.seed, x0 - 2, y0 + j) > 0.4) wearFloor(s, x0 - 2, y0 + j, 3);
+    }
   }
+
+  // Every pixel of the block now knows where the block's own foot is, so a
+  // barrel or a body standing behind it can be tested against it cheaply.
+  s.markFront(x0 - 1, y0 - WALL_H - 1, CELL + WALL_SLANT + 2, WALL_H + CELL + 2, y0 + CELL, TAG.WALL);
 };
 
 /* -------------------------------------------------------------------- api */
 
-export function paintRoom(s: Surface, g: RoomGrid) {
-  const wash = new Wash(g, 2.6);
+export function paintRoom(s: Surface, g: RoomGrid, margin = TOP_MARGIN) {
+  // Enough wash to pool the light, not enough to paint a quilt: the relief and
+  // the torchlight already carry the large-scale variation.
+  const wash = new Wash(g, 1.15);
 
   for (let cy = 0; cy < g.rows; cy++) {
     for (let cx = 0; cx < g.cols; cx++) {
-      if (cellAt(g, cx, cy) === 1) paintFloorCell(s, g, cx, cy, wash);
+      if (cellAt(g, cx, cy) === 1) paintFloorCell(s, g, cx, cy, wash, margin);
     }
   }
   // Walls after floors so the shadow band can land on already-painted floor.
+  // Back to front: north to south, and east to west because the camera is on
+  // the west side of the block — the west face is the one that turns toward us.
   for (let cy = 0; cy < g.rows; cy++) {
-    for (let cx = 0; cx < g.cols; cx++) {
-      if (cellAt(g, cx, cy) === 2) paintWallCell(s, g, cx, cy, wash);
+    for (let cx = g.cols - 1; cx >= 0; cx--) {
+      if (cellAt(g, cx, cy) === 2) paintWallCell(s, g, cx, cy, wash, margin);
     }
   }
 }

@@ -1,17 +1,22 @@
-import { CELL, paintRoom } from './paint';
+import { BOTTOM_MARGIN, CELL, RIGHT_MARGIN, TOP_MARGIN, paintRoom } from './paint';
 import { Room } from './room';
 import { MATERIAL_COUNT, MATERIALS, Surface, COLOUR_OF } from './surface';
 import { buildNormals } from './normals';
 import { LightCache, LightRig, lightShiftAt, makeLightCache, shade } from './light';
-import { drawProp } from './props';
+import { PropLight, PropRule, drawPlaced, placeProp } from './props';
 import { drawPath } from './tokens';
 import { drawBody } from '@/characters/body';
 import { LONGEST_RAMP, packRGB } from './palette';
+import { rotateGrid, toCamera, toCameraFacing } from './camera';
 
 /**
  * Build once, shade per frame, present as one blit.
  * See docs/PRESENTATION-SPEC.md X1 and PIXEL-ART-SPEC.md P14.
  */
+
+// The camera is pure geometry now, shared with the prop projection — see
+// `camera.ts`. Re-exported here because this is where callers expect it.
+export { rotateGrid, toCamera, toCameraFacing, toWorld } from './camera';
 
 export type DebugView = 'lit' | 'normals' | 'height' | 'spec' | 'materials';
 
@@ -24,29 +29,72 @@ export type RenderOptions = {
 
 export class BoardRenderer {
   readonly room: Room;
-  readonly surface: Surface;
-  readonly normals: Uint32Array;
-  private readonly cache: LightCache;
+  /** Quarter turns the camera has made; 0 is the authored view. */
+  yaw = 0;
+  /** The room in camera space. Replaced by `build`, never mutated. */
+  grid: ReturnType<typeof rotateGrid>;
+  surface: Surface;
+  normals: Uint32Array;
+  /** Lamps carried by props, already in camera space. */
+  private propLights: PropLight[] = [];
+  /** The front buffer as built. Bodies rewrite `surface.front` every frame so
+   *  they can sort against each other; this is what they start from. */
+  private staticFront: Int16Array = new Int16Array(0);
+  private cache: LightCache;
   private readonly src: HTMLCanvasElement;
   private readonly sctx: CanvasRenderingContext2D;
-  private readonly img: ImageData;
+  private img: ImageData;
 
   constructor(room: Room) {
     this.room = room;
-    const w = room.grid.cols * CELL;
-    const h = room.grid.rows * CELL;
-    this.surface = new Surface(w, h);
-    paintRoom(this.surface, room.grid);
-    for (const p of room.props) drawProp(this.surface, p, room.grid.seed);
-    this.normals = buildNormals(this.surface, 0.62);
-    this.cache = makeLightCache(w, h);
+    this.grid = room.grid;
+    this.surface = new Surface(1, 1);
+    this.normals = new Uint32Array(1);
+    this.cache = makeLightCache(1, 1);
+    this.img = new ImageData(1, 1);
 
     this.src = document.createElement('canvas');
-    this.src.width = w;
-    this.src.height = h;
     const ctx = this.src.getContext('2d');
     if (!ctx) throw new Error('2d context unavailable');
     this.sctx = ctx;
+
+    this.build(0);
+  }
+
+  /**
+   * Paint the static board for a camera yaw: floors, then walls in depth order,
+   * then every prop projected from its footprint. This is a build step rather
+   * than a per-frame cost, because none of it moves until the camera does.
+   */
+  build(yaw: number) {
+    this.yaw = yaw & 3;
+    const g = rotateGrid(this.room.grid, this.yaw);
+    this.grid = g;
+    const w = g.cols * CELL + RIGHT_MARGIN;
+    const h = g.rows * CELL + TOP_MARGIN + BOTTOM_MARGIN;
+    this.surface = new Surface(w, h);
+    paintRoom(this.surface, g, TOP_MARGIN);
+
+    // Project every prop, then lay them down back to front. A prop's depth is
+    // its footprint's south edge, so the order follows the room rather than
+    // the order someone happened to author the list in.
+    const { cols, rows } = this.room.grid;
+    const placed = this.room.props
+      .map((p) => placeProp(p, g.seed, TOP_MARGIN, this.yaw, cols, rows))
+      .sort((a, b) => a.front - b.front);
+
+    this.propLights = [];
+    for (let i = 0; i < placed.length; i++) {
+      const lamp = drawPlaced(this.surface, placed[i], g.seed);
+      if (lamp) this.propLights.push(lamp);
+    }
+
+    this.normals = buildNormals(this.surface, 0.62);
+    this.staticFront = this.surface.front.slice();
+    this.cache = makeLightCache(w, h);
+
+    this.src.width = w;
+    this.src.height = h;
     const bytes = new Uint8ClampedArray(this.surface.col.buffer, this.surface.col.byteOffset, this.surface.col.length * 4);
     this.img = new ImageData(bytes, w, h);
   }
@@ -60,16 +108,58 @@ export class BoardRenderer {
 
   /** Shade the board and draw everything that moves. */
   render(opts: RenderOptions) {
-    const { rig, time } = opts;
+    const { time } = opts;
+    const { cols, rows } = this.room.grid;
+    // The rig is authored in room coordinates: drag it into the camera's frame
+    // with the walls, or turning the room would turn the sun with it. Lamps
+    // that came from props are already in camera space.
+    const rig = {
+      ...opts.rig,
+      sun: { ...opts.rig.sun, azimuth: opts.rig.sun.azimuth - this.yaw * 90 },
+      points: [
+        ...opts.rig.points.map((p) => {
+          const [cx, cy] = toCamera(p.x / CELL, p.y / CELL, cols, rows, this.yaw);
+          return { ...p, x: cx * CELL, y: cy * CELL + TOP_MARGIN };
+        }),
+        ...this.propLights,
+      ],
+    };
     shade(this.surface, this.normals, rig, this.surface.col, time, this.cache);
 
-    if (opts.showPath) drawPath(this.surface, this.room.path);
+    if (opts.showPath) {
+      const path = this.room.path.map(([x, y]) => {
+        const [px, py] = toCamera(x + 0.5, y + 0.5, cols, rows, this.yaw);
+        return [px - 0.5, py - 0.5] as [number, number];
+      });
+      drawPath(this.surface, path, TOP_MARGIN);
+    }
 
-    for (const tok of this.room.tokens) {
+    // Back to front, so a body nearer the camera covers one further away. The
+    // front buffer then settles every body against the wall behind it.
+    this.surface.front.set(this.staticFront);
+    const bodies = this.room.tokens
+      .map((tok) => ({ tok, at: toCamera(tok.at[0], tok.at[1], cols, rows, this.yaw) }))
+      .sort((a, b) => a.at[1] - b.at[1]);
+
+    for (const { tok, at } of bodies) {
       // Sample the light at the token so it sits in the same light as the floor.
-      const shift = lightShiftAt((Math.round(tok.at[0]) + 0.5) * CELL, (Math.round(tok.at[1]) + 0.85) * CELL, rig, time);
+      const shift = lightShiftAt(
+        (Math.round(at[0]) + 0.5) * CELL,
+        TOP_MARGIN + (Math.round(at[1]) + 0.85) * CELL,
+        rig,
+        time,
+      );
       const phase = time * 1.6 + (tok.id.charCodeAt(0) % 7);
-      drawBody(this.surface, tok.spec, tok.at, tok.facing, shift, phase, opts.selectedToken === tok.id);
+      drawBody(
+        this.surface,
+        tok.spec,
+        at,
+        toCameraFacing(tok.facing, this.yaw),
+        shift,
+        phase,
+        opts.selectedToken === tok.id,
+        TOP_MARGIN,
+      );
     }
   }
 
@@ -96,15 +186,12 @@ export class BoardRenderer {
     }
   }
 
-  present(canvas: HTMLCanvasElement, scale: number, quarterTurns: number, panX: number, panY: number) {
+  present(canvas: HTMLCanvasElement, scale: number, panX: number, panY: number) {
     const { w, h } = this.surface;
     this.sctx.putImageData(this.img, 0, 0);
 
-    const q = ((quarterTurns % 4) + 4) % 4;
-    const cw = q % 2 === 1 ? h : w;
-    const ch = q % 2 === 1 ? w : h;
-    const dw = Math.round(cw * scale);
-    const dh = Math.round(ch * scale);
+    const dw = Math.round(w * scale);
+    const dh = Math.round(h * scale);
     if (canvas.width !== dw) canvas.width = dw;
     if (canvas.height !== dh) canvas.height = dh;
     if (canvas.style.width !== `${dw}px`) canvas.style.width = `${dw}px`;
@@ -112,15 +199,9 @@ export class BoardRenderer {
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.clearRect(0, 0, dw, dh);
+    ctx.setTransform(scale, 0, 0, scale, -Math.round(panX), -Math.round(panY));
     ctx.imageSmoothingEnabled = false;
-    ctx.save();
-    ctx.translate(dw / 2 - panX, dh / 2 - panY);
-    ctx.rotate((q * Math.PI) / 2);
-    ctx.scale(scale, scale);
-    ctx.drawImage(this.src, -w / 2, -h / 2);
-    ctx.restore();
+    ctx.drawImage(this.src, 0, 0);
   }
 }
 
@@ -182,25 +263,32 @@ export function buildSheet(seed: number): { w: number; h: number; col: Uint32Arr
         grid.cells[y * fieldCells + x] = edge ? 2 : 1;
       }
     }
-    const s = new Surface(fieldPx, fieldPx);
-    paintRoom(s, grid);
-    // A couple of props so the field is not just a pattern.
-    drawProp(s, { rule: 'chest', at: [2, 3], bands: 2 }, seed);
-    drawProp(s, { rule: 'brazier', at: [5, 4], lit: true }, seed);
-    drawProp(s, { rule: 'rubble', at: [3, 5], size: 2 }, seed);
+    const s = new Surface(fieldPx + RIGHT_MARGIN, fieldPx + TOP_MARGIN);
+    paintRoom(s, grid, TOP_MARGIN);
+    // A few props so the field is not just a pattern.
+    const sample: PropRule[] = [
+      { rule: 'chest', at: [2, 3], bands: 2 },
+      { rule: 'brazier', at: [5.25, 4], lit: true },
+      { rule: 'rubble', at: [3, 5], size: 2 },
+    ];
+    for (const q of sample
+      .map((p) => placeProp(p, seed, TOP_MARGIN, 0, fieldCells, fieldCells))
+      .sort((x, y) => x.front - y.front)) {
+      drawPlaced(s, q, seed);
+    }
     const n = buildNormals(s, 0.62);
     const rig: LightRig = {
       ambient: 0.3,
       sun: { azimuth: azimuths[a], elevation: a === 3 ? 82 : 14, intensity: 1 },
-      points: [{ x: 5.5 * CELL, y: 4.4 * CELL, radius: 3.2 * CELL, intensity: 1.0, flicker: 0 }],
+      points: [{ x: 5.5 * CELL, y: TOP_MARGIN + 4.4 * CELL, radius: 3.2 * CELL, intensity: 1.0, flicker: 0 }],
     };
-    shade(s, n, rig, s.col, 0, makeLightCache(fieldPx, fieldPx));
+    shade(s, n, rig, s.col, 0, makeLightCache(s.w, s.h));
 
     const ox = 8 + a * (fieldPx + gap);
     const oy = topH;
     for (let y = 0; y < fieldPx; y++) {
       for (let x = 0; x < fieldPx; x++) {
-        col[(oy + y) * w + (ox + x)] = s.col[y * fieldPx + x];
+        col[(oy + y) * w + (ox + x)] = s.col[y * s.w + x];
       }
     }
   }

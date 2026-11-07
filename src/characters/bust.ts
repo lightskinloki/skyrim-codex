@@ -31,34 +31,73 @@ import { RACE_SHAPE, drawBustRaceFace, drawBustRaceHead, showsHair } from './rac
 export const BUST_SIZE = 128;
 
 const CX = 63;
-const BROW = 44;
-const EYE_Y = 55;
+const BROW = 48;
+const EYE_Y = 56;
 const EYE_L = 52;
 const EYE_R = 74;
-const NOSE_TIP = 75;
-const MOUTH = 82;
-const CHIN = 88;
+const NOSE_TIP = 71;
+const MOUTH = 81;
+const CHIN = 89;
 
 const clothAt = (mat: number, n: number) => P(mat, clamp(7 + n, 0, RAMP_LEN[mat] - 1));
 
 /** The skull's top edge at a column, so hair can follow it. */
-const skullTop = (x: number): number => 50 - 31 * Math.sqrt(Math.max(0, 1 - ((x - CX) / 25) ** 2));
+const skullTop = (x: number): number => 48 - 30 * Math.sqrt(Math.max(0, 1 - ((x - CX) / 25) ** 2));
+
+/**
+ * The head's half-width at a row. One curve from brow to chin instead of two
+ * ellipses: a cranium laid on a jaw leaves a visible seam at the cheek, and the
+ * widest point of a face is the cheekbone, not the middle of an ellipse.
+ */
+const faceHalf = (y: number): number => {
+  if (y < 18 || y > 91) return 0;
+  if (y <= 50) return 24.5 * Math.sqrt(Math.max(0, 1 - ((y - 50) / 32) ** 2));
+  // A jaw is not the bottom of an ellipse. The old cosine pulled the face in
+  // to five pixels at the chin, which is why every bearded character read as a
+  // triangle; a real jaw keeps roughly sixty percent of the cheekbone width at
+  // the mouth and then rounds off over the last two rows.
+  const t = (y - 50) / 39;
+  const half = 10 + 14.5 * Math.cos(t * (Math.PI / 2));
+  return y > 89 ? half * ((91.5 - y) / 2.5) : half;
+};
 
 /** Where the hair stops and the forehead begins. Ragged by a pixel, by hash. */
 const hairlineAt = (x: number): number => {
-  const edge = Math.abs(x - CX) / 26;
-  const jitter = (hf(x * 3, 11, 5) > 0.62 ? 1 : 0) - (hf(x * 3, 12, 9) > 0.72 ? 1 : 0);
-  return Math.round(30 + 13 * edge ** 3 - (edge < 0.22 ? 2 : 0) + jitter);
+  const edge = Math.min(1, Math.abs(x - CX) / 27);
+  // Asymmetric on purpose: a lock falls across the left forehead and the right
+  // side is swept back. A symmetric curve is a bowl; this is a haircut.
+  const sweep = 7 * Math.exp(-(((x - (CX - 14)) / 8) ** 2));
+  const notch = x > CX + 2 ? Math.round(2 * Math.exp(-(((x - (CX + 10)) / 5) ** 2))) : 0;
+  return Math.round(36 - 6 * edge ** 2 + sweep - notch);
 };
 
-/** Where the beard starts: high at the sideburns, low over the lip. */
-const beardTopAt = (x: number): number => Math.round(78 - 14 * (Math.min(1, Math.abs(x - CX) / 19) || 0) ** 0.8);
-
-/** Where the beard stops: a point below the chin, rising to the jaw at the edges. */
-const beardBottomAt = (x: number, length: number): number => {
-  const edge = Math.min(1, Math.abs(x - CX) / 19);
-  return Math.round(86 + length * (1 - edge ** 1.4));
+/** The top of the hair mass, a little above the skull so it has volume. */
+const hairTopAt = (x: number): number => {
+  const dome = 44 - 33 * Math.sqrt(Math.max(0, 1 - ((x - CX) / 27) ** 2));
+  // A wave on the lit side and a step at the part: one deliberate line each,
+  // not a pixel of hash on every column. A silhouette made of noise reads as a
+  // damaged sprite, not as hair.
+  const wave = x < CX - 2 ? -Math.round(2 * Math.exp(-(((x - (CX - 13)) / 7) ** 2))) : 0;
+  const part = x > CX + 5 && x < CX + 10 ? 1 : 0;
+  return Math.max(10, Math.round(dome - 2 + wave + part));
 };
+
+/** Where the beard starts: below the lip at the centre, up the jaw at the sides. */
+const beardTopAt = (x: number): number =>
+  Math.max(66, Math.round(84 - 22 * Math.min(1, Math.abs(x - CX) / 22) ** 1.8));
+
+/** A shaded ellipse with a one-pixel dithered rim, so planes do not read as decals. */
+function softEllipse(m: PartMask, cx: number, cy: number, rx: number, ry: number, tone: number, rim: number) {
+  for (let y = Math.floor(cy - ry * 1.3); y <= Math.ceil(cy + ry * 1.3); y++) {
+    if (y < 0 || y >= m.h) continue;
+    for (let x = Math.floor(cx - rx * 1.3); x <= Math.ceil(cx + rx * 1.3); x++) {
+      if (x < 0 || x >= m.w) continue;
+      const d = ((x + 0.5 - cx) / rx) ** 2 + ((y + 0.5 - cy) / ry) ** 2;
+      if (d <= 1) m.data[y * m.w + x] = tone;
+      else if (d <= 1.55 && hf(x * 3 + 1, y * 5 + 2, 17) > 0.42) m.data[y * m.w + x] = rim;
+    }
+  }
+}
 
 /* --------------------------------------------------------------- shoulders */
 
@@ -117,98 +156,246 @@ function drawShoulders(m: PartMask, spec: CharacterSpec) {
 /** The neck goes down *before* the shoulders, so a gorget can cover it. */
 function drawNeck(m: PartMask, spec: CharacterSpec) {
   const sk = (n: number) => skinAt(spec, n);
-  rect(m, CX - 13, 80, 26, 26, sk(-5));
-  rect(m, CX - 13, 80, 9, 22, sk(-3));
-  rect(m, CX - 13, 80, 26, 3, sk(-6)); // the jaw's cast shadow at the top
+  // Ten pixels a side, not thirteen: the neck is behind the jaw, and a column
+  // wider than the chin is what made the head look mounted on a post.
+  rect(m, CX - 10, CHIN - 4, 20, 22, sk(-4));
+  rect(m, CX - 10, CHIN - 4, 7, 20, sk(-1));
+  rect(m, CX - 3, CHIN - 4, 6, 20, sk(-2));
+  rect(m, CX + 4, CHIN - 4, 6, 20, sk(-4));
+  rect(m, CX - 10, CHIN - 4, 20, 3, sk(-6)); // the jaw's cast shadow
+  for (let x = CX - 9; x < CX + 10; x++) {
+    if (hf(x, 90, 23) > 0.55) rect(m, x, 92, 1, 1, sk(-5)); // the collar's shadow
+  }
 }
 
 function drawHead(m: PartMask, spec: CharacterSpec) {
   const sk = (n: number) => skinAt(spec, n);
 
-  ellipse(m, CX, 72, 20, 16, sk(0)); // jaw
-  ellipse(m, CX, 50, 25, 31, sk(0)); // cranium
+  // The silhouette is one curve, widened at the cheekbones and tapered to the
+  // chin. Two ellipses (cranium + jaw) made a wide, flat face with a seam where
+  // they met; this gives the jaw an angle instead.
+  for (let y = 18; y <= 91; y++) {
+    const half = Math.round(faceHalf(y));
+    for (let x = CX - half; x <= CX + half; x++) m.data[y * m.w + x] = sk(0);
+  }
 
-  // Planes, not patches. Light is upper-left, so exactly two things are lit —
-  // the temple and the cheekbone — and exactly two are not: the right temple and
-  // the shadow the brow casts. More than that and the face reads as make-up.
-  ellipse(m, CX - 14, 38, 8, 10, sk(1));
-  rect(m, CX + 19, 46, 3, 26, sk(-1));
-  ellipse(m, CX - 12, 65, 6, 4, sk(1));
-  ellipse(m, CX + 8, 78, 10, 4, sk(-2));
-  rect(m, CX - 19, BROW + 3, 38, 2, sk(-3));
+  // One light, one shadow, one transition. The old pass painted eight soft
+  // ellipses onto the face; each was plausible on its own and together they
+  // read as camouflage. A face at this size needs a lit side, a shadow side,
+  // and three or four local marks — not a dozen patches.
+  for (let y = 18; y <= 91; y++) {
+    const half = Math.round(faceHalf(y));
+    for (let x = CX - half; x <= CX + half; x++) {
+      let tone = x < CX - 2 ? sk(1) : x > CX + 4 ? sk(-1) : sk(0);
+      if (x >= CX - 3 && x <= CX - 2 && hf(x, y, 41) > 0.45) tone = sk(0);
+      if (x >= CX + 4 && x <= CX + 5 && hf(x, y, 43) > 0.5) tone = sk(0);
+      m.data[y * m.w + x] = tone;
+    }
+  }
 
-  // Ears: 4 × 10, not 6 × 14 — at this size an ear is a notch in the
-  // silhouette, and anything bigger reads as a handle.
-  ellipse(m, CX - 25, 61, 2, 5, sk(-2));
-  rect(m, CX - 25, 59, 1, 3, sk(-5));
-  ellipse(m, CX + 25, 61, 2, 5, sk(-4));
-  rect(m, CX + 25, 59, 1, 3, sk(-6));
+  // The forehead and cheekbone catch the light; the far temple and the jaw
+  // turn away. These are the only patches the face needs.
+  for (let y = 32; y <= 41; y++) {
+    for (let x = CX - 19; x <= CX - 5; x++) {
+      if (hf(x, y, 3) > 0.22) m.data[y * m.w + x] = sk(2);
+    }
+  }
+  for (let y = 58; y <= 64; y++) {
+    const t = (y - 61) / 3;
+    for (let x = CX - 18; x <= CX - 9; x++) {
+      const dx = (x - (CX - 13.5)) / 4.5;
+      if (dx * dx + t * t <= 1 && hf(x, y, 7) > 0.2) m.data[y * m.w + x] = sk(2);
+    }
+  }
+  for (let y = 35; y <= 52; y++) {
+    for (let x = CX + 16; x <= CX + 23; x++) {
+      if (hf(x, y, 29) > 0.3) m.data[y * m.w + x] = sk(-2);
+    }
+  }
+
+  // The jaw's own edge: a narrow band of shadow, not a black outline. The
+  // render's ink outline handles the silhouette; this is the form turning away.
+  for (let y = 60; y <= 88; y++) {
+    const half = Math.round(faceHalf(y));
+    for (let k = 0; k < 2; k++) {
+      if (hf(CX + half - k, y, 31) > 0.35) m.data[y * m.w + CX + half - k] = sk(-2);
+    }
+    if (hf(CX - half, y, 37) > 0.5) m.data[y * m.w + CX - half] = sk(2);
+  }
+  for (let y = 88; y <= 91; y++) {
+    for (let x = CX - 8; x <= CX + 8; x++) m.data[y * m.w + x] = sk(-3);
+  }
+
+  // Ears. In a front view an ear is a notch in the silhouette, not a handle:
+  // five pixels wide, with a lit helix and a dark canal.
+  for (const side of [-1, 1] as const) {
+    const ex = CX + side * 24;
+    const lit = side < 0;
+    for (let y = 55; y <= 67; y++) {
+      const w = y < 58 ? 2 : y < 64 ? 3 : 2;
+      for (let i = 0; i < w; i++) m.data[y * m.w + ex + side * i] = sk(lit ? -1 : -2);
+    }
+    rect(m, ex - (side < 0 ? 1 : 0), 57, 1, 4, sk(lit ? 1 : -1));
+    rect(m, ex + (side > 0 ? 1 : 0), 62, 1, 3, sk(-4));
+    rect(m, ex, 60, 1, 2, sk(-6));
+  }
 }
 
 function drawHairCap(m: PartMask, spec: CharacterSpec) {
   if (!showsHair(spec)) {
     // A shaved scalp is not a bald ellipse: it needs the skull's own shading.
-    ellipse(m, CX, 34, 20, 12, skinAt(spec, 1));
-    rect(m, CX - 18, 28, 36, 2, skinAt(spec, 2));
+    softEllipse(m, CX - 5, 28, 13, 8, skinAt(spec, 1), skinAt(spec, 0));
+    softEllipse(m, CX - 2, 32, 8, 4, skinAt(spec, 2), skinAt(spec, 1));
+    rect(m, CX - 18, 29, 36, 1, skinAt(spec, -1));
     return;
   }
   const mid = hairAt(spec, 0);
-  const lit = hairAt(spec, 3);
-  const dark = hairAt(spec, -3);
+  const lit = hairAt(spec, 2);
+  const dark = hairAt(spec, -2);
+  const darkest = hairAt(spec, -4);
 
-  // Volume above the skull: hair sits on a head, it does not follow the bone.
+  // Volume above the skull. Three flat tones, a diagonal terminator, no hash:
+  // at this size a clean shape reads as hair and a dithered one reads as mould.
   for (let x = CX - 28; x <= CX + 28; x++) {
-    const top = Math.max(11, Math.round(skullTop(Math.max(CX - 25, Math.min(CX + 25, x))) - 4));
+    const top = hairTopAt(x);
     const bottom = hairlineAt(x);
     if (bottom <= top) continue;
-    const tone = x < CX - 6 ? lit : x > CX + 12 ? dark : mid;
-    rect(m, x, top, 1, bottom - top, tone);
+    for (let y = top; y < bottom; y++) {
+      const nx = (x - CX) / 28;
+      const ny = (y - 14) / 36;
+      const l = 0.45 - nx * 0.7 - ny * 0.3;
+      const tone = l > 0.24 ? lit : l < -0.06 ? dark : mid;
+      m.data[y * m.w + x] = tone;
+    }
   }
-  // A combed highlight on the lit side and four dark strands, so the mass has
-  // grain instead of being one flat swatch. Every strand is clamped inside the
-  // cap — a highlight that escapes the silhouette reads as a scratch.
-  for (let i = 0; i < 5; i++) {
-    const x = CX - 22 + i * 4;
-    const top = Math.max(9, Math.round(skullTop(x)) - 4);
-    const bottom = Math.min(hairlineAt(x) - 1, top + 10 - i * 2);
-    if (bottom > top) rect(m, x, top, 1, bottom - top, hairAt(spec, i < 2 ? 2 : 1));
+
+  // A side part: one pixel of the darkest tone, from the crown to just above
+  // the hairline. It is the difference between a haircut and a helmet.
+  const partX = CX + 7;
+  for (let y = hairTopAt(partX) + 1; y < hairlineAt(partX) - 1; y++) {
+    m.data[y * m.w + partX] = darkest;
   }
-  rect(m, CX + 4, 14, 2, 14, dark);
-  rect(m, CX + 13, 18, 2, 12, dark);
-  // The shadow the fringe casts on the forehead — only on the shadow side.
-  for (let x = CX + 2; x <= CX + 26; x++) {
-    const y = hairlineAt(x);
-    rect(m, x, y, 1, 2, skinAt(spec, -2));
+
+  // Locks are broad grooves, not single-pixel scratches. Each is a dark line
+  // with a lit line beside it, sweeping away from the part, and they stop a
+  // pixel short of the hairline so the fringe reads as a separate layer.
+  for (let i = 0; i < 4; i++) {
+    const x0 = CX - 20 + i * 11;
+    const top = hairTopAt(x0) + 2;
+    const bottom = hairlineAt(x0) - 1;
+    const dir = x0 < partX ? -1 : 1;
+    for (let y = top; y < bottom; y++) {
+      const xx = x0 + Math.floor((y - top) / 7) * dir;
+      const j = y * m.w + xx;
+      if ((m.data[j] >> 4) !== (mid >> 4)) continue;
+      m.data[j] = dark;
+      const k = j - dir;
+      if ((m.data[k] >> 4) === (mid >> 4)) m.data[k] = lit;
+    }
+  }
+
+  // The fringe is three locks that fall past the line, each with its own cast
+  // shadow. Between them the forehead is open, which is what keeps the hair
+  // from looking like a bowl with a straight rim.
+  const locks = [
+    { x0: CX - 22, x1: CX - 13, dip: 4 },
+    { x0: CX - 13, x1: CX - 5, dip: 3 },
+    { x0: CX - 5, x1: CX + 2, dip: 2 },
+  ];
+  for (const lock of locks) {
+    for (let x = lock.x0; x <= lock.x1; x++) {
+      const t = (x - lock.x0) / (lock.x1 - lock.x0);
+      const base = hairlineAt(x);
+      const tip = base + Math.round(Math.sin(t * Math.PI) * lock.dip);
+      for (let y = base; y < tip; y++) m.data[y * m.w + x] = x < CX - 14 ? lit : mid;
+      m.data[tip * m.w + x] = mid;
+      m.data[(tip + 1) * m.w + x] = skinAt(spec, -2);
+    }
+  }
+
+  // Sideburns follow the cheek instead of hanging at a fixed x. Two pixels on
+  // the outside of the face, angled in as the jaw narrows, so they meet the
+  // beard rather than stopping in mid-air like a pair of wires.
+  for (const side of [-1, 1] as const) {
+    for (let y = 38; y <= 64; y++) {
+      const x = CX + side * Math.max(2, Math.round(faceHalf(y)) - 1);
+      m.data[y * m.w + x] = side < 0 ? mid : dark;
+      m.data[y * m.w + x - side] = side < 0 ? lit : mid;
+    }
   }
 }
 
 function drawEyes(m: PartMask, spec: CharacterSpec) {
   const sk = (n: number) => skinAt(spec, n);
-  const sclera = P(M_HAIR_GREY, 10);
-  const iris = P(M_HAIR_BROWN, 5);
-  const slit = RACE_SHAPE[spec.race] === 'khajiit' || RACE_SHAPE[spec.race] === 'argonian';
+  const sclera = P(M_HAIR_GREY, 11); // cream, not white: a white sclera is a cartoon
+  const iris = P(M_HAIR_BROWN, 8);
+  const pupil = P(M_INK, 0);
+  const glint = P(M_HAIR_GREY, 13);
+  const catEye = RACE_SHAPE[spec.race] === 'khajiit' || RACE_SHAPE[spec.race] === 'argonian';
 
-  for (const ex of [EYE_L, EYE_R]) {
-    ellipse(m, ex, EYE_Y, 8, 4, sk(-3)); // socket
-    ellipse(m, ex, EYE_Y, 5, 2, sclera);
-    if (slit) {
-      ellipse(m, ex, EYE_Y + 1, 2, 3, iris);
-      rect(m, ex - 1, EYE_Y - 1, 2, 5, P(M_INK, 0));
-    } else {
-      ellipse(m, ex, EYE_Y + 1, 3, 3, iris);
-      rect(m, ex - 1, EYE_Y, 2, 3, P(M_INK, 0));
+  for (const [ex, far] of [
+    [EYE_L, false],
+    [EYE_R, true],
+  ] as const) {
+    const w = far ? 3 : 4;
+    const cx = ex + 0.5; // even widths sit on a pixel pair, not a seam
+
+    // The socket is one pixel of shadow, not an ellipse: a dark ring around
+    // the eye is a bruise, and it was swallowing the eye it was meant to seat.
+    for (let x = ex - w - 2; x <= ex + w + 2; x++) {
+      if (hf(x, EYE_Y - 3, 5) > 0.2) m.data[(EYE_Y - 3) * m.w + x] = sk(-1);
     }
-    rect(m, ex - 2, EYE_Y, 1, 1, P(M_HAIR_GREY, 12)); // catchlight
-    rect(m, ex - 6, EYE_Y - 2, 12, 2, sk(-5)); // upper lid and lash
-    rect(m, ex - 5, EYE_Y + 3, 10, 1, sk(-5)); // lower lid
+    for (let x = ex - w; x <= ex + w; x++) {
+      if (hf(x, EYE_Y + 4, 13) > 0.35) m.data[(EYE_Y + 4) * m.w + x] = sk(-1);
+    }
+
+    // The white is a sliver at the corners, not the subject. Iris 4 px, pupil
+    // 2 px, one pixel of catchlight on the upper left — at this size that is an
+    // eye; a bigger white turns the face into a cartoon.
+    ellipse(m, cx, EYE_Y + 0.5, w + 0.2, 2.2, sclera);
+    ellipse(m, cx, EYE_Y + 0.5, 2.0, 2.0, iris);
+    rect(m, ex, EYE_Y - 1, 2, 2, pupil);
+    if (catEye) rect(m, ex, EYE_Y - 2, 1, 4, pupil);
+    rect(m, ex - 1, EYE_Y - 1, 1, 1, glint);
+
+    // The upper lid covers the top of the iris, so the eye is not a disc. Its
+    // line drops at the corners, which is what makes it a lid and not a slot.
+    for (let x = ex - w - 1; x <= ex + w + 1; x++) {
+      const t = (x - cx) / (w + 1);
+      const y = EYE_Y - 2 + (Math.abs(t) > 0.55 ? 1 : 0);
+      m.data[y * m.w + x] = sk(-4);
+      if (x < ex && hf(x, y, 9) > 0.4) m.data[(y - 1) * m.w + x] = sk(-2); // lash shadow
+    }
+    // The lower lid is one tone lighter than the upper: light comes from above.
+    for (let x = ex - w; x <= ex + w; x++) {
+      const t = (x - cx) / w;
+      const y = EYE_Y + 3 - (Math.abs(t) > 0.72 ? 1 : 0);
+      m.data[y * m.w + x] = sk(-2);
+    }
+    rect(m, ex - w - 1, EYE_Y + 1, 1, 1, sk(-5)); // inner corner
+    rect(m, ex + w + 1, EYE_Y, 1, 1, sk(-5)); // outer corner
+
+    // A crease above the lid, not another outline.
+    for (let x = ex - w; x <= ex + w; x++) {
+      if (hf(x, 19, 11) > 0.5) m.data[(EYE_Y - 4) * m.w + x] = sk(-2);
+    }
   }
 
-  // Brows angled down toward the nose: the whole read of a stern face.
-  const brow = hairAt(spec, -1);
-  for (let i = 0; i < 13; i++) {
-    const drop = Math.round(i * 0.25);
-    rect(m, CX - 23 + i, BROW - 1 + drop, 1, 2, brow);
-    rect(m, CX + 22 - i, BROW - 1 + drop, 1, 2, hairAt(spec, -3));
+  // Brows: thicker at the inner end and angled down toward the nose — the
+  // whole read of a stern face at this size. Two tones, the lower one darker,
+  // so they sit on the brow ridge instead of being painted on the forehead.
+  for (const side of [-1, 1] as const) {
+    const outer = CX + side * 21;
+    for (let i = 0; i <= 13; i++) {
+      const x = outer - side * i;
+      const t = i / 13;
+      const top = BROW + Math.round(t * 2.5) - Math.round(Math.sin(t * Math.PI));
+      const thick = i > 10 ? 4 : 3;
+      m.data[top * m.w + x] = hairAt(spec, side < 0 ? 2 : 0);
+      for (let k = 1; k < thick; k++) m.data[(top + k) * m.w + x] = hairAt(spec, side < 0 ? -1 : -3);
+      if (hf(x, top, 13) > 0.35) m.data[(top - 1) * m.w + x] = sk(-1);
+      if (hf(x, top, 31) > 0.6) m.data[(top + thick) * m.w + x] = sk(-2);
+    }
   }
 }
 
@@ -217,63 +404,154 @@ function drawNose(m: PartMask, spec: CharacterSpec) {
   if (shape === 'khajiit' || shape === 'argonian') return; // the race draws a snout
 
   const sk = (n: number) => skinAt(spec, n);
-  rect(m, CX - 3, EYE_Y + 3, 3, NOSE_TIP - EYE_Y - 3, sk(2)); // lit ridge
-  rect(m, CX, EYE_Y + 3, 3, NOSE_TIP - EYE_Y - 3, sk(-2)); // shadowed side
-  ellipse(m, CX + 1, NOSE_TIP, 6, 3, sk(1));
-  ellipse(m, CX + 4, NOSE_TIP + 1, 3, 2, sk(-2));
-  rect(m, CX - 5, NOSE_TIP + 1, 2, 2, sk(-5)); // nostrils
-  rect(m, CX + 3, NOSE_TIP + 1, 2, 2, sk(-5));
-  rect(m, CX - 7, NOSE_TIP + 3, 15, 1, sk(-4)); // the shadow it casts on the lip
+
+  // The bridge is a narrow wedge of two planes, three pixels wide between the
+  // brows and five at the tip. A wide, evenly lit bar is what read as a plank.
+  for (let y = BROW + 3; y <= NOSE_TIP - 6; y++) {
+    const t = (y - (BROW + 3)) / (NOSE_TIP - BROW - 9);
+    const half = t < 0.55 ? 2 : 3;
+    for (let x = CX - half; x <= CX + half; x++) {
+      // Three planes, five steps apart: a bridge that is one step from the
+      // cheek is not a bridge, it is a smudge.
+      const tone = x <= CX - 2 ? sk(3) : x >= CX + 2 ? sk(-2) : sk(1);
+      m.data[y * m.w + x] = tone;
+    }
+  }
+
+  // The tip: a bulb with a lit top, a dark underside and two slot nostrils.
+  // Eleven pixels across at the widest, against a forty-nine-pixel face.
+  softEllipse(m, CX + 0.5, NOSE_TIP - 2, 4.8, 2.6, sk(1), sk(0));
+  rect(m, CX - 3, NOSE_TIP - 4, 6, 1, sk(2));
+  rect(m, CX - 5, NOSE_TIP - 1, 1, 2, sk(-2)); // wings
+  rect(m, CX + 5, NOSE_TIP - 1, 1, 2, sk(-2));
+  rect(m, CX - 5, NOSE_TIP + 1, 1, 1, sk(-1));
+  rect(m, CX + 5, NOSE_TIP + 1, 1, 1, sk(-1));
+  rect(m, CX - 2, NOSE_TIP, 2, 1, sk(-5)); // nostril slots
+  rect(m, CX + 2, NOSE_TIP, 2, 1, sk(-5));
+  rect(m, CX, NOSE_TIP + 1, 1, 1, sk(-4)); // septum
+
+  // What the nose casts on the philtrum, dithered so it is a shadow and not a
+  // second moustache.
+  for (let x = CX - 3; x <= CX + 3; x++) {
+    m.data[(NOSE_TIP + 2) * m.w + x] = sk(-3);
+    if (hf(x, NOSE_TIP, 37) > 0.45) m.data[(NOSE_TIP + 3) * m.w + x] = sk(-2);
+  }
+  rect(m, CX, NOSE_TIP + 4, 1, 2, sk(-2)); // philtrum
 }
 
 function drawMouth(m: PartMask, spec: CharacterSpec) {
   const sk = (n: number) => skinAt(spec, n);
-  rect(m, CX - 8, MOUTH, 16, 1, sk(-5));
-  rect(m, CX - 6, MOUTH + 2, 12, 2, sk(2));
-  rect(m, CX - 4, MOUTH + 5, 8, 1, sk(-3));
+
+  // A mouth is a slot with two lips around it. The line has a slight bow and
+  // the corners sit one pixel lower; the lower lip catches the light while the
+  // crease beneath it is dark. Thirteen pixels wide: a mouth that touches the
+  // jaw is a cartoon, one that is too small vanishes beside a beard.
+  for (let x = CX - 6; x <= CX + 6; x++) {
+    const t = Math.abs(x - CX) / 6;
+    const y = MOUTH + (t > 0.75 ? 1 : 0);
+    m.data[y * m.w + x] = sk(-5);
+  }
+  for (let x = CX - 5; x <= CX + 5; x++) m.data[(MOUTH - 1) * m.w + x] = sk(-2); // upper lip
+  for (let x = CX - 4; x <= CX + 4; x++) {
+    m.data[(MOUTH + 1) * m.w + x] = sk(2);
+    if (Math.abs(x - CX) < 3) m.data[(MOUTH + 2) * m.w + x] = sk(3);
+  }
+  for (let x = CX - 5; x <= CX + 5; x++) m.data[(MOUTH + 3) * m.w + x] = sk(-3); // crease
+  rect(m, CX - 7, MOUTH + 1, 1, 1, sk(-5)); // corners
+  rect(m, CX + 7, MOUTH + 1, 1, 1, sk(-5));
+  rect(m, CX - 2, MOUTH - 2, 1, 1, sk(-2)); // the bow of the upper lip
+  rect(m, CX + 2, MOUTH - 2, 1, 1, sk(-2));
 }
+
+/** Shift a packed part one step along its own ramp. */
+const shade = (part: number, d: number) => {
+  const mat = part >> 4;
+  return (mat << 4) | clamp((part & 15) + d, 0, RAMP_LEN[mat] - 1);
+};
 
 function drawBeard(m: PartMask, spec: CharacterSpec) {
   if (spec.beard === 'none' || !showsHair(spec)) return;
   const lit = hairAt(spec, 2);
   const mid = hairAt(spec, 0);
   const dark = hairAt(spec, -2);
-  const length = spec.beard === 'long' ? 12 : spec.beard === 'full' ? 4 : 0;
+  const hairMat = mid >> 4;
+  const length = spec.beard === 'long' ? 10 : spec.beard === 'full' ? 6 : 2;
+  const endY = CHIN + length;
+  const cells = new Uint8Array(m.w * m.h);
 
-  if (spec.beard === 'stubble') {
-    for (let x = CX - 19; x <= CX + 19; x++) {
-      const top = beardTopAt(x);
-      const bottom = beardBottomAt(x, 2);
-      for (let y = top; y < bottom; y += 2) {
-        if (hf(x, y, 4) > 0.55) rect(m, x, y, 1, 1, dark);
-      }
+  // The beard is clipped to the jaw row by row. The previous version filled a
+  // fixed twenty-one-pixel column, so at the mouth — where the face is only
+  // twenty pixels wide — it floated two centimetres off each cheek and read as
+  // a helmet strap. Its width has to follow the bone, with a little volume.
+  for (let y = 54; y <= endY; y++) {
+    let outer: number;
+    if (y <= CHIN) {
+      outer = Math.ceil(faceHalf(y)) + 2 + Math.round((y - 68) * 0.1);
+    } else {
+      outer = Math.max(4, 14 - Math.round((y - CHIN) * 0.8));
     }
-    return;
+    for (let x = CX - outer; x <= CX + outer; x++) {
+      if (y < beardTopAt(x)) continue;
+      const edge = outer - Math.abs(x - CX);
+      let tone = x < CX - 6 ? lit : x > CX + 8 ? dark : mid;
+      if (edge <= 1) tone = dark;
+      if (y > CHIN - 2) tone = dark;
+      if (y < 66) tone = mid; // the sideburn is flatter than the jaw
+      if (spec.beard === 'stubble' && hf(x * 3, y * 5, 4) < 0.62) continue;
+      m.data[y * m.w + x] = tone;
+      cells[y * m.w + x] = 1;
+    }
   }
 
-  // The mass first, shaped by the two functions, so it can never climb past the
-  // cheekbones and swallow the eyes. Its outer edge is a shade darker than its
-  // middle, which is what gives it a silhouette against the skin.
-  for (let x = CX - 20; x <= CX + 20; x++) {
+  // A clean top edge with a few stray hairs, not a row of noise. The beard has
+  // to grow out of the cheek, so the line is dark and the strays are mid.
+  for (let x = CX - 24; x <= CX + 24; x++) {
     const top = beardTopAt(x);
-    const bottom = beardBottomAt(x, length);
-    if (bottom <= top) continue;
-    const edge = Math.abs(x - CX) > 16;
-    const tone = edge ? dark : x < CX - 5 ? lit : mid;
-    rect(m, x, top, 1, bottom - top, tone);
-    if (top > 0) rect(m, x, top, 1, 1, hairAt(spec, -4)); // the hard top edge
-    // Strands: every third column, in the darker tone, stopping short of the
-    // point so the beard thins out rather than being cut off.
-    if (x % 3 === 0) rect(m, x, top + 3, 1, Math.max(0, bottom - top - 7), dark);
+    if (Math.abs(x - CX) < 4) continue;
+    const i = top * m.w + x;
+    if (cells[i]) m.data[i] = dark;
+    if (hf(x, top, 29) > 0.78) {
+      m.data[(top - 1) * m.w + x] = mid;
+      cells[(top - 1) * m.w + x] = 1;
+    }
   }
-  rect(m, CX - 5, CHIN + length - 7, 9, 3, lit);
 
-  // Then the mouth, cut back through the mass, then the moustache above it.
-  rect(m, CX - 8, MOUTH, 16, 1, skinAt(spec, -5));
-  rect(m, CX - 5, MOUTH + 1, 10, 1, skinAt(spec, 3));
-  for (let i = 0; i < 9; i++) {
-    rect(m, CX - 9 + i, MOUTH - 4 + (i > 4 ? 1 : 0), 1, 3, i < 4 ? lit : mid);
+  // Broad locks, the same trick as the hair: a dark groove with a lit edge,
+  // running outward as they fall. Five of them, never one per pixel.
+  for (let i = 0; i < 5; i++) {
+    const x0 = CX - 19 + i * 8;
+    const top = beardTopAt(x0) + 2;
+    const dir = x0 < CX ? -1 : 1;
+    for (let y = top; y <= endY - 2; y++) {
+      const xx = x0 + Math.floor((y - top) / 8) * dir;
+      const j = y * m.w + xx;
+      if (!cells[j] || (m.data[j] >> 4) !== hairMat) continue;
+      m.data[j] = shade(m.data[j], -1);
+      const k = j - dir;
+      if (cells[k] && (m.data[k] >> 4) === hairMat) m.data[k] = shade(m.data[k], 1);
+    }
   }
+
+  // The moustache: two wings over the upper lip, thick enough to read, with a
+  // gap at the philtrum and ends that turn down into the beard.
+  if (spec.beard !== 'stubble') {
+    for (let x = CX - 10; x <= CX + 10; x++) {
+      const d = Math.abs(x - CX) / 10;
+      if (d < 0.18) continue; // the philtrum gap
+      const y = MOUTH - 5 + Math.round(d * 2.6);
+      m.data[y * m.w + x] = x < CX ? lit : mid;
+      m.data[(y + 1) * m.w + x] = x < CX ? mid : dark;
+      if (d > 0.25) m.data[(y + 2) * m.w + x] = dark;
+      if (d > 0.8) m.data[(y + 3) * m.w + x] = dark;
+    }
+  } else {
+    for (let x = CX - 10; x <= CX + 10; x++) {
+      if (hf(x, 77, 9) > 0.45) m.data[77 * m.w + x] = mid;
+      if (hf(x, 78, 11) > 0.6) m.data[78 * m.w + x] = dark;
+    }
+  }
+
+  drawMouth(m, spec);
 }
 
 /** Behind the head: the mass that gives long hair its width. */

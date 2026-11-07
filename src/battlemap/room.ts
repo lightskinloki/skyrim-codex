@@ -65,52 +65,46 @@ export function makeDemoRoom(): Room {
   rect(g, 12, 1, 1, 3, 2);
   rect(g, 1, 8, 4, 1, 2);
 
+  // Every `at` is the **north-west corner of the footprint**, in cells, on an
+  // eighth-of-a-cell lattice. The prop is a solid standing on that rectangle:
+  // turning the camera rotates the rectangle, so nothing can shift.
   const props: PropRule[] = [
-    // Deliberately coarse: fractional coordinates, snapped at build (P6a).
-    { rule: 'rug', at: [12.2, 8.4], w: 4, h: 2, navy: false },
-    { rule: 'table', at: [12.9, 7.1], w: 2 },
-    { rule: 'bench', at: [12.15, 9.2], w: 2 },
-    { rule: 'bench', at: [12.2, 5.9], w: 2 },
+    { rule: 'rug', at: [11.5, 7.5], w: 4, h: 3.5 },
+    { rule: 'bench', at: [12.5, 7.75], w: 2 },
+    { rule: 'table', at: [12.5, 8.75], w: 2 },
+    { rule: 'bench', at: [12.5, 9.75], w: 2 },
 
-    { rule: 'chest', at: [3.1, 15.4], w: 1, bands: 2 },
-    { rule: 'chest', at: [4.4, 15.2], w: 2, bands: 1 },
-    { rule: 'crate', at: [24.2, 14.8] },
-    { rule: 'crate', at: [25.2, 15.3] },
-    { rule: 'barrel', at: [2.4, 3.2] },
-    { rule: 'barrel', at: [3.3, 4.15] },
-    { rule: 'barrel', at: [25.3, 4.2] },
+    { rule: 'chest', at: [3, 15], w: 1, bands: 2 },
+    { rule: 'chest', at: [4.5, 15], w: 1.5, bands: 1 },
+    { rule: 'crate', at: [23.75, 14.5] },
+    { rule: 'crate', at: [24.75, 15] },
+    { rule: 'barrel', at: [2, 3] },
+    { rule: 'barrel', at: [2.75, 3.75] },
+    { rule: 'barrel', at: [25, 4] },
 
-    { rule: 'shelf', at: [2.6, 9.2], w: 2 },
-    { rule: 'shelf', at: [2.6, 11.6], w: 2 },
+    { rule: 'shelf', at: [2, 9], w: 2 },
+    { rule: 'shelf', at: [2, 11.5], w: 2 },
 
-    { rule: 'brazier', at: [8.2, 3.4], lit: true },
-    { rule: 'brazier', at: [19.2, 3.6], lit: true },
-    { rule: 'brazier', at: [14.2, 15.4], lit: true },
+    { rule: 'brazier', at: [8, 3], lit: true },
+    { rule: 'brazier', at: [19, 3.5], lit: true },
+    { rule: 'brazier', at: [14, 15], lit: true },
 
-    { rule: 'column', at: [7.3, 10.2] },
-    { rule: 'column', at: [20.4, 10.4] },
+    { rule: 'column', at: [7, 10] },
+    { rule: 'column', at: [20, 10] },
 
-    { rule: 'rubble', at: [8.3, 16.2], size: 3 },
-    { rule: 'rubble', at: [9.4, 16.4], size: 1 },
-    { rule: 'rubble', at: [18.2, 16.3], size: 2 },
-    { rule: 'rubble', at: [6.2, 13.2], size: 1 },
-    { rule: 'rubble', at: [26.2, 11.4], size: 2 },
-    { rule: 'rubble', at: [1.6, 6.2], size: 1 },
-    { rule: 'rubble', at: [21.2, 16.2], size: 2 },
+    { rule: 'rubble', at: [8.25, 16], size: 3 },
+    { rule: 'rubble', at: [9.25, 16.25], size: 1 },
+    { rule: 'rubble', at: [18, 16], size: 2 },
+    { rule: 'rubble', at: [6, 13], size: 1 },
+    { rule: 'rubble', at: [26, 11], size: 2 },
+    { rule: 'rubble', at: [1.5, 6], size: 1 },
+    { rule: 'rubble', at: [21, 16], size: 2 },
   ];
 
-  const braziers = props.filter((p) => p.rule === 'brazier' && p.lit) as Extract<PropRule, { rule: 'brazier' }>[];
-
-  const points: PointLight[] = braziers.map((b, i) => ({
-    id: `brazier-${i}`,
-    x: (Math.round(b.at[0]) + 0.5) * CELL,
-    y: (Math.round(b.at[1]) + 0.35) * CELL,
-    radius: 5.0 * CELL,
-    // Enough to lift a midnight floor seven steps: a brazier is the difference
-    // between a room you cannot see and a room you can.
-    intensity: 3.2,
-    flicker: 0.5,
-  }));
+  // Lamps are not authored here: a brazier's light is derived from the bowl's
+  // own footprint at build time, so the glow can never be painted somewhere the
+  // bowl is not.
+  const points: PointLight[] = [];
 
   // One cold shaft from a crack in the roof, to prove two moods can coexist.
   points.push({ id: 'shaft', x: 14.5 * CELL, y: 3.2 * CELL, radius: 7 * CELL, intensity: 1.1, flicker: 0 });

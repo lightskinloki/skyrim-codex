@@ -320,6 +320,15 @@ does not drag five phones with them.
   four angles, not a continuous function.
 - **No tilt.** Tilt is the isometric projection that was rejected: same shear,
   same broken grid, same re-authored art. Height is carried by §10 instead.
+- **As built.** A snapped turn *rebuilds* the board in the camera's frame rather
+  than rotating the finished raster: the cell map is reindexed, walls are
+  repainted in depth order, props are rotated on whole pixels about their
+  footprint, and tokens and point lights are moved with them. The sun keeps its
+  world azimuth (the camera's yaw is subtracted from it), so a face that was lit
+  is still lit from the same side of the room. Turning to the north wall
+therefore *reveals* the room behind it, which is the only reason to offer a
+  turn at all — spinning a finished image would leave every face pointed the
+  wrong way.
 
 A **shot** — punch, follow, reveal — is local too. The beat is a pure function of
 the committed event, so every device computes the same camera moves from the same
@@ -368,6 +377,16 @@ level.
 Reach bands are drawn the same way: an ellipse offset to the enemy's own `z`,
 not a ring painted on the floor. A ring on the floor claims a 15-ft flier is in
 reach when nothing on the ground can touch them.
+
+**Occlusion is a front buffer, not a z-buffer.** Every pixel a wall or a prop
+paints records the screen y of that object's own foot (`Surface.front`, §11 in
+PIXEL-ART). A body is then tested per pixel: if the standing surface's front is
+nearer than the body's feet, the surface wins the pixel. That is why a barrel
+behind a wall is cut off by it and one in front paints over its face, with no
+sort list, no second pass and no object ever knowing what drew it. Flat props
+(rugs, decals) write zero, so anything may stand on them. Depth is the prop's
+*footprint*, not its artwork: a low shelf in the cell south of a wall is in
+front of that wall even though its sprite is drawn high in its own cell.
 
 ---
 
@@ -673,3 +692,139 @@ placement are data; the surface is rules.
 
 What a committed action then *looks like* — beat sheet, hit-stop, damage numbers,
 turn wheel, pacing budget — is [PRESENTATION-SPEC.md](PRESENTATION-SPEC.md).
+
+---
+
+## 16. Props are solids, and the camera is a projection
+
+**R1. A prop is a footprint plus a height, never a sprite.**
+
+```ts
+type PlacedProp = {
+  at: [number, number];   // the footprint's north-west corner, in cells
+  cellsX: number; cellsY: number;   // footprint, in cells
+  height: number;                   // px the solid stands above the floor
+  top: Mask;                        // the floor silhouette, in ramp indices
+};
+```
+
+Rendering it is a projection, in this order:
+
+1. **Rotate the footprint rectangle** with the camera transform — the same
+   transform that moves the cells, the tokens and the point lights. Both corners
+   are transformed and the result normalised, so the rectangle the camera sees
+   is the rectangle the room contains.
+2. **Rotate the floor silhouette** to match, on whole pixels (`rotMask`).
+3. **Extrude** it: the top plane is the silhouette lifted by `height` — the same
+   oblique projection the walls use — and the vertical face is hung under each
+   column of the silhouette from that column's own near edge.
+
+Step 3 is what makes a barrel round and a table have legs with the floor visible
+between them: a solid's face follows its own outline instead of being a box that
+happens to be roughly the right size. A face pixel is annotated `FACE.SOUTH` so
+the light pass treats it as vertical — a height field alone cannot say that, and
+without it the sun shades a wall of a barrel as if it were a slope.
+
+**R2. Why this cannot drift.** The footprint is the *only* input to placement.
+There is no sprite offset, no rotation about a hand-picked origin, and no
+post-rotation nudges, so there is nothing that can be applied twice or applied
+from the wrong pivot. `at` is authored on an eighth of a cell (4 px), and a
+quarter turn followed by `× CELL` stays on whole pixels, which is why the four
+views are pixel-exact rather than resampled.
+
+This is not a claim to assume: `npm run test:props` projects every prop at all
+four yaws, inverts both corners of the projected rectangle, and fails if the room
+rectangle, its size, or its pixel alignment changes. If a turn can move an object,
+that test says so.
+
+> **Rejected — rotating a drawn sprite about its own anchor.** The obvious cheap
+> version of camera rotation: keep the sprite, turn the mask, translate it so the
+> old anchor lands on the new cell. It was implemented, and it was wrong. A bench
+> two cells long became a *vertical* bench, the sprite's pivot did not agree with
+> the cell grid, and the result looked like the furniture was being rearranged
+> every quarter turn. The lesson is the one R2 encodes: a position has to be
+> derived from a rectangle in room space, not adjusted after the fact.
+
+**R3. Lamps are carried by the object that burns.** A point light is not an
+authored coordinate — it is the projected footprint centre of the brazier that
+emits it. Author the lamp separately and it can be painted where the bowl is not,
+which is exactly what an offset glow looks like: a light with nothing under it.
+
+**R4. Depth is a foot line, not a paint order.** Every pixel a wall or a prop
+paints records the screen row its foot stands on. A sprite drawn later is tested
+against that per pixel: behind it loses those pixels, in front of it wins. Props
+are laid down by their footprint's south edge, and tokens are tested the same
+way, so a character behind a table is hidden by the table rather than painted
+through it. The renderer never needs a per-object z-buffer, and the order props
+happen to appear in the scene file is not a visual decision.
+
+**R5. The vertical face is authored brighter than the top.** A south-facing face
+loses roughly 2.4 ramp steps under a high sun before any detail is legible. Face
+tones are therefore authored about three steps above the top plane; authored at
+the same value, every solid becomes a dark hole with a lit lid.
+
+**R6. Nothing is drawn outside its own kind.** The move path is an annotation of
+the *floor*, so it only writes to floor pixels: a route crossing a table does not
+get painted over the table. Contact shadows only darken floor. Both are one line
+of guard, and both were visible bugs before they were rules.
+
+---
+
+## 17. As built: the board is a 3D scene
+
+§16 describes the 2.5D projection the board used to have. It is kept because the
+failure it documents — a sprite rotated about its own anchor, drifting off its
+footprint — is the reason the renderer was replaced. **§17 is what ships.**
+
+**R1. The room is geometry, and the camera is a projection.** Walls, floors,
+steps, rugs and props are triangles in cell space (`src/battlemap/gl/scene.ts`).
+An orthographic camera turns them, `depthOf` gives every vertex a depth, and the
+raster writes the nearest surface per pixel. There is no paint order, no front
+buffer and no per-face sprite offsets, so there is nothing to get wrong when the
+camera moves: a prop cannot slide, and a wall cannot be painted behind a token.
+
+**R2. One camera, free orbit.** Yaw is continuous (0–360°), tilt 20–84°, zoom
+0.4–4×, pan in screen pixels. Drag orbits, shift-drag pans, the wheel zooms. The
+wall cut-away is recomputed from the yaw (`buildWalls`), so the near walls become
+curbs as they come between the camera and the floor — that is a rule about
+occlusion, not a fixed four-view set. Textures are cached by seed, so an orbit
+rebuilds geometry only.
+
+**R3. Light is per face, not per pixel, and the palette is the only output.**
+Each triangle carries a normal; the sun term is `exposure + (ndl − flat) · relief`
+with a lower relief on verticals, so a box turns three distinct faces without any
+of them reaching step 0. A vertical face at 58° sun lands around step 5 and a
+sun-facing one around step 7, against a floor at 8: dark enough to read the turn,
+light enough to keep the texture. The brazier's contribution is capped at +3.4
+steps, because uncapped it walks the stone ramp to cream and the pool reads as a
+hole.
+
+**R4. Shadows are a projected mask, softened before they land.** Every caster is
+projected along the sun onto the floor at quarter resolution; that binary mask is
+then blurred into a 0–255 penumbra and subtracted per pixel. A binary mask has a
+four-pixel staircase for an edge, which reads as a hole at 1:1; the blur gives the
+dither somewhere to feather. Shadow subtraction is 3.2 steps, so the darkest
+floor is still stone.
+
+**R5. Firelight is a screen-space pass, not vertex light.** A point light is
+smaller than a cell, so corner-interpolated light averages the pool away. After
+the solids, each brazier's floor footprint is walked in screen space, the inverse
+projection recovers the world point, the depth buffer proves the pixel is floor,
+and an amber dither from the oak ramp is laid over it. ~1.4 ms for three braziers.
+
+**R6. Ink is a depth cliff, with a threshold that knows the difference between a
+cliff and a slope.** The silhouette pass inks a pixel when its neighbour is more
+than 0.28 deeper. At 0.055 a wall face's own perspective gradient inked whole
+triangles black — the exact bug that made every box read as a hole. The threshold
+is above any legitimate surface gradient in this scene and below a real wall edge.
+
+**Still being perfected.** The wall coping texture reads busier at 1:1 than the
+flagstones; the brazier bowl is still a stack of cylinders with a billboard flame;
+tokens remain flat billboards (the character creator's spec is the intended
+source for extruded bodies). Character faces are the other open item — see
+PIXEL-ART-SPEC §3.
+
+**Budget.** ~3.4k triangles, 1082×880 at 32 px/cell, 30 fps target. Section costs
+are recorded in `renderStats` and dumped by `scripts/dump-3d.ts`, which writes a
+1:1 PNG and a steady-state frame time so tuning does not rely on a browser
+screenshot.

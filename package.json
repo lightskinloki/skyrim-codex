@@ -11,7 +11,8 @@
     "test:alchemy": "esbuild scripts/test-alchemy.ts --bundle --platform=node --format=cjs --alias:@=./src --outfile=node_modules/.test-alchemy.cjs && node node_modules/.test-alchemy.cjs",
     "test:damage": "esbuild scripts/test-damage.ts --bundle --platform=node --format=cjs --alias:@=./src --outfile=node_modules/.test-damage.cjs && node node_modules/.test-damage.cjs",
     "preview": "vite preview",
-    "test:encounter": "esbuild scripts/test-encounter.ts --bundle --platform=node --format=cjs --alias:@=./src --outfile=node_modules/.test-encounter.cjs && node node_modules/.test-encounter.cjs"
+    "test:encounter": "esbuild scripts/test-encounter.ts --bundle --platform=node --format=cjs --alias:@=./src --outfile=node_modules/.test-encounter.cjs && node node_modules/.test-encounter.cjs",
+    "test:props": "esbuild scripts/test-props.ts --bundle --platform=node --format=cjs --alias:@=./src --outfile=node_modules/.test-props.cjs && node node_modules/.test-props.cjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

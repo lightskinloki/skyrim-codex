@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { BoardRenderer, DebugView, buildSheet } from '@/battlemap/renderer';
+import { Board3D, buildSheet } from '@/battlemap/gl/render';
 import { MOODS, makeDemoRoom } from '@/battlemap/room';
 import { LightRig } from '@/battlemap/light';
 import { CELL } from '@/battlemap/paint';
@@ -12,74 +12,84 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { RotateCcw, RotateCw, ZoomIn, ZoomOut, Flame, Eye, RefreshCw } from 'lucide-react';
+import { RotateCcw, ZoomIn, ZoomOut, Flame, Eye, RefreshCw, Move3d } from 'lucide-react';
 
-const MODES: { id: DebugView; label: string }[] = [
+type View = 'lit' | 'depth' | 'materials';
+
+const MODES: { id: View; label: string }[] = [
   { id: 'lit', label: 'Lit' },
-  { id: 'normals', label: 'Normals' },
-  { id: 'height', label: 'Height' },
-  { id: 'spec', label: 'Specular' },
+  { id: 'depth', label: 'Depth' },
   { id: 'materials', label: 'Materials' },
 ];
 
+const clamp = (v: number, lo: number, hi: number) => (v < lo ? lo : v > hi ? hi : v);
+
 export function BattleMapView() {
   const room = useRef(makeDemoRoom()).current;
-  const rendererRef = useRef<BoardRenderer | null>(null);
+  const boardRef = useRef<Board3D | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const sheetRef = useRef<HTMLCanvasElement | null>(null);
+  const fitRef = useRef(1);
 
   const [tab, setTab] = useState<'room' | 'sheet'>('room');
   const [rig, setRig] = useState<LightRig>(() => JSON.parse(JSON.stringify(room.rig)));
   const [mood, setMood] = useState('noon');
-  const [angle, setAngle] = useState(0);
-  const [zoom, setZoom] = useState(1);
+  const [cam, setCam] = useState({ yaw: 32, pitch: 55, zoom: 1 });
   const [pan, setPan] = useState({ x: 0, y: 0 });
-  const [view, setView] = useState<DebugView>('lit');
+  const [view, setView] = useState<View>('lit');
   const [showPath, setShowPath] = useState(true);
-  const [torches, setTorches] = useState<{ x: number; y: number }[]>([]);
+  const [torches, setTorches] = useState(0);
   const [fit, setFit] = useState(1);
   const [fps, setFps] = useState(0);
 
   // Latest values for the animation loop, without re-creating it.
-  const live = useRef({ rig, view, showPath, angle, zoom, pan, fit, tab });
-  live.current = { rig, view, showPath, angle, zoom, pan, fit, tab };
+  const live = useRef({ rig, view, showPath, cam, pan, tab });
+  live.current = { rig, view, showPath, cam, pan, tab };
+
+  /* ---------------------------------------------------------------- paint */
+  // Stable identity: the animation loop restarts whenever this changes, and a
+  // restart resets the frame clock. Reading `fit` from a ref keeps the loop
+  // alive across the per-frame bounds changes an orbit produces.
+  const paint = useCallback(() => {
+    const b = boardRef.current;
+    const canvas = canvasRef.current;
+    const el = wrapRef.current;
+    if (!b || !canvas || !el) return;
+    const L = live.current;
+    b.yaw = L.cam.yaw;
+    b.pitch = L.cam.pitch;
+    b.render(L.rig, {
+      showPath: L.showPath,
+      selectedToken: 'pc-1',
+      time: performance.now() / 1000,
+      // The ink sweep reads the depth buffer, which is only stale while the
+      // camera is actually moving. Skipping it mid-drag buys back a fifth of
+      // the frame; the pointer-up frame puts the lines back.
+      outline: !drag.current?.moved,
+    });
+    if (L.view !== 'lit') b.debug(L.view);
+
+    // The board's buffer changes shape as the camera orbits, so the fit is a
+    // per-frame consequence of the projection rather than a one-time setup.
+    const exact = Math.min(el.clientWidth / b.width, el.clientHeight / b.height);
+    const next = exact >= 1 ? Math.floor(exact) : Math.max(0.2, exact);
+    if (Math.abs(next - fitRef.current) > 0.001) {
+      fitRef.current = next;
+      setFit(next);
+    }
+
+    b.present(canvas, next * L.cam.zoom, L.pan.x, L.pan.y);
+  }, []);
 
   /* ---------------------------------------------------------------- setup */
   useEffect(() => {
-    const r = new BoardRenderer(room);
-    rendererRef.current = r;
-
-    // Paint one frame now rather than waiting for the loop's first tick. A tab
-    // that is unfocused or throttled never runs requestAnimationFrame at all,
-    // and a blank canvas is indistinguishable from a broken renderer.
-    const paintOnce = () => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      r.render({ rig: room.rig, time: 0, showPath: true, selectedToken: 'pc-1' });
-      r.present(canvas, 1, 0, 0, 0);
-    };
-    paintOnce();
-
-    const observer = new ResizeObserver(() => {
-      const el = wrapRef.current;
-      if (!el) return;
-      const q = ((live.current.angle % 4) + 4) % 4;
-      const cw = q % 2 === 1 ? r.height : r.width;
-      const ch = q % 2 === 1 ? r.width : r.height;
-      // Integer scaling above 1 keeps the art crisp. Below 1 there is no integer
-      // left, and overflowing the viewport would make a phone unusable — so the
-      // overview zoom is fractional and lands on whole pixels only when it can.
-      const exact = Math.min(el.clientWidth / cw, el.clientHeight / ch);
-      const next = exact >= 1 ? Math.floor(exact) : Math.max(0.25, exact);
-      setFit(next);
-      // The observer can fire before the loop ever runs, so rescale here too.
-      const canvas = canvasRef.current;
-      if (canvas) r.present(canvas, next, live.current.angle, live.current.pan.x, live.current.pan.y);
-    });
+    boardRef.current = new Board3D(room);
+    paint();
+    const observer = new ResizeObserver(() => paint());
     if (wrapRef.current) observer.observe(wrapRef.current);
     return () => observer.disconnect();
-  }, [room]);
+  }, [paint, room]);
 
   /* ------------------------------------------------------------ animation */
   useEffect(() => {
@@ -87,33 +97,14 @@ export function BattleMapView() {
     let last = 0;
     let frames = 0;
     let fpsAt = 0;
-    const start = performance.now();
-
-    // Nothing here needs 60 Hz: the only thing that moves between commits is
-    // firelight. So the gate is whatever the machine can afford — 30 fps when
-    // there is headroom, 15 when there is not — rather than a fixed 24 that a
-    // slow phone would miss every frame anyway.
-    let gate = 33;
-    let cost = 16;
-
     const loop = (now: number) => {
       raf = requestAnimationFrame(loop);
       if (live.current.tab !== 'room') return;
-      if (now - last < gate) return;
+      // Firelight is the only thing that moves between commits, and 30 Hz is
+      // plenty for it.
+      if (now - last < 26) return;
       last = now;
-      const r = rendererRef.current;
-      const canvas = canvasRef.current;
-      if (!r || !canvas) return;
-      const t = (now - start) / 1000;
-      const t0 = performance.now();
-      r.render({ rig: live.current.rig, time: t, showPath: live.current.showPath, selectedToken: 'pc-1' });
-      if (live.current.view !== 'lit') r.debug(live.current.view);
-      const scale = live.current.fit * live.current.zoom;
-      r.present(canvas, scale, live.current.angle, live.current.pan.x, live.current.pan.y);
-
-      cost = cost * 0.85 + (performance.now() - t0) * 0.15;
-      gate = cost > 30 ? 66 : cost < 18 ? 26 : 33;
-
+      paint();
       frames++;
       if (now - fpsAt > 1000) {
         setFps(Math.round((frames * 1000) / (now - fpsAt)));
@@ -123,80 +114,84 @@ export function BattleMapView() {
     };
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
-  }, []);
+  }, [paint]);
 
-  /* ---------------------------------------------------------------- sheet */
+  /* ----------------------------------------------------------------- wheel */
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      setCam((c) => ({ ...c, zoom: clamp(c.zoom * (e.deltaY > 0 ? 0.9 : 1.1), 0.4, 4) }));
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, [tab]);
+
+  /* ----------------------------------------------------------------- sheet */
   useEffect(() => {
     if (tab !== 'sheet') return;
     const canvas = sheetRef.current;
     if (!canvas) return;
-    const { w, h, col } = buildSheet(room.grid.seed);
+    const { w, h, col } = buildSheet(room);
     canvas.width = w;
     canvas.height = h;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     const bytes = new Uint8ClampedArray(col.buffer, col.byteOffset, col.length * 4);
     ctx.putImageData(new ImageData(bytes, w, h), 0, 0);
-    canvas.style.width = `${Math.min(w, 1000)}px`;
-    canvas.style.height = `${(h * Math.min(w, 1000)) / w}px`;
-  }, [tab, room.grid.seed]);
+    canvas.style.width = `${Math.min(w, 1100)}px`;
+    canvas.style.height = `${(h * Math.min(w, 1100)) / w}px`;
+  }, [tab, room]);
 
   /* ------------------------------------------------------------- controls */
-  const applyMood = useCallback(
-    (id: string) => {
-      const m = MOODS.find((x) => x.id === id);
-      if (!m) return;
-      setMood(id);
-      setRig((r) => ({ ...r, ambient: m.rig.ambient, sun: { ...m.rig.sun } }));
-    },
-    [],
-  );
+  const applyMood = useCallback((id: string) => {
+    const m = MOODS.find((x) => x.id === id);
+    if (!m) return;
+    setMood(id);
+    setRig((r) => ({ ...r, ambient: m.rig.ambient, sun: { ...m.rig.sun } }));
+  }, []);
 
   const addTorch = useCallback(
     (clientX: number, clientY: number) => {
       const canvas = canvasRef.current;
-      const r = rendererRef.current;
-      if (!canvas || !r) return;
+      const b = boardRef.current;
+      if (!canvas || !b) return;
       const rect = canvas.getBoundingClientRect();
-      const q = ((angle % 4) + 4) % 4;
-      const scale = fit * zoom;
-      const cw = q % 2 === 1 ? r.height : r.width;
-      const ch = q % 2 === 1 ? r.width : r.height;
-
-      // Screen -> canvas CSS px -> transform space -> board space.
-      let vx = (clientX - rect.left - (cw * scale) / 2 + pan.x) / scale;
-      let vy = (clientY - rect.top - (ch * scale) / 2 + pan.y) / scale;
-      const th = (q * Math.PI) / 2;
-      const cos = Math.cos(-th);
-      const sin = Math.sin(-th);
-      const rx = vx * cos - vy * sin;
-      const ry = vx * sin + vy * cos;
-      const bx = rx + r.width / 2;
-      const by = ry + r.height / 2;
-      if (bx < 0 || by < 0 || bx > r.width || by > r.height) return;
-
-      const cellX = Math.floor(bx / CELL);
-      const cellY = Math.floor(by / CELL);
-      const cell = room.grid.cells[cellY * room.grid.cols + cellX];
-      if (cell !== 1) return;
-
-      const point = { x: bx, y: by };
-      setTorches((t) => [...t, point]);
-      setRig((rg) => ({
-        ...rg,
+      const scale = fitRef.current * live.current.cam.zoom;
+      const bx = (clientX - rect.left + live.current.pan.x) / scale;
+      const by = (clientY - rect.top + live.current.pan.y) / scale;
+      const [x, z] = b.worldAt(bx, by);
+      // Colliders are real now: a torch cannot be placed inside a wall or a
+      // table, because the scene knows where they are.
+      if (b.cellAt(x, z) !== 1 || b.solidAtCell(x, z)) return;
+      setTorches((n) => n + 1);
+      setRig((r) => ({
+        ...r,
         points: [
-          ...rg.points,
-          { id: `torch-${rg.points.length}`, x: point.x, y: point.y, radius: 3.6 * CELL, intensity: 1.15, flicker: 0.55 },
+          ...r.points,
+          {
+            id: `torch-${r.points.length}`,
+            x: x * CELL,
+            y: z * CELL,
+            radius: 3.6 * CELL,
+            intensity: 1.5,
+            flicker: 0.55,
+          },
         ],
       }));
     },
-    [angle, fit, zoom, pan.x, pan.y, room.grid],
+    [],
   );
 
-  /* ----------------------------------------------------------------- drag */
-  const drag = useRef<{ x: number; y: number; moved: boolean } | null>(null);
+  const drag = useRef<{ x: number; y: number; moved: boolean; mode: 'orbit' | 'pan' } | null>(null);
   const onPointerDown = (e: React.PointerEvent) => {
-    drag.current = { x: e.clientX, y: e.clientY, moved: false };
+    drag.current = {
+      x: e.clientX,
+      y: e.clientY,
+      moved: false,
+      mode: e.button === 2 || e.shiftKey ? 'pan' : 'orbit',
+    };
     (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
   };
   const onPointerMove = (e: React.PointerEvent) => {
@@ -205,9 +200,16 @@ export function BattleMapView() {
     const dx = e.clientX - d.x;
     const dy = e.clientY - d.y;
     if (Math.abs(dx) + Math.abs(dy) > 3) d.moved = true;
-    if (d.moved) {
-      drag.current = { x: e.clientX, y: e.clientY, moved: true };
+    if (!d.moved) return;
+    drag.current = { x: e.clientX, y: e.clientY, moved: true, mode: d.mode };
+    if (d.mode === 'pan') {
       setPan((p) => ({ x: p.x - dx, y: p.y - dy }));
+    } else {
+      setCam((c) => ({
+        ...c,
+        yaw: (c.yaw + dx * 0.45 + 360) % 360,
+        pitch: clamp(c.pitch - dy * 0.35, 20, 84),
+      }));
     }
   };
   const onPointerUp = (e: React.PointerEvent) => {
@@ -217,8 +219,7 @@ export function BattleMapView() {
   };
 
   const reset = () => {
-    setAngle(0);
-    setZoom(1);
+    setCam({ yaw: 32, pitch: 55, zoom: 1 });
     setPan({ x: 0, y: 0 });
   };
 
@@ -229,22 +230,14 @@ export function BattleMapView() {
           <span className="rounded bg-amber-500/15 px-2 py-0.5 text-xs font-semibold tracking-wide text-amber-300">
             BATTLEMAP
           </span>
-          <span className="text-xs text-neutral-400">the four-buffer renderer · E1 / E2 gate</span>
+          <span className="text-xs text-neutral-400">a real 3D scene · depth buffer · colliders</span>
         </div>
 
         <div className="ml-auto flex items-center gap-2">
-          <Button
-            size="sm"
-            variant={tab === 'room' ? 'secondary' : 'ghost'}
-            onClick={() => setTab('room')}
-          >
+          <Button size="sm" variant={tab === 'room' ? 'secondary' : 'ghost'} onClick={() => setTab('room')}>
             Room
           </Button>
-          <Button
-            size="sm"
-            variant={tab === 'sheet' ? 'secondary' : 'ghost'}
-            onClick={() => setTab('sheet')}
-          >
+          <Button size="sm" variant={tab === 'sheet' ? 'secondary' : 'ghost'} onClick={() => setTab('sheet')}>
             Contact sheet
           </Button>
         </div>
@@ -258,18 +251,16 @@ export function BattleMapView() {
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
+            onContextMenu={(e) => e.preventDefault()}
           >
-            <canvas
-              ref={canvasRef}
-              className="touch-none select-none"
-              style={{ imageRendering: 'pixelated' }}
-            />
+            <canvas ref={canvasRef} className="touch-none select-none" style={{ imageRendering: 'pixelated' }} />
             <div className="pointer-events-none absolute bottom-2 left-3 text-[11px] text-neutral-500">
-              drag to pan · click the floor to place a torch · {fps} fps · {fit * zoom}×
+              drag to orbit · shift-drag to pan · scroll to zoom · click the floor to place a torch · {fps} fps ·{' '}
+              {(fit * cam.zoom).toFixed(2)}×
             </div>
           </div>
 
-          <aside className="w-72 shrink-0 space-y-5 border-l border-white/10 p-4 text-sm">
+          <aside className="w-72 shrink-0 space-y-5 overflow-y-auto border-l border-white/10 p-4 text-sm">
             <section className="space-y-2">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Mood</h3>
               <div className="grid grid-cols-2 gap-2">
@@ -318,8 +309,43 @@ export function BattleMapView() {
             </section>
 
             <section className="space-y-2">
+              <h3 className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-neutral-400">
+                <Move3d className="h-3 w-3" /> Camera
+              </h3>
+              <SliderRow
+                label="Orbit"
+                value={Math.round(cam.yaw)}
+                min={0}
+                max={360}
+                step={1}
+                suffix="°"
+                onChange={(v) => setCam((c) => ({ ...c, yaw: v }))}
+              />
+              <SliderRow
+                label="Tilt"
+                value={Math.round(cam.pitch)}
+                min={20}
+                max={84}
+                step={1}
+                suffix="°"
+                onChange={(v) => setCam((c) => ({ ...c, pitch: v }))}
+              />
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" className="flex-1" onClick={() => setCam((c) => ({ ...c, zoom: Math.max(0.4, c.zoom - 0.25) }))}>
+                  <ZoomOut className="h-3 w-3" />
+                </Button>
+                <Button size="sm" variant="outline" className="flex-1" onClick={() => setCam((c) => ({ ...c, zoom: Math.min(4, c.zoom + 0.25) }))}>
+                  <ZoomIn className="h-3 w-3" />
+                </Button>
+                <Button size="sm" variant="outline" className="flex-1" title="Reset view" onClick={reset}>
+                  <RotateCcw className="h-3 w-3" />
+                </Button>
+              </div>
+            </section>
+
+            <section className="space-y-2">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-neutral-400">View</h3>
-              <Select value={view} onValueChange={(v) => setView(v as DebugView)}>
+              <Select value={view} onValueChange={(v) => setView(v as View)}>
                 <SelectTrigger className="h-8">
                   <SelectValue />
                 </SelectTrigger>
@@ -339,7 +365,7 @@ export function BattleMapView() {
                   size="sm"
                   variant="outline"
                   onClick={() => {
-                    setTorches([]);
+                    setTorches(0);
                     setRig(JSON.parse(JSON.stringify(room.rig)));
                     setMood('noon');
                   }}
@@ -350,42 +376,20 @@ export function BattleMapView() {
               </div>
             </section>
 
-            <section className="space-y-2">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Camera</h3>
-              <div className="flex gap-2">
-                <Button size="sm" variant="outline" className="flex-1" onClick={() => setZoom((z) => Math.max(1, z - 1))}>
-                  <ZoomOut className="h-3 w-3" />
-                </Button>
-                <Button size="sm" variant="outline" className="flex-1" onClick={() => setZoom((z) => Math.min(4, z + 1))}>
-                  <ZoomIn className="h-3 w-3" />
-                </Button>
-                <Button size="sm" variant="outline" className="flex-1" onClick={() => setAngle((a) => a + 3)}>
-                  <RotateCcw className="h-3 w-3" />
-                </Button>
-                <Button size="sm" variant="outline" className="flex-1" onClick={() => setAngle((a) => a + 1)}>
-                  <RotateCw className="h-3 w-3" />
-                </Button>
-              </div>
-              <Button size="sm" variant="ghost" className="w-full" onClick={reset}>
-                Reset view
-              </Button>
-            </section>
-
             <section className="space-y-1 border-t border-white/10 pt-3 text-[11px] leading-relaxed text-neutral-500">
               <p className="flex items-center gap-1">
-                <Flame className="h-3 w-3" /> {torches.length} placed torch{torches.length === 1 ? '' : 'es'}
+                <Flame className="h-3 w-3" /> {torches} placed torch{torches === 1 ? '' : 'es'}
               </p>
-              <p>Sun sweep is the E2 gate: sweep elevation to 13° and the caps should rake.</p>
+              <p>Orbit all the way round: walls are cut to a curb only when they would block the room.</p>
             </section>
           </aside>
         </div>
       ) : (
         <div className="min-h-0 flex-1 overflow-auto p-4">
           <p className="mb-3 max-w-3xl text-xs leading-relaxed text-neutral-400">
-            Top: every material's ramp, nine steps each. Below: one field built from a{' '}
-            <span className="text-neutral-200">single</span> floor tile with offset, flips and hashed decals,
-            rendered at four sun azimuths. If the field reads as a pattern rather than as a floor, E1 fails; if
-            the relief does not change across the four, E2 fails.
+            One 3D room, four suns — all four panels come from the same geometry, camera and light rig, with only the
+            azimuth and elevation changed. If a panel's relief collapses, E2 fails; if the room stops reading as one
+            place across the four, E1 fails.
           </p>
           <canvas ref={sheetRef} className="rounded border border-white/10" style={{ imageRendering: 'pixelated' }} />
         </div>

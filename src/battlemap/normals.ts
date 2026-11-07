@@ -1,4 +1,4 @@
-import { Surface } from './surface';
+import { FACE, Surface } from './surface';
 import { clamp } from './rng';
 
 /**
@@ -21,8 +21,26 @@ export function buildNormals(s: Surface, relief = 0.6): Uint32Array {
     else if (y >= h) y = h - 1;
     return height[y * w + x];
   };
+  const pack = (nx: number, ny: number, nz: number) =>
+    ((255 << 24) |
+      (((clamp(Math.round(nz * 127 + 128), 0, 255) & 255) << 16) |
+        ((clamp(Math.round(ny * 127 + 128), 0, 255) & 255) << 8) |
+        (clamp(Math.round(nx * 127 + 128), 0, 255) & 255))) >>>
+    0;
+
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
+      const i = y * w + x;
+      // An authored vertical face wins over the height-field normal: a wall is
+      // vertical, and no 3×3 height kernel can say so.
+      const f = s.face[i];
+      if (f !== FACE.NONE) {
+        const nx = f === FACE.WEST ? -1 : f === FACE.EAST ? 1 : 0;
+        const ny = f === FACE.NORTH ? -1 : f === FACE.SOUTH ? 1 : 0;
+        out[i] = pack(nx, ny, 0);
+        continue;
+      }
+
       const gx =
         H(x + 1, y - 1) + 2 * H(x + 1, y) + H(x + 1, y + 1) -
         (H(x - 1, y - 1) + 2 * H(x - 1, y) + H(x - 1, y + 1));
@@ -36,13 +54,7 @@ export function buildNormals(s: Surface, relief = 0.6): Uint32Array {
       nx *= inv;
       ny *= inv;
       nz *= inv;
-      const i = y * w + x;
-      out[i] =
-        ((255 << 24) |
-          (((clamp(Math.round(nz * 127 + 128), 0, 255) & 255) << 16) |
-            ((clamp(Math.round(ny * 127 + 128), 0, 255) & 255) << 8) |
-            (clamp(Math.round(nx * 127 + 128), 0, 255) & 255))) >>>
-        0;
+      out[i] = pack(nx, ny, nz);
     }
   }
   return out;
