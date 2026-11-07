@@ -31,7 +31,9 @@ const coals: Tex = (() => {
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       const v = hf(0x7c1d, x, y);
-      idx[y * w + x] = v > 0.86 ? 3 : v > 0.58 ? 2 : v > 0.24 ? 1 : 0;
+      // Two steps, not four: a wide ramp made the whole bed a pale disc, and
+      // from above the bed is most of what you see of a brazier.
+      idx[y * w + x] = v > 0.82 ? 2 : v > 0.4 ? 1 : 0;
     }
   }
   return { w, h, idx, mx: w - 1, my: h - 1 };
@@ -96,6 +98,51 @@ function emberBox(out: Tri[], cx: number, cz: number, y0: number, y1: number, r:
   }
 }
 
+/**
+ * The fire's composition, authored rather than hashed.
+ *
+ * Five random cones have no silhouette: every brazier gets its own blob, and
+ * from above they all collapse into the same disc. These are the licks a bowl
+ * of coals actually has — a white-hot core, a main lick, two side licks, a
+ * back lick, and three short crowns that curl over the rim. The seed only
+ * jitters the composition and spins it per brazier, so the fire keeps a front
+ * and a lean from every camera angle. The crowns are what make a top-down view
+ * read as fire: they project *outward past the bowl* instead of stacking under
+ * the core.
+ */
+type Tongue = {
+  /** Base offset from the fire's centre, in cells. */
+  ox: number;
+  oz: number;
+  height: number;
+  radius: number;
+  /** Tip offset from the base: the lick's lean. */
+  lx: number;
+  lz: number;
+  low: number;
+  mid: number;
+  tip: number;
+  sides: number;
+};
+
+const TONGUES: Tongue[] = [
+  // The core: tallest, whitest, and almost upright.
+  { ox: 0.0, oz: 0.0, height: 0.86, radius: 0.07, lx: 0.02, lz: 0.01, low: 11.6, mid: 10.4, tip: 8.6, sides: 5 },
+  { ox: 0.06, oz: 0.02, height: 0.78, radius: 0.088, lx: 0.11, lz: 0.03, low: 9.8, mid: 8.4, tip: 6.0, sides: 5 },
+  { ox: -0.1, oz: 0.05, height: 0.62, radius: 0.07, lx: -0.13, lz: 0.05, low: 9.4, mid: 8.0, tip: 5.6, sides: 5 },
+  { ox: 0.08, oz: -0.07, height: 0.54, radius: 0.062, lx: 0.12, lz: -0.08, low: 9.5, mid: 8.0, tip: 5.6, sides: 5 },
+  { ox: -0.05, oz: -0.09, height: 0.46, radius: 0.058, lx: -0.06, lz: -0.13, low: 9.1, mid: 7.8, tip: 5.4, sides: 5 },
+  // Crowns: short, wide, thrown out over the rim. Read from above.
+  { ox: 0.17, oz: 0.04, height: 0.3, radius: 0.065, lx: 0.18, lz: 0.03, low: 9.9, mid: 8.6, tip: 6.6, sides: 4 },
+  { ox: -0.16, oz: 0.08, height: 0.27, radius: 0.06, lx: -0.18, lz: 0.07, low: 9.7, mid: 8.4, tip: 6.4, sides: 4 },
+  { ox: 0.02, oz: -0.17, height: 0.25, radius: 0.058, lx: 0.02, lz: -0.19, low: 9.5, mid: 8.2, tip: 6.2, sides: 4 },
+  // The skirt: low licks lying across the coals. From above these are the fire
+  // — a ragged orange edge outside the core, instead of a glowing disc.
+  { ox: 0.2, oz: 0.02, height: 0.12, radius: 0.055, lx: 0.1, lz: 0.01, low: 8.9, mid: 7.9, tip: 5.8, sides: 4 },
+  { ox: -0.11, oz: 0.17, height: 0.11, radius: 0.05, lx: -0.06, lz: 0.09, low: 8.7, mid: 7.7, tip: 5.6, sides: 4 },
+  { ox: -0.16, oz: -0.1, height: 0.13, radius: 0.052, lx: -0.08, lz: -0.05, low: 9.0, mid: 8.0, tip: 5.9, sides: 4 },
+];
+
 /** A ring of points around a flame tongue, tapering as it rises. */
 const ring = (cx: number, cz: number, r: number, sides: number, phase: number): [number, number][] => {
   const pts: [number, number][] = [];
@@ -139,9 +186,9 @@ function buildFire(out: Tri[], F: SceneFire, time: number, seed: number) {
       a[1] * 32,
       b[0] * 32,
       b[1] * 32,
-      8.1 + hf(s, i, 9) * 0.7,
-      8.1 + hf(s, i, 9) * 0.7,
-      8.1 + hf(s, i, 9) * 0.7,
+      6.3 + hf(s, i, 9) * 0.5,
+      6.3 + hf(s, i, 9) * 0.5,
+      6.3 + hf(s, i, 9) * 0.5,
     );
   }
 
@@ -153,29 +200,34 @@ function buildFire(out: Tri[], F: SceneFire, time: number, seed: number) {
     const cz = F.z + Math.sin(a) * d;
     const r = 0.035 + hf(s, k, 4) * 0.03;
     const top = base + 0.012 + hf(s, k, 5) * 0.02;
-    emberBox(out, cx, cz, base, top, r, 9.4 + hf(s, k, 6) * 1.2);
+    emberBox(out, cx, cz, base, top, r, 8.6 + hf(s, k, 6) * 1.2);
   }
 
   /* ----------------------------------------------------------- tongues */
-  // Five tongues, not one cone: a flame is a cluster of licks that lean
-  // independently, and the gaps between them are where the coal bed shows
-  // through. Sized to a brazier, not to the sprite it replaced: 0.4–0.8 cells
-  // tall and about a third of a cell across at the bed.
-  for (let n = 0; n < 5; n++) {
-    const phase = hf(s, n, 11) * TAU;
-    const breathe = 0.85 + 0.3 * (0.5 + 0.5 * Math.sin(time * 2.7 + phase * 2.3));
-    const h = (0.52 + hf(s, n, 12) * 0.4) * breathe;
-    const ang = hf(s, n, 13) * TAU + time * 0.32;
-    const off = n === 0 ? 0.012 : 0.055 + hf(s, n, 14) * 0.085;
-    const bx = F.x + Math.cos(ang) * off;
-    const bz = F.z + Math.sin(ang) * off;
-    const lean = 0.07 + hf(s, n, 15) * 0.06;
-    const sway = Math.sin(time * 2.1 + phase) * 0.016;
-    const lx = Math.cos(ang + 1.3) * lean + sway;
-    const lz = Math.sin(ang + 1.3) * lean + sway * 0.7;
-    const r0 = 0.062 + hf(s, n, 16) * 0.045;
+  // One composition, spun per brazier and jittered by the seed — not five
+  // random cones. The flame has a front, a lean and a ragged edge, and the
+  // crown licks sit outside the core so a top-down camera sees fire around the
+  // coal bed instead of a glowing disc.
+  const spin = hf(s, 3, 1) * TAU;
+  const cs = Math.cos(spin);
+  const sn = Math.sin(spin);
+  const rot = (x: number, z: number): [number, number] => [x * cs - z * sn, x * sn + z * cs];
 
-    const sidesN = 5;
+  for (let n = 0; n < TONGUES.length; n++) {
+    const T = TONGUES[n];
+    const phase = hf(s, n, 11) * TAU;
+    const breathe = 0.9 + 0.22 * (0.5 + 0.5 * Math.sin(time * 2.5 + phase * 2.1));
+    const h = T.height * breathe;
+    const [ox, oz] = rot(T.ox, T.oz);
+    const [leanX, leanZ] = rot(T.lx, T.lz);
+    const sway = Math.sin(time * 2.0 + phase) * 0.018;
+    const lx = leanX + sway;
+    const lz = leanZ + sway * 0.7;
+    const bx = F.x + ox;
+    const bz = F.z + oz;
+    const r0 = T.radius * (0.9 + 0.2 * hf(s, n, 16));
+
+    const sidesN = T.sides;
     const ph = hf(s, n, 17) * TAU;
     const lower = ring(bx, bz, r0, sidesN, ph);
     const midY = base + h * 0.56;
@@ -184,13 +236,11 @@ function buildFire(out: Tri[], F: SceneFire, time: number, seed: number) {
     const tip = ring(bx + lx, bz + lz, 0.005, sidesN, ph);
 
     const flick = 0.35 * Math.sin(time * 6.1 + phase * 3.1) + 0.2 * Math.sin(time * 9.7 + phase);
-    // One tongue is the white-hot core; the rest are the orange body of the
-    // flame. Without that split the whole fire reads as a pale lamp.
-    const core = n === 0;
-    const heat = 0.9 + hf(s, n, 18) * 1.1;
-    const lLow = core ? 11.4 + flick * 0.6 : 8.4 + heat * 0.5 + flick;
-    const lMid = core ? 10.2 + flick * 0.5 : 7.4 + heat * 0.25 + flick * 0.6;
-    const lTip = core ? 8.6 + flick * 0.5 : 5.2 + flick * 0.6;
+    // The profile's own temperatures: the core goes white, the crowns stay
+    // orange at their tips. Flicker is a nudge on top, not the palette.
+    const lLow = T.low + flick * 0.45;
+    const lMid = T.mid + flick * 0.35;
+    const lTip = T.tip + flick * 0.5;
 
     const band = (A: [number, number][], B: [number, number][], ay: number, by: number, la: number, lb: number) => {
       for (let i = 0; i < sidesN; i++) {
@@ -205,6 +255,13 @@ function buildFire(out: Tri[], F: SceneFire, time: number, seed: number) {
         const b1: Vec3 = [B[i2][0], by, B[i2][1]];
         push(out, a0, a1, b1, nrm, flat, 0, 0, 0, 0, 0, 0, la, la, lb);
         push(out, a0, b1, b0, nrm, flat, 0, 0, 0, 0, 0, 0, la, lb, lb);
+        // Double-sided. A flame is an open tube, and from a high camera you
+        // look down it: culled back faces would punch a hole straight through
+        // the fire to the coals. The inner wall is the same emission, so the
+        // volume reads as solid from every angle.
+        const back: Vec3 = [-nrm[0], -nrm[1], -nrm[2]];
+        push(out, b1, a1, a0, back, flat, 0, 0, 0, 0, 0, 0, lb, la, la);
+        push(out, b0, b1, a0, back, flat, 0, 0, 0, 0, 0, 0, lb, lb, la);
       }
     };
     band(lower, mid, base, midY, lLow, lMid);

@@ -834,13 +834,19 @@ is above any legitimate surface gradient in this scene and below a real wall edg
 **R7. Fire is geometry, not a sprite** (`src/battlemap/gl/flame.ts`). A painted
 flame has a position but no body: from a low camera it thins to a line, and from
 a high one it lies on the floor it is meant to burn above. Each brazier instead
-gets a coal bed, three coals and five tapered tongues, plus four rising embers —
-triangles like every other prop, built for the current instant so they can
-flicker, and depth-tested like anything else. Their vertices are **emissive**:
-a flame does not take the sun, so it stays lit at midnight and does not take a
-bright step at noon. The ink sweep runs before them on purpose — it reads depth
-only, and would otherwise ink the seam between two overlapping tongues, which on
-a two-pixel tongue is the whole tongue. ~0.5 ms for three braziers.
+gets a coal bed, three coals and a **composed** set of licks — core, main, two
+sides, a back, three crowns and a low skirt — plus four rising embers. The
+profile is authored, not hashed; the seed only jitters it and spins it per
+brazier, so a fire has a silhouette instead of five random cones. The crowns and
+skirt project past the bowl, which is what makes a top-down camera see fire
+instead of a glowing disc. Every tongue is double-sided, because an open tube
+seen from a high camera is a hole through the fire to the coals. Triangles like
+every other prop, built for the current instant so they can flicker, and
+depth-tested like anything else. Their vertices are **emissive**: a flame does
+not take the sun, so it stays lit at midnight and does not take a bright step at
+noon. The ink sweep runs before them on purpose — it reads depth only, and would
+otherwise ink the seam between two overlapping tongues, which on a two-pixel
+tongue is the whole tongue. ~0.9 ms for three braziers.
 
 **R8. A contact shadow is a floor decal, not a screen sticker.** A sprite ellipse
 is a circle pasted on the picture; at 84° it lies on a floor that has become a
