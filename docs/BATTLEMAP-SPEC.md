@@ -812,18 +812,21 @@ projected along the sun onto the floor at quarter resolution; that binary mask i
 then blurred into a 0–255 penumbra and subtracted per pixel. A binary mask has a
 four-pixel staircase for an edge, which reads as a hole at 1:1; the blur gives the
 dither somewhere to feather. Shadow subtraction is 3.2 steps, so the darkest
-floor is still stone.
+floor is still stone. A caster carries the plane its shadow lands on (`castTo`),
+so a ledge throws onto the storey below it instead of onto its own top — a floor
+quad does not cast, or every tile would shadow itself.
 
-**R5. Firelight is a screen-space pass, not vertex light.** A point light is
-smaller than a cell, so corner-interpolated light averages the pool away. After
-the solids, each brazier's floor footprint is walked in screen space, the inverse
-projection recovers the world point, and the depth buffer proves the pixel is
-floor (not a rug, a crate or a path dot). Coverage is solid at the bowl and
-dithered only at the rim, and the ramp step is derived from the flagstone's own
-luminance, so seams and mottling survive the tint instead of being replaced by a
-flat wash. The visible pool is 0.72× the light's own reach: past about two cells
-the amber dither stops reading as light and starts reading as a different floor.
-~0.6 ms for three braziers.
+**R5. Firelight is a globe, not a pool on the floor plane.** A point light is
+smaller than a cell, so corner-interpolated light averages it away; after the
+solids, each lamp walks its own screen disc, recovers the world point of a pixel
+from *that pixel's* depth, and shades it by the real 3D distance. A flagstone
+keeps the oak tint it has always had, because firelight on stone is amber and the
+dithered rim is what makes it read as light instead of as a hole; every other
+surface is lifted inside its **own** ramp (the raster keeps material and step per
+pixel), so a wall warms without turning into wood. That is what lets a brazier
+light the wall it stands against, and a wall torch light the stone under it. A
+lamp with no flicker still contributes this rim lift, but paints no amber pool —
+that one is a shaft, not a fire. ~0.7 ms for three braziers.
 
 **R6. Ink is a depth cliff, with a threshold that knows the difference between a
 cliff and a slope.** The silhouette pass inks a pixel when its neighbour is more
@@ -855,12 +858,41 @@ pool is, so the camera foreshortens it like the flagstones, and a crate standing
 on it keeps its own pixels. Flagstones only: a rug is cloth under the feet, and a
 stone shadow on cloth turns the weave into a hole.
 
-**Still being perfected.** The wall coping texture reads busier at 1:1 than the
-flagstones. Tokens remain flat billboards by design (R1a): the character
-creator's spec is the source for their four facings. Character faces are the
-other open item — see PIXEL-ART-SPEC §3.
+**R9. A room is a stack of storeys, and a storey is a volume.** `Room.tiers` is a
+list of `{ y, rects, deck }`. Every cell a tier covers gets a walking surface at
+`y`, a collider whose top is `y`, and a cliff face wherever the cell beside it is
+lower — and the face starts at the highest thing already under it, so a ledge
+closes onto the floor or onto the storey below and nothing is a floating slab.
+Tiers are built low to high, which is why a gallery over the pit and a mesa on a
+shelf are the same code path. Stairs are a run of colliders, one per step, so
+`surfaceAt` climbs them without knowing what a stair is; a prop is built from its
+own deck up and lifted as one unit — vertices, collider, flame and lamp together.
 
-**Budget.** ~3.4k triangles, 1082×880 at 32 px/cell, 30 fps target. Section costs
-are recorded in `renderStats` and dumped by `scripts/dump-3d.ts`, which writes a
-1:1 PNG and a steady-state frame time so tuning does not rely on a browser
-screenshot.
+Two bugs are worth recording, because both looked like renderer faults. A
+prop's triangles share their corner arrays, so lifting a vertex per triangle
+lifted it two or three times and a chest on a ledge became a fan; the lift now
+walks a set of unique vertices. And rock must be cut as a **half-plane**: a
+per-cell test of "which side of the chamber is this wall on" leaves single-cell
+fins standing along the cut wherever two neighbours disagree.
+
+**R10. A cavern is a chamber carved out of a mass.** `src/battlemap/cave.ts` is
+four storeys — pit, shelf, gallery, high ledge — inside a block of rock that runs
+to the grid edge, so the block's silhouette is straight. Everything on the
+camera's side of the room is removed rather than lowered to a curb: a cave is
+sliced open for the table, and what is left behind the cut is the chamber wall's
+inner face. A one-cell shell reads as a ring of fins, so the mass is solid.
+
+**Still being perfected.** The wall coping texture reads busier at 1:1 than the
+flagstones. The cavern is a first pass: the model is right and the ledges are
+real, but they are still rectangles and every wall cell draws its own face, so
+the result reads as terraced rock rather than as a cave. Tokens remain flat
+billboards by design (R1a): the character creator's spec is the source for their
+four facings. Character faces are the other open item — see PIXEL-ART-SPEC §3.
+
+**Budget.** 3.5k triangles for the tavern, 1082×880 at 32 px/cell, 41.6 ms a
+frame; 5.7k triangles for the cavern, 1611×1433, 62–80 ms. Section costs are
+recorded in `renderStats` and dumped by `scripts/dump-3d.ts`, which writes a 1:1
+PNG and a steady-state frame time so tuning does not rely on a browser
+screenshot. The next scaling step is not more geometry: it is rendering at a
+lower pixel scale and upscaling inside the palette, which costs a fraction of a
+frame and loses none of the art.

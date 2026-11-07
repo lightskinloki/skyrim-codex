@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Board3D, buildSheet } from '@/battlemap/gl/render';
-import { MOODS, makeDemoRoom } from '@/battlemap/room';
+import { MOODS, makeDemoRoom, type Room } from '@/battlemap/room';
+import { makeCaveRoom } from '@/battlemap/cave';
 import { LightRig } from '@/battlemap/light';
 import { CELL } from '@/battlemap/paint';
 import { Button } from '@/components/ui/button';
@@ -24,8 +25,17 @@ const MODES: { id: View; label: string }[] = [
 
 const clamp = (v: number, lo: number, hi: number) => (v < lo ? lo : v > hi ? hi : v);
 
+const ROOMS: { id: string; label: string; make: () => Room }[] = [
+  { id: 'tavern', label: 'Tavern', make: makeDemoRoom },
+  { id: 'cavern', label: 'Cavern', make: makeCaveRoom },
+];
+
 export function BattleMapView() {
-  const room = useRef(makeDemoRoom()).current;
+  const rooms = useRef<Record<string, Room>>(
+    Object.fromEntries(ROOMS.map((r) => [r.id, r.make()])),
+  ).current;
+  const [roomId, setRoomId] = useState(ROOMS[0].id);
+  const room = rooms[roomId];
   const boardRef = useRef<Board3D | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
@@ -34,7 +44,7 @@ export function BattleMapView() {
 
   const [tab, setTab] = useState<'room' | 'sheet'>('room');
   const [rig, setRig] = useState<LightRig>(() => JSON.parse(JSON.stringify(room.rig)));
-  const [mood, setMood] = useState('noon');
+  const [mood, setMood] = useState<string | null>('noon');
   const [cam, setCam] = useState({ yaw: 32, pitch: 55, zoom: 1 });
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [view, setView] = useState<View>('lit');
@@ -83,6 +93,14 @@ export function BattleMapView() {
   }, []);
 
   /* ---------------------------------------------------------------- setup */
+  // A new room brings its own rig, its own scale and its own places to stand.
+  useEffect(() => {
+    setRig(JSON.parse(JSON.stringify(room.rig)));
+    setMood(null);
+    setTorches(0);
+    setPan({ x: 0, y: 0 });
+  }, [room]);
+
   useEffect(() => {
     boardRef.current = new Board3D(room);
     paint();
@@ -230,10 +248,22 @@ export function BattleMapView() {
           <span className="rounded bg-amber-500/15 px-2 py-0.5 text-xs font-semibold tracking-wide text-amber-300">
             BATTLEMAP
           </span>
-          <span className="text-xs text-neutral-400">a real 3D scene · depth buffer · colliders</span>
+          <span className="text-xs text-neutral-400">a real 3D scene · depth buffer · colliders · storeys</span>
         </div>
 
         <div className="ml-auto flex items-center gap-2">
+          <div className="flex items-center gap-1 rounded-md border border-white/10 p-0.5">
+            {ROOMS.map((r) => (
+              <Button
+                key={r.id}
+                size="sm"
+                variant={roomId === r.id ? 'secondary' : 'ghost'}
+                onClick={() => setRoomId(r.id)}
+              >
+                {r.label}
+              </Button>
+            ))}
+          </div>
           <Button size="sm" variant={tab === 'room' ? 'secondary' : 'ghost'} onClick={() => setTab('room')}>
             Room
           </Button>
@@ -380,7 +410,10 @@ export function BattleMapView() {
               <p className="flex items-center gap-1">
                 <Flame className="h-3 w-3" /> {torches} placed torch{torches === 1 ? '' : 'es'}
               </p>
-              <p>Orbit all the way round: walls are cut to a curb only when they would block the room.</p>
+              <p>
+                Orbit all the way round: a near wall is cut to a curb, and a cavern's near rock is cut away
+                entirely, so the room stays legible from any angle.
+              </p>
             </section>
           </aside>
         </div>

@@ -40,17 +40,29 @@ import { toCameraRect } from './camera';
  * an eighth of a cell (4 px) and every projection lands on whole pixels.
  */
 
-export type PropRule =
-  | { rule: 'table'; at: [number, number]; w?: number }
-  | { rule: 'bench'; at: [number, number]; w?: number }
-  | { rule: 'chest'; at: [number, number]; w?: number; bands?: number }
-  | { rule: 'crate'; at: [number, number] }
-  | { rule: 'barrel'; at: [number, number] }
-  | { rule: 'shelf'; at: [number, number]; w?: number }
-  | { rule: 'rubble'; at: [number, number]; size?: number }
-  | { rule: 'brazier'; at: [number, number]; lit?: boolean }
-  | { rule: 'rug'; at: [number, number]; w?: number; h?: number; navy?: boolean }
-  | { rule: 'column'; at: [number, number] };
+/**
+ * `at` is the north-west corner of the footprint. `y` is the height of the
+ * surface the prop stands on and defaults to whatever deck is under it, so a
+ * crate on a gallery sits on the gallery without being told.
+ */
+type PropBase = { at: [number, number]; y?: number };
+
+export type PropRule = PropBase &
+  (
+    | { rule: 'table'; w?: number }
+    | { rule: 'bench'; w?: number }
+    | { rule: 'chest'; w?: number; bands?: number }
+    | { rule: 'crate' }
+    | { rule: 'barrel' }
+    | { rule: 'shelf'; w?: number }
+    | { rule: 'rubble'; size?: number }
+    | { rule: 'brazier'; lit?: boolean }
+    | { rule: 'rug'; w?: number; h?: number; navy?: boolean }
+    | { rule: 'column'; h?: number }
+    /** Rises from its own deck to `rise` above it. Steps are real, and each one
+     *  is a surface a token can stand on. */
+    | { rule: 'stairs'; w?: number; rise: number; run?: number; along?: 'x' | 'z'; dir?: -1 | 1 }
+  );
 
 /* ------------------------------------------------------------------ steps */
 // Authored a few steps below the lit value: the sun adds ~3.7 steps at noon, so
@@ -439,6 +451,19 @@ const artOf = (p: PropRule, seed: number): Art => {
         top: columnTop(CELL, CELL),
         side: columnSide,
         spec: 10,
+      };
+    // The flat board has no height, so it flattens a stair into a raised block.
+    // The 3D scene builds the real steps (gl/scene.ts); this is only what the
+    // legacy contact sheets need to stay type-correct.
+    case 'stairs':
+      return {
+        cellsX: p.w ?? 1.5,
+        cellsY: p.run ?? 2,
+        height: Math.round(p.rise * CELL * 0.7),
+        mat: M_STONE_PROP,
+        top: rubbleTop(3, id),
+        side: rubbleSide,
+        spec: 6,
       };
     case 'rubble': {
       const size = p.size ?? 2;

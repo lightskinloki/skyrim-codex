@@ -126,6 +126,90 @@ export function wallFaceTexture(seed: number): Tex {
   return t;
 }
 
+/**
+ * Cavern wall: strata, not courses. The same 64 px wrap as the masonry, but the
+ * horizontal lines are broken by a slow sine and the joints wander, so a cave
+ * wall reads as rock rather than as a brick wall that has been stretched.
+ *
+ * It tiles because the sine's period is the tile width and the strata period
+ * divides the tile height.
+ */
+export function rockFaceTexture(seed: number): Tex {
+  const w = 64;
+  const h = 64;
+  const t = field(w, h, 5);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const off = Math.round(Math.sin((x / w) * Math.PI * 2) * 2.4 + Math.sin((x / w) * Math.PI * 4 + 1.1) * 1.2);
+      const yy = (((y + off) % h) + h) % h;
+      const band = Math.floor(yy / 8);
+      const inBand = yy % 8;
+      let s = 4 + (band % 3);
+      if (inBand === 0) s = 3;
+      else if (inBand === 1) s = Math.min(9, s + 1);
+      else if (inBand === 7) s = Math.max(1, s - 1);
+      const n = hf(seed ^ 0x2f7d, x, y);
+      if (n > 0.9) s += 1;
+      else if (n < 0.09) s -= 1;
+      // A fault: a wandering crack, one texel wide, that crosses the strata.
+      const fault = Math.round(Math.sin((y / h) * Math.PI * 6 + 0.7) * 5 + 11);
+      if ((x + 32 + fault) % 37 === 0 && n > 0.35) s = 1;
+      t.idx[y * w + x] = clamp(s, 0, 11);
+    }
+  }
+  return t;
+}
+
+/**
+ * A ledge top. No joints: a shelf is one piece of rock, and a tile seam every
+ * cell would make a cave ledge look like a pavement. The strata run across it
+ * in one-cell bands, and the flecks are sparse, so the surface reads as stone
+ * without ever reading as masonry.
+ */
+export function ledgeTexture(seed: number): Tex {
+  const w = 32;
+  const h = 32;
+  const t = field(w, h, 4);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      // Blotches first, then a speckle. Stripes here read as planks, which is
+      // exactly the wrong answer for a stone shelf.
+      let s = 4;
+      const blob = hf(seed ^ 0x6c21, x >> 2, y >> 2);
+      if (blob > 0.76) s = 5;
+      else if (blob < 0.24) s = 3;
+      const n = hf(seed ^ 0x2b93, x, y);
+      if (n > 0.96) s += 1;
+      else if (n < 0.04) s -= 1;
+      // A few cracks, aligned to the same lattice so two cells continue one.
+      if (hf(seed ^ 0x77c5, x >> 4, y) > 0.985 && n > 0.3) s -= 1;
+      t.idx[y * w + x] = clamp(s, 1, 9);
+    }
+  }
+  return t;
+}
+
+/** The top of a cavern wall: the rock mass above the chamber, seen from above.
+ *  Dark and broken, because a lit coping slab around a cave turns the roof into
+ *  a bright picture frame and the pit into a stage. */
+export function rockTopTexture(seed: number): Tex {
+  const w = 64;
+  const h = 64;
+  const t = field(w, h, 2);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      let s = 2;
+      const n = hf(seed ^ 0x8e11, x, y);
+      if (n > 0.82) s = 3;
+      else if (n < 0.15) s = 1;
+      if (hf(seed ^ 0x5d77, x >> 2, y >> 2) > 0.93) s = 1;
+      if (hf(seed ^ 0x1c4b, x, y) > 0.992) s = 4;
+      t.idx[y * w + x] = clamp(s, 0, 8);
+    }
+  }
+  return t;
+}
+
 /** The cap, seen from above: big coping slabs, because a 4 px course on a
  *  32 px cell is a stipple, not masonry. Two slabs to the cell, running bond. */
 export function wallTopTexture(seed: number): Tex {

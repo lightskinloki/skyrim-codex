@@ -11,6 +11,28 @@ export type TokenPlacement = {
   spec: CharacterSpec;
   at: [number, number];
   facing: Facing;
+  /** Height of the surface the token stands on, in cells. Defaults to the deck
+   *  under it; set it to author a token on a ledge. */
+  y?: number;
+};
+
+export type Deck = 'stone' | 'wood';
+
+/**
+ * A storey. Every cell a tier covers gets a walking surface at `y` and a solid
+ * mass under it down to the next surface below — so a ledge is a real volume,
+ * not a decal, and you can stand on it, walk under a higher one, and see its
+ * cliff from the pit. Two tiers over the same cell are a gallery above a floor.
+ *
+ * A room is a stack of these: the grid is the ground storey, and a cave with
+ * four ledges is the same room with three more tiers in it.
+ */
+export type Tier = {
+  /** Walking surface, in cells. */
+  y: number;
+  /** Covered cells, as [x, z, w, h] rectangles in cell space. */
+  rects: [number, number, number, number][];
+  deck?: Deck;
 };
 
 export type Room = {
@@ -20,6 +42,10 @@ export type Room = {
   /** The demo path: a dotted chain, the way a move is drawn (PRESENTATION X8). */
   path: [number, number][];
   rig: LightRig;
+  /** Upper storeys. The ground is always `grid` at y = 0. */
+  tiers?: Tier[];
+  /** Perimeter wall height, in cells. Tall rooms need tall walls. */
+  wallHeight?: number;
 };
 
 const makeGrid = (cols: number, rows: number, seed: number): RoomGrid => ({

@@ -4,7 +4,7 @@ import { BAYER4, clamp, fbm1, mottle } from '../rng';
 import { LightRig, exposureOf, sunAbove, sunVector } from '../light';
 import { BODY_H, BODY_W, renderBody } from '@/characters/body';
 import type { Facing } from '../room';
-import { Scene, Tri, Vec3, WALL_H, ambientAt, buildScene, solidAt } from './scene';
+import { Scene, Tri, Vec3, ambientAt, buildScene, solidAt, surfaceAt } from './scene';
 import { Sprite } from './texture';
 import { flameTris } from './flame';
 
@@ -38,6 +38,9 @@ export type Frame = {
   col: Uint32Array;
   depth: Float32Array;
   mat: Uint8Array;
+  /** Ramp step of the winning pixel, so a lamp can lift a surface inside its
+   *  own ramp instead of guessing from the colour. */
+  step: Uint8Array;
   /** Sun shadow at quarter resolution: a 4 x 4 px block, not a pixel. */
   shadow: Uint8Array;
   /** The same mask blurred into a 0..255 penumbra, read per floor pixel. */
@@ -121,6 +124,7 @@ const makeFrame = (w: number, h: number, pix: number): Frame => {
     col: new Uint32Array(w * h),
     depth: new Float32Array(w * h),
     mat: new Uint8Array(w * h),
+    step: new Uint8Array(w * h),
     shadow: new Uint8Array(sw * sh),
     soft: new Uint8Array(sw * sh),
     sw,
@@ -138,7 +142,7 @@ function boundsOf(scene: Scene, b: Basis, pix: number) {
   let minY = Infinity;
   let maxY = -Infinity;
   for (const x of [0, scene.cols]) {
-    for (const y of [0, WALL_H]) {
+    for (const y of [0, scene.yMax]) {
       for (const z of [0, scene.rows]) {
         const sx = projectX(b, x, z) * pix;
         const sy = projectY(b, x, y, z) * pix;
@@ -194,8 +198,8 @@ export function renderFrame(
   let tMark = performance.now();
   frame.col.fill(VOID);
   frame.depth.fill(1e9);
-  const writeMat = opts.materials === true;
-  if (writeMat) frame.mat.fill(0);
+  frame.mat.fill(0);
+  frame.step.fill(0);
   frame.shadow.fill(0);
   renderStats.clear = performance.now() - tMark;
   tMark = performance.now();
@@ -225,7 +229,14 @@ export function renderFrame(
   });
 
   /** Sun on the face plus every lamp, in ramp steps. */
-  const lightAt = (px: number, py: number, pz: number, n: Vec3, sunTerm: number): number => {
+  const lightAt = (
+    px: number,
+    py: number,
+    pz: number,
+    n: Vec3,
+    sunTerm: number,
+    wash: boolean,
+  ): number => {
     let f = sunTerm;
     let lamps = 0;
     for (let k = 0; k < lights.length; k++) {
@@ -244,11 +255,12 @@ export function renderFrame(
     // A brazier is a small flame, not a floodlight: uncapped it walks the
     // stone ramp to its cream top and the pool reads as a hole in the floor.
     f += Math.min(lamps, 3.4);
-    if (py < 0.05) {
+    if (wash) {
       // The wash and contact darkening are pre-summed on the floor lattice:
       // four hashes per vertex is real money across nine hundred floor quads.
+      // Every walking surface takes them, at zero and at six cells alike.
       f += ambientAt(scene, px, pz);
-    } else if (n[1] > 0.9) {
+    } else if (n[1] > 0.9 && py < 0.05) {
       f += (mottle(px * 0.9, pz * 0.9, scene.seed + 13) - 0.5) * 0.45;
     }
     return f;
@@ -258,6 +270,7 @@ export function renderFrame(
   const col = frame.col;
   const depth = frame.depth;
   const matBuf = frame.mat;
+  const stepBuf = frame.step;
   const offX = frame.offX;
   const offY = frame.offY;
 
@@ -336,7 +349,6 @@ export function renderFrame(
           const i = py * w + px;
           if (d < depth[i]) {
             depth[i] = d;
-            if (writeMat) matBuf[i] = mat;
             const tx = (u | 0) & mx;
             const ty = (v | 0) & my;
             let lit = l;
@@ -346,6 +358,8 @@ export function renderFrame(
             let ii = ti[ty * tw + tx] + fl + (lit - fl > BAYER4[row | (px & 3)] ? 1 : 0);
             if (ii < 0) ii = 0;
             else if (ii > top) ii = top;
+            matBuf[i] = mat;
+            stepBuf[i] = ii;
             col[i] = COLOUR_OF[base + ii];
           }
         }
@@ -373,16 +387,19 @@ export function renderFrame(
     for (let t = 0; t < tris.length; t++) {
       const T = tris[t];
       if (!T.cast) continue;
-      const t0 = T.p0[1] / sunW.y;
-      const t1 = T.p1[1] / sunW.y;
-      const t2 = T.p2[1] / sunW.y;
+      // A shadow lands on the plane its caster stands on, not always on the
+      // pit: a ledge face throws onto the storey below it.
+      const gy = T.castTo ?? 0;
+      const t0 = (T.p0[1] - gy) / sunW.y;
+      const t1 = (T.p1[1] - gy) / sunW.y;
+      const t2 = (T.p2[1] - gy) / sunW.y;
       if (t0 > 40 || t1 > 40 || t2 > 40) continue;
       const ax = (projectX(b, T.p0[0] - sunW.x * t0, T.p0[2] - sunW.z * t0) * pix + offX) * 0.25;
-      const ay = (projectY(b, T.p0[0] - sunW.x * t0, 0, T.p0[2] - sunW.z * t0) * pix + offY) * 0.25;
+      const ay = (projectY(b, T.p0[0] - sunW.x * t0, gy, T.p0[2] - sunW.z * t0) * pix + offY) * 0.25;
       const bx = (projectX(b, T.p1[0] - sunW.x * t1, T.p1[2] - sunW.z * t1) * pix + offX) * 0.25;
-      const by = (projectY(b, T.p1[0] - sunW.x * t1, 0, T.p1[2] - sunW.z * t1) * pix + offY) * 0.25;
+      const by = (projectY(b, T.p1[0] - sunW.x * t1, gy, T.p1[2] - sunW.z * t1) * pix + offY) * 0.25;
       const qx = (projectX(b, T.p2[0] - sunW.x * t2, T.p2[2] - sunW.z * t2) * pix + offX) * 0.25;
-      const qy = (projectY(b, T.p2[0] - sunW.x * t2, 0, T.p2[2] - sunW.z * t2) * pix + offY) * 0.25;
+      const qy = (projectY(b, T.p2[0] - sunW.x * t2, gy, T.p2[2] - sunW.z * t2) * pix + offY) * 0.25;
       const area = (bx - ax) * (qy - ay) - (qx - ax) * (by - ay);
       if (Math.abs(area) < 0.0001) continue;
       const inv = 1 / area;
@@ -456,9 +473,10 @@ export function renderFrame(
         (vertical ? VERTICAL_LIFT : 0) +
         (ndl - flat) * sunI * (vertical ? RELIEF_VERT : RELIEF) -
         (T.cap ? CAP_DROP : 0);
-      l0 = lightAt(T.p0[0], T.p0[1], T.p0[2], n, sunTerm);
-      l1 = lightAt(T.p1[0], T.p1[1], T.p1[2], n, sunTerm);
-      l2 = lightAt(T.p2[0], T.p2[1], T.p2[2], n, sunTerm);
+      const wash = T.wash === true;
+      l0 = lightAt(T.p0[0], T.p0[1], T.p0[2], n, sunTerm, wash);
+      l1 = lightAt(T.p1[0], T.p1[1], T.p1[2], n, sunTerm, wash);
+      l2 = lightAt(T.p2[0], T.p2[1], T.p2[2], n, sunTerm, wash);
     }
 
     const p0 = T.p0;
@@ -553,62 +571,76 @@ export function renderFrame(
 }
 
 /**
- * The braziers' pools, painted after the solids rather than in the vertex
- * light. A point light is smaller than a cell, and a cell lit only at its four
- * corners averages the pool away; walking the light's own screen footprint
- * costs a fraction of a pass and lands the falloff where the bowl is. The tint
- * goes into the oak ramp, so firelight keeps a hue instead of walking the stone
- * ramp to cream.
+ * Every lamp, as a sphere. The old pass could only tint the floor plane,
+ * because it inverted the projection back to y = 0 — which is why a brazier
+ * standing against a wall never warmed that wall. Here each pixel's world point
+ * is recovered from its own depth, so the distance is a real 3D distance and
+ * the light lands on whatever it reaches: flagstones, a crate, a cliff face, the
+ * underside of a gallery above the fire.
+ *
+ * A flagstone keeps the oak tint it has always had, because firelight on stone
+ * is amber and the dithered boundary is what makes the pool read as light. Every
+ * other surface is lifted inside its *own* ramp (the raster keeps the material
+ * and the step), so a wall warms without turning into wood.
  */
 function firePass(frame: Frame, b: Basis, pix: number, lights: FireLight[]) {
-  const { w, h, col, depth, offX, offY } = frame;
-  const det = b.rx * b.uz - b.rz * b.ux;
-  if (Math.abs(det) < 1e-6) return;
-  const inv = 1 / det;
+  const { w, h, col, depth, mat, step, offX, offY } = frame;
   for (let k = 0; k < lights.length; k++) {
     const L = lights[k];
-    if (!(L.flicker > 0) || L.intensity < 2) continue;
+    if (!(L.intensity > 0.45)) continue;
+    const glow = L.flicker > 0;
     const cx = projectX(b, L.x, L.z) * pix + offX;
-    const cy = projectY(b, L.x, 0, L.z) * pix + offY;
-    // The visible pool is tighter than the light's own reach: past about two
-    // cells the amber dither stops reading as light and starts reading as a
-    // different floor.
-    const pool = L.radius * 0.72;
-    const rx = pool * pix;
+    const cy = projectY(b, L.x, L.y, L.z) * pix + offY;
+    // An orthographic camera projects a sphere to a disc of its own radius, so
+    // the light's own reach is the bounds of the pass.
+    const rx = L.radius * pix;
     const x0 = Math.max(0, Math.floor(cx - rx));
     const x1 = Math.min(w - 1, Math.ceil(cx + rx));
     const y0 = Math.max(0, Math.floor(cy - rx));
     const y1 = Math.min(h - 1, Math.ceil(cy + rx));
-    const r2 = pool * pool;
+    const r2 = L.radius * L.radius;
     for (let py = y0; py <= y1; py++) {
       const sy = (py + 0.5 - offY) / pix;
       const row = (py & 3) << 2;
       for (let px = x0; px <= x1; px++) {
-        const sx = (px + 0.5 - offX) / pix;
-        const wx = (b.uz * sx + b.rz * sy) * inv;
-        const wz = (-b.ux * sx - b.rx * sy) * inv;
-        const dx = wx - L.x;
-        const dz = wz - L.z;
-        const d2 = dx * dx + dz * dz;
-        if (d2 > r2) continue;
         const i = py * w + px;
-        // Only bare flagstones: the lamp lights a wall or a crate in front of
-        // it, but not through a pool drawn on the ground plane — and a rug is
-        // cloth, so tinting it with oak steps turns the weave into orange dirt.
-        if (Math.abs(depth[i] - (wx * b.fx + wz * b.fz)) > 0.003) continue;
-        const fall = 1 - Math.sqrt(d2) / pool;
-        // Coverage, not a flat wash: solid at the bowl, dithered only at the
-        // rim. The dither *is* the blend between amber and flagstone, so it has
-        // to stay at pixel scale; blocky 2 x 2 cells read as dirt.
-        const t = fall * fall * 0.82;
-        if (t <= BAYER4[row | (px & 3)]) continue;
-        // Keep the flagstone's own relief: the ramp step comes from what is
-        // already on the floor, so seams and mottling survive the tint instead
-        // of being replaced by a flat wash.
-        const c = col[i];
-        const lum = (((c & 255) * 77 + ((c >>> 8) & 255) * 151 + ((c >>> 16) & 255) * 28) >> 8);
-        const step = clamp(3 + (lum >> 5) + Math.round(fall * 2.2), 4, 12);
-        col[i] = COLOUR_OF[(M_WOOD_PROP << 4) + step];
+        const d = depth[i];
+        if (d > 1e8) continue;
+        const sx = (px + 0.5 - offX) / pix;
+        // p = sx·right + (−screenY)·up + depth·forward, because the basis is
+        // orthonormal. This is the pixel's own surface point, not a plane.
+        const wx = sx * b.rx - sy * b.ux + d * b.fx;
+        const wy = -sy * b.uy + d * b.fy;
+        const wz = sx * b.rz - sy * b.uz + d * b.fz;
+        const dx = wx - L.x;
+        const dy = wy - L.y;
+        const dz = wz - L.z;
+        const dd = dx * dx + dy * dy + dz * dz;
+        if (dd > r2) continue;
+        const fall = 1 - Math.sqrt(dd) / L.radius;
+        if (fall <= 0.04) continue;
+        const m = mat[i];
+        if (glow && m === M_FLOOR) {
+          // Coverage, not a flat wash: solid at the bowl, dithered only at the
+          // rim. The dither *is* the blend between amber and flagstone.
+          const t = fall * fall * 0.82;
+          if (t <= BAYER4[row | (px & 3)]) continue;
+          // Keep the flagstone's own relief: the step comes from what is
+          // already on the floor, so seams and mottling survive the tint.
+          const c = col[i];
+          const lum = (((c & 255) * 77 + ((c >>> 8) & 255) * 151 + ((c >>> 16) & 255) * 28) >> 8);
+          const s = clamp(3 + (lum >> 5) + Math.round(fall * 2.2), 4, 12);
+          col[i] = COLOUR_OF[(M_WOOD_PROP << 4) + s];
+          mat[i] = M_WOOD_PROP;
+          step[i] = s;
+        } else {
+          const t = fall * fall * 0.9;
+          if (t <= BAYER4[row | (px & 3)]) continue;
+          const top = RAMP_LEN[m] - 1;
+          const s = Math.min(top, step[i] + Math.max(1, Math.round(fall * 2.2)));
+          col[i] = COLOUR_OF[m * 16 + s];
+          step[i] = s;
+        }
       }
     }
   }
@@ -622,13 +654,18 @@ function drawPath(frame: Frame, scene: Scene, b: Basis, pix: number, offX: numbe
   const hot = COLOUR_OF[(9 << 4) + 9];
   const { w, h, col, depth } = frame;
 
+  // A path is walked, so each dot stands on whatever the previous dot could
+  // step onto. That is what lets a dotted move climb a stair — the dots rise
+  // because the surfaces do, not because anything here knows what a stair is.
+  let deck = 0;
   const screen = path.map(([cx, cz]) => {
     const x = cx + 0.5;
     const z = cz + 0.5;
+    deck = surfaceAt(scene, x, z, deck, 0.5);
     return {
       x: Math.round(projectX(b, x, z) * pix + offX),
-      y: Math.round(projectY(b, x, 0.02, z) * pix + offY),
-      d: depthOf(b, x, 0.02, z) - 0.03,
+      y: Math.round(projectY(b, x, deck + 0.02, z) * pix + offY),
+      d: depthOf(b, x, deck + 0.02, z) - 0.03,
     };
   });
 
@@ -720,13 +757,13 @@ function facingFor(dir: Facing, b: Basis): Facing {
  * foreshortened by the same projection as the flagstones, and a crate standing
  * on it keeps its own pixels.
  */
-function groundShadow(frame: Frame, b: Basis, pix: number, x: number, z: number, radius: number) {
+function groundShadow(frame: Frame, b: Basis, pix: number, x: number, y: number, z: number, radius: number) {
   const { w, h, col, depth, offX, offY } = frame;
   const det = b.rx * b.uz - b.rz * b.ux;
   if (Math.abs(det) < 1e-6) return;
   const inv = 1 / det;
   const cx = projectX(b, x, z) * pix + offX;
-  const cy = projectY(b, x, 0, z) * pix + offY;
+  const cy = projectY(b, x, y, z) * pix + offY;
   const r = radius * pix;
   const x0 = Math.max(0, Math.floor(cx - r));
   const x1 = Math.min(w - 1, Math.ceil(cx + r));
@@ -739,8 +776,11 @@ function groundShadow(frame: Frame, b: Basis, pix: number, x: number, z: number,
     const row = (py & 3) << 2;
     for (let px = x0; px <= x1; px++) {
       const sx = (px + 0.5 - offX) / pix;
-      const wx = (b.uz * sx + b.rz * sy) * inv;
-      const wz = (-b.ux * sx - b.rx * sy) * inv;
+      // Inverse projection onto the plane the token stands on, not onto y = 0:
+      // a decal at the bottom of a six-cell ledge has to land on the ledge.
+      const bY = -sy - y * b.uy;
+      const wx = (sx * b.uz - b.rz * bY) * inv;
+      const wz = (b.rx * bY - b.ux * sx) * inv;
       const dx = (wx - x) / radius;
       const dz = (wz - z) / radius;
       const d2 = dx * dx + dz * dz;
@@ -748,7 +788,7 @@ function groundShadow(frame: Frame, b: Basis, pix: number, x: number, z: number,
       const i = py * w + px;
       // Flagstones only. A rug is cloth under the feet, not stone, and painting
       // a stone shadow on it turns the weave into a hole.
-      if (Math.abs(depth[i] - (wx * b.fx + wz * b.fz)) > 0.003) continue;
+      if (Math.abs(depth[i] - (wx * b.fx + y * b.fy + wz * b.fz)) > 0.003) continue;
       const solid = d2 < 0.4;
       if (!solid && BAYER4[row | (px & 3)] > (1 - Math.sqrt(d2)) * 2.6) continue;
       col[i] = solid ? core : rim;
@@ -791,14 +831,14 @@ function drawSprites(
 
   for (const tok of scene.tokens) {
     const sx = Math.round(projectX(b, tok.x, tok.z) * pix + frame.offX);
-    const sy = Math.round(projectY(b, tok.x, 0.01, tok.z) * pix + frame.offY);
+    const sy = Math.round(projectY(b, tok.x, tok.y + 0.01, tok.z) * pix + frame.offY);
 
-    groundShadow(frame, b, pix, tok.x, tok.z, 0.34);
+    groundShadow(frame, b, pix, tok.x, tok.y, tok.z, 0.34);
 
     const facing = facingFor(tok.facing, b);
-    const shift = shiftAt(tok.x, 0.7, tok.z);
+    const shift = shiftAt(tok.x, tok.y + 0.7, tok.z);
     const sprite = bodySprite(tok.spec, facing, shift);
-    const anchor = depthOf(b, tok.x, 0.02, tok.z);
+    const anchor = depthOf(b, tok.x, tok.y + 0.02, tok.z);
     list.push({
       depth: anchor,
       sprite,
@@ -835,8 +875,8 @@ function drawSprites(
     const tok = scene.tokens.find((t) => t.id === selected);
     if (tok) {
       const sx = Math.round(projectX(b, tok.x, tok.z) * pix + frame.offX);
-      const sy = Math.round(projectY(b, tok.x, 0.01, tok.z) * pix + frame.offY);
-      const d = depthOf(b, tok.x, 0.02, tok.z) - 0.1;
+      const sy = Math.round(projectY(b, tok.x, tok.y + 0.01, tok.z) * pix + frame.offY);
+      const d = depthOf(b, tok.x, tok.y + 0.02, tok.z) - 0.1;
       for (let i = 0; i < 9; i++) {
         const half = i < 4 ? i + 1 : 10 - i;
         for (let k = 0; k < half; k++) {

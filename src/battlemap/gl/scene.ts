@@ -1,11 +1,24 @@
-import { M_CLOTH_NAVY, M_CLOTH_RED, M_FLOOR, M_METAL, M_STONE_PROP, M_WALL, M_WOOD_PROP } from '../surface';
+import {
+  M_CLOTH_NAVY,
+  M_CLOTH_RED,
+  M_FLOOR,
+  M_METAL,
+  M_STONE_PROP,
+  M_WALL,
+  M_WOOD_FLOOR,
+  M_WOOD_PROP,
+  M_WOOD_WALL,
+} from '../surface';
 import { clamp, hf, mottle } from '../rng';
-import type { Facing, Room, TokenPlacement } from '../room';
+import type { Facing, Room, Tier, TokenPlacement } from '../room';
 import {
   Tex,
   clothTexture,
   floorTexture,
+  ledgeTexture,
   metalTexture,
+  rockFaceTexture,
+  rockTopTexture,
   rugTexture,
   stoneTexture,
   wallFaceTexture,
@@ -49,6 +62,14 @@ export type Tri = {
   receives: boolean;
   /** Wall coping: weathered, and a step under the flagstones. */
   cap?: boolean;
+  /** Takes the room-scale wash and the contact darkening, like a floor. */
+  wash?: boolean;
+  /**
+   * The plane this triangle's sun shadow lands on. Zero is the ground. A ledge
+   * face throws its shadow onto what it stands on, not onto its own top — which
+   * is the difference between a cliff and a floating slab.
+   */
+  castTo?: number;
   /**
    * Self-lit, in ramp steps per vertex. A flame does not take the sun: its
    * brightness is a property of the vertex, not of where the light rig is. This
@@ -62,8 +83,10 @@ export type Collider = {
   z0: number;
   x1: number;
   z1: number;
-  /** Top of the solid, in cells. A rug is 0; a wall is 1.125. */
-  h: number;
+  /** Bottom of the solid, in cells. A ledge starts at the deck under it. */
+  base: number;
+  /** Top of the solid, in cells — also the surface a token can stand on. */
+  top: number;
 };
 
 export type SceneLight = {
@@ -80,6 +103,8 @@ export type SceneToken = {
   spec: TokenPlacement['spec'];
   x: number;
   z: number;
+  /** The deck the token stands on, in cells. */
+  y: number;
   facing: Facing;
 };
 
@@ -100,6 +125,10 @@ export type Scene = {
   /** AO plus the room-scale wash, already summed for the floor. */
   floorAmb: Float32Array;
   grid: Uint8Array;
+  /** Highest deck over each cell: where this storey ends and the next begins. */
+  tierTop: Float32Array;
+  /** Tallest thing in the room, so the frame can be sized before anything is drawn. */
+  yMax: number;
 };
 
 export const WALL_H = 1.875;
@@ -261,6 +290,9 @@ const addCylinder = (
 type Textures = {
   wallFace: Tex;
   wallTop: Tex;
+  rockFace: Tex;
+  rockTop: Tex;
+  ledge: Tex;
   wood: Tex;
   stone: Tex;
   metal: Tex;
@@ -277,6 +309,9 @@ const texturesFor = (seed: number): Textures => {
     t = {
       wallFace: wallFaceTexture(seed ^ 0x11c7),
       wallTop: wallTopTexture(seed ^ 0x5a3d),
+      rockFace: rockFaceTexture(seed ^ 0x4b9e),
+      rockTop: rockTopTexture(seed ^ 0x77a1),
+      ledge: ledgeTexture(seed ^ 0x39c5),
       wood: woodTexture(seed ^ 0x2441),
       stone: stoneTexture(seed ^ 0x9ab3),
       metal: metalTexture(seed ^ 0x77dd),
@@ -306,8 +341,16 @@ const floorsFor = (seed: number): Tex[] => {
   return f;
 };
 
-const addCollider = (c: Collider[], x0: number, z0: number, x1: number, z1: number, h: number) => {
-  c.push({ x0, z0, x1, z1, h });
+const addCollider = (
+  c: Collider[],
+  x0: number,
+  z0: number,
+  x1: number,
+  z1: number,
+  top: number,
+  base = 0,
+) => {
+  c.push({ x0, z0, x1, z1, base, top });
 };
 
 /**
@@ -439,10 +482,40 @@ function buildProp(
     case 'column': {
       const cx = x0 + 0.5;
       const cz = z0 + 0.5;
+      // A column has a height because a cave does. A stump reads as furniture;
+      // four cells of rock reads as a pillar holding a roof.
+      const h = p.h ?? 0.94;
+      const shaftTop = Math.max(0.16, h - 0.08);
       addCylinder(tris, cx, cz, 0.46, 0.46, 0, 0.06, M_STONE_PROP, tex.stone, 16);
-      addCylinder(tris, cx, cz, 0.35, 0.35, 0.06, 0.86, M_STONE_PROP, tex.stone, 16, false);
-      addCylinder(tris, cx, cz, 0.46, 0.46, 0.86, 0.94, M_STONE_PROP, tex.stone, 16);
-      addCollider(colliders, x0, z0, x0 + 1, z0 + 1, 0.94);
+      addCylinder(tris, cx, cz, 0.35, 0.35, 0.06, shaftTop, M_STONE_PROP, tex.stone, 16, false);
+      addCylinder(tris, cx, cz, 0.46, 0.46, shaftTop, h, M_STONE_PROP, tex.stone, 16);
+      addCollider(colliders, x0, z0, x0 + 1, z0 + 1, h);
+      break;
+    }
+    case 'stairs': {
+      // Real steps, and every one is a surface. `rise` is measured from the
+      // deck the stair stands on, so the same rule climbs a pit wall or a
+      // gallery without knowing which it is.
+      const w = p.w ?? 1.6;
+      const run = p.run ?? 2;
+      const rise = p.rise;
+      const along = p.along ?? 'z';
+      const dir = p.dir ?? 1;
+      const steps = clamp(Math.round(rise / 0.3), 3, 14);
+      for (let s = 0; s < steps; s++) {
+        const d0 = (s / steps) * run;
+        const d1 = ((s + 1) / steps) * run;
+        const a = dir > 0 ? d0 : run - d1;
+        const b = dir > 0 ? d1 : run - d0;
+        const top = ((s + 1) / steps) * rise;
+        if (along === 'z') {
+          addBox(tris, x0, z0 + a, x0 + w, z0 + b, 0, top, M_STONE_PROP, tex.stone);
+          addCollider(colliders, x0, z0 + a, x0 + w, z0 + b, top);
+        } else {
+          addBox(tris, x0 + a, z0, x0 + b, z0 + w, 0, top, M_STONE_PROP, tex.stone);
+          addCollider(colliders, x0 + a, z0, x0 + b, z0 + w, top);
+        }
+      }
       break;
     }
     case 'rubble': {
@@ -503,6 +576,8 @@ function buildWalls(
   tex: Textures,
   tris: Tri[],
   colliders: Collider[],
+  wallH: number,
+  rock: boolean,
 ) {
   const a = (yaw * Math.PI) / 180;
   const fx = -Math.sin(a);
@@ -518,20 +593,39 @@ function buildWalls(
     for (let cx = 0; cx < cols; cx++) {
       if (grid[cy * cols + cx] !== 2) continue;
 
-      // A perimeter block whose outside faces the camera would hide the room.
-      // Cut it to a curb: the room keeps an edge, and the interior is legible
-      // from every orbit. Blocks inside the room (pillars, the alcove) stay
-      // full height and occlude honestly.
+      // A block whose outside faces the camera would hide the room. Cut it to a
+      // curb: the room keeps an edge, and the interior is legible from every
+      // orbit. Blocks inside the room (pillars, the alcove) stay full height and
+      // occlude honestly.
+      //
+      // A cavern is a chamber carved out of a mass, so "outside" is not a void
+      // here: it is the mass itself. What has to be cut is the chamber wall on
+      // the camera's side, and any filler rock behind it — the filler is only
+      // there so the chamber is not a thin shell, and leaving it at full height
+      // would turn the roof into a plateau that fills the frame.
       let curb = false;
-      for (const [dx, dz, ox, oz] of dirs) {
-        // Only a *void* neighbour is an exterior face. A floor neighbour is the
-        // inside of the room, and testing that instead curbed every wall cell
-        // in the ring — which is exactly how the first pass lost its height.
-        const outside = cellAt(grid, cols, rows, cx + dx, cy + dz) === 0;
-        if (outside && ox * fx + oz * fz < -0.001) curb = true;
+      if (rock) {
+        // The cave is a chamber inside a mass that runs to the edge of the grid,
+        // and the camera slices it: everything on the camera's half of the room
+        // is not drawn. A half-plane, not a per-cell test, because a per-cell
+        // rule leaves single-cell fins along the cut where two neighbours
+        // disagree about which side of the chamber they are on.
+        const side = (cx + 0.5 - cols / 2) * fx + (cy + 0.5 - rows / 2) * fz;
+        if (side < 0) continue;
+      } else {
+        for (const [dx, dz, ox, oz] of dirs) {
+          // Only a *void* neighbour is an exterior face. A floor neighbour is
+          // the inside of the room, and testing that instead curbed every wall
+          // cell in the ring — which is exactly how the first pass lost height.
+          const outside = cellAt(grid, cols, rows, cx + dx, cy + dz) === 0;
+          if (outside && ox * fx + oz * fz < -0.001) curb = true;
+        }
       }
 
-      const h = curb ? CURB_H : WALL_H;
+      if (rock && curb) continue;
+      const h = curb ? CURB_H : wallH;
+      const faceTex = rock ? tex.rockFace : tex.wallFace;
+      const topTex = rock ? tex.rockTop : tex.wallTop;
       const x0 = cx;
       const z0 = cy;
       const x1 = cx + 1;
@@ -545,16 +639,18 @@ function buildWalls(
         [x0, h, z1],
         [0, 1, 0],
         M_WALL,
-        tex.wallTop,
+        topTex,
         uvTop,
         true,
         false,
         true,
       );
+      // The coping is above the floor, so the wash must not be applied to it;
+      // the cap keeps its own weathered step instead (CAP_DROP).
 
       const face = (dx: number, dz: number, quad: [Vec3, Vec3, Vec3, Vec3], n: Vec3, alongX: boolean) => {
         if (!curb && cellAt(grid, cols, rows, cx + dx, cy + dz) === 2) return;
-        addQuad(tris, quad[0], quad[1], quad[2], quad[3], n, M_WALL, tex.wallFace, wallUv(h, alongX));
+        addQuad(tris, quad[0], quad[1], quad[2], quad[3], n, M_WALL, faceTex, wallUv(h, alongX));
       };
 
       face(0, -1, [[x0, 0, z0], [x1, 0, z0], [x1, h, z0], [x0, h, z0]], [0, 0, -1], true);
@@ -562,9 +658,127 @@ function buildWalls(
       face(-1, 0, [[x0, 0, z1], [x0, 0, z0], [x0, h, z0], [x0, h, z1]], [-1, 0, 0], false);
       face(1, 0, [[x1, 0, z0], [x1, 0, z1], [x1, h, z1], [x1, h, z0]], [1, 0, 0], false);
 
-      addCollider(colliders, x0, z0, x1, z1, h);
+      addCollider(colliders, x0, z0, x1, z1, h, 0);
     }
   }
+}
+
+/* ------------------------------------------------------------------ tiers */
+type TierBuild = { tier: Tier; cover: Uint8Array; base: Float32Array };
+
+/**
+ * Upper storeys, as volumes. A tier is a set of cells at a height; every one of
+ * them gets a walking top and a face wherever the cell beside it is lower, and
+ * the face always starts at the highest thing already under it. That single
+ * rule is why the ledges close: nothing is a floating slab, because a ledge's
+ * cliff runs down to whatever it stands on — the pit floor, or the storey below
+ * it.
+ *
+ * Tiers are built low to high, so `topAt` is, at every step, the surface under
+ * the storey being built. A gallery over the pit and a gallery over a ledge are
+ * then the same code path.
+ */
+function buildTiers(
+  room: Room,
+  cols: number,
+  rows: number,
+  seed: number,
+  tex: Textures,
+  tris: Tri[],
+  colliders: Collider[],
+): { topAt: Float32Array; builds: TierBuild[] } {
+  const topAt = new Float32Array(cols * rows);
+  const builds: TierBuild[] = [];
+  const tiers = [...(room.tiers ?? [])].sort((a, b) => a.y - b.y);
+
+  for (const tier of tiers) {
+    const cover = new Uint8Array(cols * rows);
+    for (const [rx, rz, rw, rh] of tier.rects) {
+      const x0 = Math.max(0, rx);
+      const z0 = Math.max(0, rz);
+      const x1 = Math.min(cols, rx + rw);
+      const z1 = Math.min(rows, rz + rh);
+      for (let z = z0; z < z1; z++) for (let x = x0; x < x1; x++) cover[z * cols + x] = 1;
+    }
+    const base = new Float32Array(cols * rows);
+    for (let i = 0; i < cover.length; i++) if (cover[i]) base[i] = topAt[i];
+    builds.push({ tier, cover, base });
+    for (let i = 0; i < cover.length; i++) if (cover[i]) topAt[i] = tier.y;
+  }
+
+  const grid = room.grid.cells;
+  for (const b of builds) {
+    const y = b.tier.y;
+    const wood = (b.tier.deck ?? 'stone') === 'wood';
+    const topMat = wood ? M_WOOD_FLOOR : M_FLOOR;
+    const faceMat = wood ? M_WOOD_WALL : M_WALL;
+    const faceTex = wood ? tex.wood : tex.rockFace;
+
+    for (let cz = 0; cz < rows; cz++) {
+      for (let cx = 0; cx < cols; cx++) {
+        const i = cz * cols + cx;
+        if (!b.cover[i]) continue;
+
+        const topTex = wood ? tex.wood : tex.ledge;
+        const before = tris.length;
+        addQuad(
+          tris,
+          [cx, y, cz],
+          [cx + 1, y, cz],
+          [cx + 1, y, cz + 1],
+          [cx, y, cz + 1],
+          [0, 1, 0],
+          topMat,
+          topTex,
+          (p) => [(p[0] - cx) * PX, (p[2] - cz) * PX],
+          false,
+          true,
+        );
+        tris[before].wash = true;
+        tris[before + 1].wash = true;
+
+        const face = (
+          dx: number,
+          dz: number,
+          a: Vec3,
+          b2: Vec3,
+          c2: Vec3,
+          d2: Vec3,
+          n: Vec3,
+          alongX: boolean,
+        ) => {
+          const nx = cx + dx;
+          const nz = cz + dz;
+          const inside = nx >= 0 && nz >= 0 && nx < cols && nz < rows;
+          // A face against a wall is buried in it.
+          if (inside && grid[nz * cols + nx] === 2) return;
+          const nb = inside ? topAt[nz * cols + nx] : 0;
+          // The neighbour is already at this height (or above it): its own mass
+          // covers this edge.
+          if (nb >= y - 0.001) return;
+          const from = Math.max(b.base[i], nb);
+          if (y - from < 0.02) return;
+          const q0: Vec3 = [a[0], from, a[2]];
+          const q1: Vec3 = [b2[0], from, b2[2]];
+          const q2: Vec3 = [c2[0], y, c2[2]];
+          const q3: Vec3 = [d2[0], y, d2[2]];
+          const t0 = tris.length;
+          addQuad(tris, q0, q1, q2, q3, n, faceMat, faceTex, wallUv(y, alongX));
+          tris[t0].castTo = from;
+          tris[t0 + 1].castTo = from;
+        };
+
+        face(0, -1, [cx, 0, cz], [cx + 1, 0, cz], [cx + 1, 0, cz], [cx, 0, cz], [0, 0, -1], true);
+        face(0, 1, [cx + 1, 0, cz + 1], [cx, 0, cz + 1], [cx, 0, cz + 1], [cx + 1, 0, cz + 1], [0, 0, 1], true);
+        face(-1, 0, [cx, 0, cz + 1], [cx, 0, cz], [cx, 0, cz], [cx, 0, cz + 1], [-1, 0, 0], false);
+        face(1, 0, [cx + 1, 0, cz], [cx + 1, 0, cz + 1], [cx + 1, 0, cz + 1], [cx + 1, 0, cz], [1, 0, 0], false);
+
+        addCollider(colliders, cx, cz, cx + 1, cz + 1, y, wood ? y - 0.22 : b.base[i]);
+      }
+    }
+  }
+
+  return { topAt, builds };
 }
 
 /* ---------------------------------------------------------------------- ao */
@@ -619,12 +833,50 @@ const sampleGrid = (grid: Float32Array, cols: number, rows: number, x: number, z
 export const aoAt = (s: Scene, x: number, z: number): number => sampleGrid(s.ao, s.cols, s.rows, x, z);
 export const ambientAt = (s: Scene, x: number, z: number): number => sampleGrid(s.floorAmb, s.cols, s.rows, x, z);
 
-export const solidAt = (s: Scene, x: number, z: number): boolean => {
+/**
+ * Is there a solid in the way at this height? A thing you can stand on is not
+ * an obstacle (`c.top <= y`); a thing above your head is not one either, which
+ * is what makes a gallery walkable underneath.
+ */
+export const solidAt = (s: Scene, x: number, z: number, y = 0, clearance = 0.5): boolean => {
   for (let i = 0; i < s.colliders.length; i++) {
     const c = s.colliders[i];
-    if (x >= c.x0 && x <= c.x1 && z >= c.z0 && z <= c.z1) return true;
+    if (x < c.x0 || x > c.x1 || z < c.z0 || z > c.z1) continue;
+    if (c.top <= y + 0.01) continue;
+    if (c.base >= y + clearance) continue;
+    return true;
   }
   return false;
+};
+
+/**
+ * What do you stand on here, given you can step up `step` and will drop to
+ * whatever is below? This is the whole of vertical movement's surface logic: a
+ * stair is a run of colliders, a ledge is one big one, and the pit floor is the
+ * grid. It also means a path can climb a stair without knowing what a stair is.
+ */
+export const surfaceAt = (s: Scene, x: number, z: number, fromY: number, step = 0.45): number => {
+  let best = -Infinity;
+  const reach = fromY + step;
+  for (let i = 0; i < s.colliders.length; i++) {
+    const c = s.colliders[i];
+    if (x < c.x0 || x > c.x1 || z < c.z0 || z > c.z1) continue;
+    if (c.top > reach) continue;
+    if (c.top > best) best = c.top;
+  }
+  if (best > -Infinity) return best;
+  const cx = Math.floor(x);
+  const cz = Math.floor(z);
+  if (cx >= 0 && cz >= 0 && cx < s.cols && cz < s.rows && s.grid[cz * s.cols + cx] === 1) return 0;
+  return fromY;
+};
+
+/** The deck at a point, without the walk step: where a prop is placed. */
+export const deckAt = (s: Scene, x: number, z: number): number => {
+  const cx = Math.floor(x);
+  const cz = Math.floor(z);
+  if (cx < 0 || cz < 0 || cx >= s.cols || cz >= s.rows) return 0;
+  return s.tierTop[cz * s.cols + cx];
 };
 
 /* -------------------------------------------------------------------- api */
@@ -640,6 +892,9 @@ export function buildScene(room: Room, yaw: number): Scene {
   // them keeps the drag path to geometry.
   const tex = texturesFor(seed);
   const floors = floorsFor(seed);
+
+  // Upper storeys first: their colliders are what the props then stand on.
+  const { topAt: tierTop } = buildTiers(room, cols, rows, seed, tex, tris, colliders);
 
   // A point light is smaller than a cell, and a cell lit only at its corners
   // averages the pool away. The floor within one cell of a lit brazier is cut
@@ -683,22 +938,70 @@ export function buildScene(room: Room, yaw: number): Scene {
             false,
             true,
           );
+          tris[tris.length - 1].wash = true;
+          tris[tris.length - 2].wash = true;
         }
       }
     }
   }
 
-  buildWalls(room.grid.cells, cols, rows, yaw, tex, tris, colliders);
+  buildWalls(
+    room.grid.cells,
+    cols,
+    rows,
+    yaw,
+    tex,
+    tris,
+    colliders,
+    room.wallHeight ?? WALL_H,
+    room.tiers !== undefined && room.tiers.length > 0,
+  );
 
-  for (const p of room.props) buildProp(p, seed, tex, tris, colliders, fires, lights);
+  // Everything a prop builds is authored from its own deck up, so the whole
+  // prop is built once and then lifted as a unit — vertices, collider, flame
+  // and lamp together. Nothing can be left standing on the floor by accident.
+  for (const p of room.props) {
+    const px = p.at[0] + 0.4;
+    const pz = p.at[1] + 0.4;
+    const cx = Math.floor(px);
+    const cz = Math.floor(pz);
+    const base =
+      p.y ?? (cx >= 0 && cz >= 0 && cx < cols && cz < rows ? tierTop[cz * cols + cx] : 0);
+    const t0 = tris.length;
+    const c0 = colliders.length;
+    const f0 = fires.length;
+    const l0 = lights.length;
+    buildProp(p, seed, tex, tris, colliders, fires, lights);
+    // Triangles share their corner arrays, so a vertex must be lifted once, not
+    // once per triangle that uses it — that is how a chest becomes a fan.
+    const lifted = new Set<Vec3>();
+    for (let i = t0; i < tris.length; i++) {
+      const T = tris[i];
+      lifted.add(T.p0);
+      lifted.add(T.p1);
+      lifted.add(T.p2);
+      // A prop's shadow belongs on the deck it stands on, not on the pit below.
+      if (T.cast) T.castTo = base;
+    }
+    if (base !== 0) {
+      for (const v of lifted) v[1] += base;
+      for (let i = c0; i < colliders.length; i++) {
+        colliders[i].base += base;
+        colliders[i].top += base;
+      }
+      for (let i = f0; i < fires.length; i++) fires[i].y += base;
+      for (let i = l0; i < lights.length; i++) lights[i].y += base;
+    }
+  }
 
-  const tokens: SceneToken[] = room.tokens.map((t) => ({
-    id: t.id,
-    spec: t.spec,
-    x: t.at[0] + 0.5,
-    z: t.at[1] + 0.5,
-    facing: t.facing,
-  }));
+  const tokens: SceneToken[] = room.tokens.map((t) => {
+    const x = t.at[0] + 0.5;
+    const z = t.at[1] + 0.5;
+    const cx = Math.floor(x);
+    const cz = Math.floor(z);
+    const deck = cx >= 0 && cz >= 0 && cx < cols && cz < rows ? tierTop[cz * cols + cx] : 0;
+    return { id: t.id, spec: t.spec, x, z, y: t.y ?? deck, facing: t.facing };
+  });
 
   const ao = buildAo(cols, rows, colliders);
   const floorAmb = new Float32Array(ao.length);
@@ -707,6 +1010,9 @@ export function buildScene(room: Room, yaw: number): Scene {
       floorAmb[j * (cols + 1) + i] = ao[j * (cols + 1) + i] + (mottle(i * 1.15, j * 1.15, seed) - 0.5) * 0.28;
     }
   }
+
+  let yMax = room.wallHeight ?? WALL_H;
+  for (let i = 0; i < colliders.length; i++) if (colliders[i].top > yMax) yMax = colliders[i].top;
 
   return {
     room,
@@ -721,6 +1027,8 @@ export function buildScene(room: Room, yaw: number): Scene {
     ao,
     floorAmb,
     grid: room.grid.cells,
+    tierTop,
+    yMax,
   };
 }
 

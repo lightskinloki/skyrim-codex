@@ -1,6 +1,7 @@
 import { deflateSync } from 'node:zlib';
 import { writeFileSync } from 'node:fs';
 import { MOODS, makeDemoRoom } from '@/battlemap/room';
+import { makeCaveRoom } from '@/battlemap/cave';
 import { buildScene } from '@/battlemap/gl/scene';
 import { renderFrame, renderStats } from '@/battlemap/gl/render';
 
@@ -58,12 +59,13 @@ function writePng(path: string, w: number, h: number, col: Uint32Array) {
   writeFileSync(path, png);
 }
 
-const room = makeDemoRoom();
+const roomName = process.argv[5] ?? 'tavern';
+const room = roomName === 'cavern' ? makeCaveRoom() : makeDemoRoom();
 const yaw = Number(process.argv[2] ?? 32);
 const pitch = Number(process.argv[3] ?? 55);
 const mood = MOODS.find((m) => m.id === process.argv[4]);
 if (mood) room.rig = { ...room.rig, ...mood.rig };
-const tag = mood ? `-${mood.id}` : '';
+const tag = `${roomName === 'cavern' ? '-cavern' : ''}${mood ? `-${mood.id}` : ''}`;
 const scene = buildScene(room, yaw);
 const opts = { showPath: true, selectedToken: "pc-1", time: 1 };
 const f = renderFrame(scene, { yaw, pitch, pix: 32 }, room.rig, opts);
