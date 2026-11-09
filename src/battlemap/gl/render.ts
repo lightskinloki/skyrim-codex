@@ -4,7 +4,7 @@ import { BAYER4, clamp, fbm1, mottle } from '../rng';
 import { LightRig, exposureOf, sunAbove, sunVector } from '../light';
 import { BODY_H, BODY_W, renderBody } from '@/characters/body';
 import type { Facing } from '../room';
-import { Scene, Tri, Vec3, ambientAt, buildScene, solidAt, surfaceAt } from './scene';
+import { Scene, Tri, Vec3, ambientAt, buildScene, receivingPlanes, solidAt, surfaceAt } from './scene';
 import { Sprite } from './texture';
 import { flameTris } from './flame';
 
@@ -41,9 +41,13 @@ export type Frame = {
   /** Ramp step of the winning pixel, so a lamp can lift a surface inside its
    *  own ramp instead of guessing from the colour. */
   step: Uint8Array;
-  /** Sun shadow at quarter resolution: a 4 x 4 px block, not a pixel. */
+  /** Every height a shadow can land on, in cells — the ground, each deck. A
+   *  cast shadow belongs to exactly one of them. */
+  planes: number[];
+  /** Sun shadow at quarter resolution: a 4 x 4 px block, not a pixel, stacked
+   *  once per receiving plane. */
   shadow: Uint8Array;
-  /** The same mask blurred into a 0..255 penumbra, read per floor pixel. */
+  /** The same masks blurred into a 0..255 penumbra, read per receiving pixel. */
   soft: Uint8Array;
   sw: number;
   sh: number;
@@ -115,7 +119,7 @@ const projectX = (b: Basis, x: number, z: number): number => x * b.rx + z * b.rz
 const projectY = (b: Basis, x: number, y: number, z: number): number => -(x * b.ux + y * b.uy + z * b.uz);
 const depthOf = (b: Basis, x: number, y: number, z: number): number => x * b.fx + y * b.fy + z * b.fz;
 
-const makeFrame = (w: number, h: number, pix: number): Frame => {
+const makeFrame = (w: number, h: number, pix: number, planes: number[]): Frame => {
   const sw = (w + 3) >> 2;
   const sh = (h + 3) >> 2;
   return {
@@ -125,8 +129,9 @@ const makeFrame = (w: number, h: number, pix: number): Frame => {
     depth: new Float32Array(w * h),
     mat: new Uint8Array(w * h),
     step: new Uint8Array(w * h),
-    shadow: new Uint8Array(sw * sh),
-    soft: new Uint8Array(sw * sh),
+    planes,
+    shadow: new Uint8Array(sw * sh * planes.length),
+    soft: new Uint8Array(sw * sh * planes.length),
     sw,
     sh,
     offX: 0,
@@ -161,6 +166,20 @@ function boundsOf(scene: Scene, b: Basis, pix: number) {
     offX: -minX + pad,
     offY: -minY + pad,
   };
+}
+
+/** Which plane a cast or a receiving surface belongs to, or -1 for none. */
+function planeIndexOf(planes: number[], y: number): number {
+  let best = -1;
+  let bestD = 0.06;
+  for (let i = 0; i < planes.length; i++) {
+    const d = Math.abs(planes[i] - y);
+    if (d <= bestD) {
+      bestD = d;
+      best = i;
+    }
+  }
+  return best;
 }
 
 /** What the table has seen. `seen` is the persistent memory, `visible` is the
@@ -198,10 +217,16 @@ export function renderFrame(
   const pix = camera.pix ?? CELL;
   const b = basisOf(camera.yaw, camera.pitch);
   const bounds = boundsOf(scene, b, pix);
+  const planes = receivingPlanes(scene.tris);
+  const samePlanes =
+    reuse !== null &&
+    reuse !== undefined &&
+    reuse.planes.length === planes.length &&
+    reuse.planes.every((y, i) => Math.abs(y - planes[i]) < 0.001);
   const frame =
-    reuse && reuse.w === bounds.w && reuse.h === bounds.h && reuse.pix === pix
+    reuse && reuse.w === bounds.w && reuse.h === bounds.h && reuse.pix === pix && samePlanes
       ? reuse
-      : makeFrame(bounds.w, bounds.h, pix);
+      : makeFrame(bounds.w, bounds.h, pix, planes);
 
   frame.offX = bounds.offX;
   frame.offY = bounds.offY;
@@ -269,7 +294,7 @@ export function renderFrame(
       // The wash and contact darkening are pre-summed on the floor lattice:
       // four hashes per vertex is real money across nine hundred floor quads.
       // Every walking surface takes them, at zero and at six cells alike.
-      f += ambientAt(scene, px, pz);
+      f += ambientAt(scene, px, pz, py);
     } else if (n[1] > 0.9 && py < 0.05) {
       f += (mottle(px * 0.9, pz * 0.9, scene.seed + 13) - 0.5) * 0.45;
     }
@@ -288,6 +313,7 @@ export function renderFrame(
     tex: { w: number; h: number; idx: Uint8Array; mx: number; my: number },
     mat: number,
     receives: boolean,
+    plane: number,
     ax: number,
     ay: number,
     az: number,
@@ -322,6 +348,7 @@ export function renderFrame(
     const top = RAMP_LEN[mat] - 1;
     const base = mat << 4;
     const shadowBuf = frame.soft;
+    const shadowBase = plane >= 0 ? plane * frame.sw * frame.sh : 0;
 
     // The barycentrics, depth, uv and light are all affine in screen x, so the
     // inner loop is a handful of adds and one texture fetch rather than a dozen
@@ -362,7 +389,7 @@ export function renderFrame(
             const tx = (u | 0) & mx;
             const ty = (v | 0) & my;
             let lit = l;
-            if (receives) lit -= shadowBuf[sj + (px >> 2)] * 0.0125;
+            if (receives && plane >= 0) lit -= shadowBuf[shadowBase + sj + (px >> 2)] * 0.0125;
 
             const fl = Math.floor(lit);
             let ii = ti[ty * tw + tx] + fl + (lit - fl > BAYER4[row | (px & 3)] ? 1 : 0);
@@ -386,10 +413,12 @@ export function renderFrame(
 
   const tris = scene.tris;
 
-  // Projected sun shadows. Every solid is projected onto the floor plane along
-  // the sun and unioned into a mask; a floor pixel under the mask loses a few
-  // steps. This is what makes a wall meet the ground and a table sit under its
-  // own top, and it costs one extra conservative fill of the casters.
+  // Projected sun shadows. Every solid is projected along the sun onto the
+  // plane it stands on and unioned into that plane's mask; a receiving pixel
+  // under the mask loses a few steps. One mask per height is what keeps a
+  // shadow on the pit from also darkening a deck three cells above it: the
+  // buffers are screen-space, so a single mask would bleed across storeys.
+  const shadowUsed = new Uint8Array(planes.length);
   if (sunW.y > 0.04) {
     const shadow = frame.shadow;
     const sw = frame.sw;
@@ -400,6 +429,12 @@ export function renderFrame(
       // A shadow lands on the plane its caster stands on, not always on the
       // pit: a ledge face throws onto the storey below it.
       const gy = T.castTo ?? 0;
+      const layer = planeIndexOf(planes, gy);
+      // A caster with no receiving surface at its own plane is invisible: it
+      // would otherwise tint whatever happens to overlap it on screen.
+      if (layer < 0) continue;
+      shadowUsed[layer] = 1;
+      const layerBase = layer * sw * sh;
       const t0 = (T.p0[1] - gy) / sunW.y;
       const t1 = (T.p1[1] - gy) / sunW.y;
       const t2 = (T.p2[1] - gy) / sunW.y;
@@ -426,7 +461,7 @@ export function renderFrame(
           const c1 = ((qx - pxc) * (ay - pyc) - (ax - pxc) * (qy - pyc)) * inv;
           if (c1 < 0) continue;
           if (c0 + c1 > 1) continue;
-          shadow[py * sw + px] = 1;
+          shadow[layerBase + py * sw + px] = 1;
         }
       }
     }
@@ -441,18 +476,28 @@ export function renderFrame(
     const soft = frame.soft;
     const sw = frame.sw;
     const sh = frame.sh;
-    for (let y = 0; y < sh; y++) {
-      const y0 = y > 0 ? y - 1 : 0;
-      const y1 = y < sh - 1 ? y + 1 : sh - 1;
-      for (let x = 0; x < sw; x++) {
-        const x0 = x > 0 ? x - 1 : 0;
-        const x1 = x < sw - 1 ? x + 1 : sw - 1;
-        let sum = 0;
-        for (let yy = y0; yy <= y1; yy++) {
-          const r = yy * sw;
-          sum += shadow[r + x0] + shadow[r + x] + shadow[r + x1];
+    const n = sw * sh;
+    for (let layer = 0; layer < planes.length; layer++) {
+      const base = layer * n;
+      if (!shadowUsed[layer]) {
+        // A reused frame still holds last frame's mask for a plane that has
+        // lost its caster; a receiver must never read it.
+        soft.fill(0, base, base + n);
+        continue;
+      }
+      for (let y = 0; y < sh; y++) {
+        const y0 = y > 0 ? y - 1 : 0;
+        const y1 = y < sh - 1 ? y + 1 : sh - 1;
+        for (let x = 0; x < sw; x++) {
+          const x0 = x > 0 ? x - 1 : 0;
+          const x1 = x < sw - 1 ? x + 1 : sw - 1;
+          let sum = 0;
+          for (let yy = y0; yy <= y1; yy++) {
+            const r = base + yy * sw;
+            sum += shadow[r + x0] + shadow[r + x] + shadow[r + x1];
+          }
+          soft[base + y * sw + x] = (sum * 255) / 9;
         }
-        soft[y * sw + x] = (sum * 255) / 9;
       }
     }
   }
@@ -506,6 +551,7 @@ export function renderFrame(
       T.tex,
       T.mat,
       T.receives,
+      T.receives ? planeIndexOf(planes, T.p0[1]) : -1,
       ax,
       ay,
       az,

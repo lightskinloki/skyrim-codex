@@ -814,14 +814,29 @@ light enough to keep the texture. The brazier's contribution is capped at +3.4
 steps, because uncapped it walks the stone ramp to cream and the pool reads as a
 hole.
 
-**R4. Shadows are a projected mask, softened before they land.** Every caster is
-projected along the sun onto the floor at quarter resolution; that binary mask is
-then blurred into a 0–255 penumbra and subtracted per pixel. A binary mask has a
-four-pixel staircase for an edge, which reads as a hole at 1:1; the blur gives the
-dither somewhere to feather. Shadow subtraction is 3.2 steps, so the darkest
-floor is still stone. A caster carries the plane its shadow lands on (`castTo`),
-so a ledge throws onto the storey below it instead of onto its own top — a floor
-quad does not cast, or every tile would shadow itself.
+**R4. Shadows are a projected mask per receiving plane, softened before they
+land.** A caster carries the plane its shadow lands on (`castTo`), so a ledge
+throws onto the storey below it instead of onto its own top; a floor quad does
+not cast, or every tile would shadow itself. Each caster is projected along the
+sun onto that plane and unioned into **that plane's** quarter-resolution mask.
+The masks are screen-space, so a single shared buffer lets a shadow cast on the
+pit floor also darken a shelf three cells above it — the deck then reads as a
+see-through hole. Receivers are therefore keyed by height: the ground, the
+bridge deck and every storey top each have their own mask, and a pixel can only
+read the mask of the plane it stands on. Each mask is blurred into a 0–255
+penumbra before use; a binary mask has a four-pixel staircase for an edge, which
+reads as a hole at 1:1, and the blur gives the dither somewhere to feather.
+Shadow subtraction is 3.2 steps, so the darkest floor is still stone.
+
+**R4a. Contact darkening belongs to a plane too.** The baked wash is built once
+per receiving plane, and a solid darkens a surface only when its top rises above
+that surface. That one test is what stops a storey shading itself: a deck's own
+collider tops out at the deck, so it is not a caster for that plane — but the
+wall behind it, a crate standing on it, or a gallery overhead still is. A single
+flat wash made every raised deck three steps darker than the floor it stood over,
+which is the other half of the "transparent platform" read. All the planes are
+filled in one walk of the colliders, so a five-storey room's rebuild stays near
+the cost of a one-storey room's.
 
 **R5. Firelight is a globe, not a pool on the floor plane.** A point light is
 smaller than a cell, so corner-interpolated light averages it away; after the

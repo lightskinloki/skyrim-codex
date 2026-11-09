@@ -134,10 +134,9 @@ export type Scene = {
   fires: SceneFire[];
   lights: SceneLight[];
   colliders: Collider[];
-  /** Ambient occlusion on the cell-corner lattice, in ramp steps. */
-  ao: Float32Array;
-  /** AO plus the room-scale wash, already summed for the floor. */
-  floorAmb: Float32Array;
+  /** Contact wash on the cell-corner lattice, one grid per receiving plane:
+   *  a surface is darkened only by what rises above it. */
+  ambient: { y: number; grid: Float32Array }[];
   grid: Uint8Array;
   /** Highest deck over each cell: where this storey ends and the next begins. */
   tierTop: Float32Array;
@@ -941,33 +940,80 @@ function buildTiers(
 
 /* ---------------------------------------------------------------------- ao */
 /**
- * Contact darkening, baked per cell corner. A floor vertex near a wall or the
+ * Contact darkening, baked per cell corner and per receiving plane.
+ *
+ * A surface is darkened only by solids that rise above it. That one test is
+ * what stops a storey shading itself: a deck's own collider has its top at the
+ * deck, so it is not a caster for that plane — but a wall, a crate standing on
+ * the deck, or a gallery overhead still is. A floor vertex near a wall or the
  * legs of a table loses a couple of steps, which is what makes the object meet
- * the floor instead of hover over it. Soft and inverted-square, not a stamped
- * ring — the dither in the light pass turns the falloff into pixel steps.
+ * the floor instead of hover over it; the falloff is soft and inverted-square,
+ * not a stamped ring, so the dither in the light pass turns it into pixels.
+ *
+ * All planes are filled in one walk of the colliders: each corner collects the
+ * solids within reach once, then each plane keeps only those that stand above
+ * it. That keeps a five-storey room's rebuild near the cost of one floor's.
  */
-function buildAo(cols: number, rows: number, colliders: Collider[]): Float32Array {
+function buildAmbient(
+  cols: number,
+  rows: number,
+  colliders: Collider[],
+  planes: number[],
+  seed: number,
+): { y: number; grid: Float32Array }[] {
   const w = cols + 1;
   const h = rows + 1;
-  const out = new Float32Array(w * h);
+  const grids = planes.map(() => new Float32Array(w * h));
   const R = 1.35;
+  // Parallel arrays, not objects: this runs for every corner of every rebuild,
+  // and a quarter of a million little allocations is a visible hitch on an
+  // orbit, when the scene is rebuilt on every yaw change.
+  const nearTop = new Float32Array(colliders.length);
+  const nearOcc = new Float32Array(colliders.length);
   for (let j = 0; j < h; j++) {
     for (let i = 0; i < w; i++) {
       const x = i;
       const z = j;
-      let occ = 0;
+      let count = 0;
       for (let k = 0; k < colliders.length; k++) {
         const c = colliders[k];
         const dx = Math.max(c.x0 - x, 0, x - c.x1);
         const dz = Math.max(c.z0 - z, 0, z - c.z1);
         const d = Math.sqrt(dx * dx + dz * dz);
         if (d >= R) continue;
-        const o = 1 - d / R;
-        if (o > occ) occ = o;
+        nearTop[count] = c.top;
+        nearOcc[count] = 1 - d / R;
+        count++;
       }
-      out[j * w + i] = -3.0 * occ * occ;
+      const mot = (mottle(i * 1.15, j * 1.15, seed) - 0.5) * 0.28;
+      for (let p = 0; p < planes.length; p++) {
+        const y = planes[p];
+        let occ = 0;
+        for (let k = 0; k < count; k++) {
+          if (nearTop[k] > y + 0.01 && nearOcc[k] > occ) occ = nearOcc[k];
+        }
+        grids[p][j * w + i] = -3.0 * occ * occ + mot;
+      }
     }
   }
+  return planes.map((y, p) => ({ y, grid: grids[p] }));
+}
+
+/**
+ * The heights a shadow or a contact wash can land on: the ground and the
+ * walking top of every storey. A rug floats a centimetre over its deck and
+ * snaps to it, because the planes are storeys, not vertex heights.
+ */
+export function receivingPlanes(tris: Tri[]): number[] {
+  const out: number[] = [];
+  for (let t = 0; t < tris.length; t++) {
+    const T = tris[t];
+    if (!T.receives) continue;
+    const y = Math.round(T.p0[1] * 1000) / 1000;
+    if (!out.some((v) => Math.abs(v - y) < 0.06)) out.push(y);
+  }
+  if (!out.length) out.push(0);
+  out.sort((a, b) => a - b);
   return out;
 }
 
@@ -988,8 +1034,19 @@ const sampleGrid = (grid: Float32Array, cols: number, rows: number, x: number, z
   return top + (bot - top) * fz;
 };
 
-export const aoAt = (s: Scene, x: number, z: number): number => sampleGrid(s.ao, s.cols, s.rows, x, z);
-export const ambientAt = (s: Scene, x: number, z: number): number => sampleGrid(s.floorAmb, s.cols, s.rows, x, z);
+/** The contact wash for the surface at `y`, from that plane's own grid. */
+export const ambientAt = (s: Scene, x: number, z: number, y = 0): number => {
+  let best = s.ambient[0];
+  let bestD = Math.abs(best.y - y);
+  for (let i = 1; i < s.ambient.length; i++) {
+    const d = Math.abs(s.ambient[i].y - y);
+    if (d < bestD) {
+      bestD = d;
+      best = s.ambient[i];
+    }
+  }
+  return sampleGrid(best.grid, s.cols, s.rows, x, z);
+};
 
 /**
  * Is there a solid in the way at this height? A thing you can stand on is not
@@ -1227,13 +1284,8 @@ export function buildScene(room: Room, yaw: number): Scene {
     return { id: t.id, spec: t.spec, x, z, y: t.y ?? deck, facing: t.facing };
   });
 
-  const ao = buildAo(cols, rows, colliders);
-  const floorAmb = new Float32Array(ao.length);
-  for (let j = 0; j <= rows; j++) {
-    for (let i = 0; i <= cols; i++) {
-      floorAmb[j * (cols + 1) + i] = ao[j * (cols + 1) + i] + (mottle(i * 1.15, j * 1.15, seed) - 0.5) * 0.28;
-    }
-  }
+  const planes = receivingPlanes(tris);
+  const ambient = buildAmbient(cols, rows, colliders, planes, seed);
 
   let yMax = room.wallHeight ?? WALL_H;
   for (let i = 0; i < colliders.length; i++) if (colliders[i].top > yMax) yMax = colliders[i].top;
@@ -1248,8 +1300,7 @@ export function buildScene(room: Room, yaw: number): Scene {
     fires,
     lights,
     colliders,
-    ao,
-    floorAmb,
+    ambient,
     grid: room.grid.cells,
     tierTop,
     yMax,
