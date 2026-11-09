@@ -12,7 +12,7 @@ import { CELL } from './paint';
  */
 export type RoomPlay = {
   rig?: LightRig;
-  tokenAt?: Record<string, { at: [number, number]; facing?: Facing }>;
+  tokenAt?: Record<string, { at: [number, number]; facing?: Facing; y?: number }>;
   /** Base64 bitmask over visible cells, one bit per cell. */
   explored?: string;
 };
@@ -62,6 +62,10 @@ export function applyPlay(room: Room, play: RoomPlay | undefined): Room {
       if (!p) continue;
       t.at = [p.at[0], p.at[1]];
       if (p.facing !== undefined) t.facing = p.facing;
+      // A body that walked up a stair prop is not on the tier lattice, so the
+      // deck it finished on has to travel with it or the next load puts it back
+      // through the floor.
+      if (p.y !== undefined) t.y = p.y;
     }
   }
   return out;

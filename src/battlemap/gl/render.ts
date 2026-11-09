@@ -32,6 +32,28 @@ import { flameTris } from './flame';
 
 export type CameraView = { yaw: number; pitch: number; pix?: number };
 
+/** A body mid-walk. The scene owns where a token *is*; this is where it is this
+ *  frame, so an animation never has to rebuild the room. */
+export type TokenMotion = {
+  x: number;
+  y: number;
+  z: number;
+  facing: Facing;
+  /** 0..3 walk cycle; 0 is the stance. */
+  step: number;
+};
+
+/** Where a token was drawn, for click selection. The depth is the same anchor
+ *  the sprite was tested against, so a token behind a wall is not clickable
+ *  through it. */
+export type TokenHit = {
+  id: string;
+  left: number;
+  top: number;
+  depth: number;
+  sprite: Sprite;
+};
+
 export type Frame = {
   w: number;
   h: number;
@@ -49,11 +71,18 @@ export type Frame = {
   shadow: Uint8Array;
   /** The same masks blurred into a 0..255 penumbra, read per receiving pixel. */
   soft: Uint8Array;
+  /** Camera and sun the masks were projected for; null until they are built. */
+  shadowKey: string | null;
+  /** The scene they were projected from, by identity — a rebuilt room is a
+   *  different scene even at the same camera. */
+  shadowScene: Scene | null;
   sw: number;
   sh: number;
   offX: number;
   offY: number;
   pix: number;
+  /** Tokens drawn this frame, far to near, for hit testing. */
+  hits: TokenHit[];
 };
 
 type Basis = {
@@ -132,11 +161,14 @@ const makeFrame = (w: number, h: number, pix: number, planes: number[]): Frame =
     planes,
     shadow: new Uint8Array(sw * sh * planes.length),
     soft: new Uint8Array(sw * sh * planes.length),
+    shadowKey: null,
+    shadowScene: null,
     sw,
     sh,
     offX: 0,
     offY: 0,
     pix,
+    hits: [],
   };
 };
 
@@ -196,6 +228,13 @@ export type RenderOpts = {
   selectedToken?: string | null;
   time?: number;
   fog?: FogView | null;
+  /** The route to draw this frame: a preview, or the one being walked. */
+  path?: [number, number][] | null;
+  /** The deck each dot stands on. A planned route knows its own heights, which
+   *  is the only way a dot can follow a staircase cell by cell. */
+  pathDecks?: number[] | null;
+  /** Bodies that are moving, by token id. */
+  motion?: Record<string, TokenMotion> | null;
   /** Set false while the camera is moving; the outline sweep is a fifth of the frame. */
   outline?: boolean;
   /** Keep the per-pixel material id, which only the debug view reads. */
@@ -230,12 +269,19 @@ export function renderFrame(
 
   frame.offX = bounds.offX;
   frame.offY = bounds.offY;
+  frame.hits.length = 0;
+  // The sun mask is a function of the camera, the sun and the geometry — not of
+  // time. Firelight is the only thing that moves while the table sits still, so
+  // reprojecting 5,700 triangles onto five planes at 30 Hz is work that cannot
+  // change the answer. Key the mask; skip the pass on a hit.
+  const shadowKey = `${camera.yaw}|${camera.pitch}|${pix}|${bounds.w}|${bounds.h}|${bounds.offX}|${bounds.offY}|${rig.sun.azimuth}|${rig.sun.elevation}`;
+  const shadowHit = frame.shadowScene === scene && frame.shadowKey === shadowKey;
   let tMark = performance.now();
   frame.col.fill(VOID);
   frame.depth.fill(1e9);
   frame.mat.fill(0);
   frame.step.fill(0);
-  frame.shadow.fill(0);
+  if (!shadowHit) frame.shadow.fill(0);
   renderStats.clear = performance.now() - tMark;
   tMark = performance.now();
 
@@ -418,91 +464,101 @@ export function renderFrame(
   // under the mask loses a few steps. One mask per height is what keeps a
   // shadow on the pit from also darkening a deck three cells above it: the
   // buffers are screen-space, so a single mask would bleed across storeys.
-  const shadowUsed = new Uint8Array(planes.length);
-  if (sunW.y > 0.04) {
-    const shadow = frame.shadow;
-    const sw = frame.sw;
-    const sh = frame.sh; // quarter-resolution fill
-    for (let t = 0; t < tris.length; t++) {
-      const T = tris[t];
-      if (!T.cast) continue;
-      // A shadow lands on the plane its caster stands on, not always on the
-      // pit: a ledge face throws onto the storey below it.
-      const gy = T.castTo ?? 0;
-      const layer = planeIndexOf(planes, gy);
-      // A caster with no receiving surface at its own plane is invisible: it
-      // would otherwise tint whatever happens to overlap it on screen.
-      if (layer < 0) continue;
-      shadowUsed[layer] = 1;
-      const layerBase = layer * sw * sh;
-      const t0 = (T.p0[1] - gy) / sunW.y;
-      const t1 = (T.p1[1] - gy) / sunW.y;
-      const t2 = (T.p2[1] - gy) / sunW.y;
-      if (t0 > 40 || t1 > 40 || t2 > 40) continue;
-      const ax = (projectX(b, T.p0[0] - sunW.x * t0, T.p0[2] - sunW.z * t0) * pix + offX) * 0.25;
-      const ay = (projectY(b, T.p0[0] - sunW.x * t0, gy, T.p0[2] - sunW.z * t0) * pix + offY) * 0.25;
-      const bx = (projectX(b, T.p1[0] - sunW.x * t1, T.p1[2] - sunW.z * t1) * pix + offX) * 0.25;
-      const by = (projectY(b, T.p1[0] - sunW.x * t1, gy, T.p1[2] - sunW.z * t1) * pix + offY) * 0.25;
-      const qx = (projectX(b, T.p2[0] - sunW.x * t2, T.p2[2] - sunW.z * t2) * pix + offX) * 0.25;
-      const qy = (projectY(b, T.p2[0] - sunW.x * t2, gy, T.p2[2] - sunW.z * t2) * pix + offY) * 0.25;
-      const area = (bx - ax) * (qy - ay) - (qx - ax) * (by - ay);
-      if (Math.abs(area) < 0.0001) continue;
-      const inv = 1 / area;
-      const minX = Math.max(0, Math.floor(Math.min(ax, bx, qx)));
-      const maxX = Math.min(sw - 1, Math.ceil(Math.max(ax, bx, qx)));
-      const minY = Math.max(0, Math.floor(Math.min(ay, by, qy)));
-      const maxY = Math.min(sh - 1, Math.ceil(Math.max(ay, by, qy)));
-      for (let py = minY; py <= maxY; py++) {
-        const pyc = py + 0.5;
-        for (let px = minX; px <= maxX; px++) {
-          const pxc = px + 0.5;
-          const c0 = ((bx - pxc) * (qy - pyc) - (qx - pxc) * (by - pyc)) * inv;
-          if (c0 < 0) continue;
-          const c1 = ((qx - pxc) * (ay - pyc) - (ax - pxc) * (qy - pyc)) * inv;
-          if (c1 < 0) continue;
-          if (c0 + c1 > 1) continue;
-          shadow[layerBase + py * sw + px] = 1;
-        }
-      }
-    }
-  }
-
-  // A binary block shadow has a four-pixel staircase for an edge, and at 1:1
-  // that reads as a hole cut in the floor. Blurring the quarter-res mask into a
-  // coverage value gives the penumbra somewhere to land, so the dither can
-  // feather it instead of stepping it.
-  {
-    const shadow = frame.shadow;
-    const soft = frame.soft;
-    const sw = frame.sw;
-    const sh = frame.sh;
-    const n = sw * sh;
-    for (let layer = 0; layer < planes.length; layer++) {
-      const base = layer * n;
-      if (!shadowUsed[layer]) {
-        // A reused frame still holds last frame's mask for a plane that has
-        // lost its caster; a receiver must never read it.
-        soft.fill(0, base, base + n);
-        continue;
-      }
-      for (let y = 0; y < sh; y++) {
-        const y0 = y > 0 ? y - 1 : 0;
-        const y1 = y < sh - 1 ? y + 1 : sh - 1;
-        for (let x = 0; x < sw; x++) {
-          const x0 = x > 0 ? x - 1 : 0;
-          const x1 = x < sw - 1 ? x + 1 : sw - 1;
-          let sum = 0;
-          for (let yy = y0; yy <= y1; yy++) {
-            const r = base + yy * sw;
-            sum += shadow[r + x0] + shadow[r + x] + shadow[r + x1];
+  //
+  // The whole pass is skipped on a hit against the key computed above. That is
+  // the common frame at a table: the camera is parked, the sun is authored, and
+  // the only thing animating is a flame.
+  if (!shadowHit) {
+    const shadowUsed = new Uint8Array(planes.length);
+    if (sunW.y > 0.04) {
+      const shadow = frame.shadow;
+      const sw = frame.sw;
+      const sh = frame.sh; // quarter-resolution fill
+      for (let t = 0; t < tris.length; t++) {
+        const T = tris[t];
+        if (!T.cast) continue;
+        // A shadow lands on the plane its caster stands on, not always on the
+        // pit: a ledge face throws onto the storey below it.
+        const gy = T.castTo ?? 0;
+        const layer = planeIndexOf(planes, gy);
+        // A caster with no receiving surface at its own plane is invisible: it
+        // would otherwise tint whatever happens to overlap it on screen.
+        if (layer < 0) continue;
+        shadowUsed[layer] = 1;
+        const layerBase = layer * sw * sh;
+        const t0 = (T.p0[1] - gy) / sunW.y;
+        const t1 = (T.p1[1] - gy) / sunW.y;
+        const t2 = (T.p2[1] - gy) / sunW.y;
+        if (t0 > 40 || t1 > 40 || t2 > 40) continue;
+        const ax = (projectX(b, T.p0[0] - sunW.x * t0, T.p0[2] - sunW.z * t0) * pix + offX) * 0.25;
+        const ay = (projectY(b, T.p0[0] - sunW.x * t0, gy, T.p0[2] - sunW.z * t0) * pix + offY) * 0.25;
+        const bx = (projectX(b, T.p1[0] - sunW.x * t1, T.p1[2] - sunW.z * t1) * pix + offX) * 0.25;
+        const by = (projectY(b, T.p1[0] - sunW.x * t1, gy, T.p1[2] - sunW.z * t1) * pix + offY) * 0.25;
+        const qx = (projectX(b, T.p2[0] - sunW.x * t2, T.p2[2] - sunW.z * t2) * pix + offX) * 0.25;
+        const qy = (projectY(b, T.p2[0] - sunW.x * t2, gy, T.p2[2] - sunW.z * t2) * pix + offY) * 0.25;
+        const area = (bx - ax) * (qy - ay) - (qx - ax) * (by - ay);
+        if (Math.abs(area) < 0.0001) continue;
+        const inv = 1 / area;
+        const minX = Math.max(0, Math.floor(Math.min(ax, bx, qx)));
+        const maxX = Math.min(sw - 1, Math.ceil(Math.max(ax, bx, qx)));
+        const minY = Math.max(0, Math.floor(Math.min(ay, by, qy)));
+        const maxY = Math.min(sh - 1, Math.ceil(Math.max(ay, by, qy)));
+        for (let py = minY; py <= maxY; py++) {
+          const pyc = py + 0.5;
+          for (let px = minX; px <= maxX; px++) {
+            const pxc = px + 0.5;
+            const c0 = ((bx - pxc) * (qy - pyc) - (qx - pxc) * (by - pyc)) * inv;
+            if (c0 < 0) continue;
+            const c1 = ((qx - pxc) * (ay - pyc) - (ax - pxc) * (qy - pyc)) * inv;
+            if (c1 < 0) continue;
+            if (c0 + c1 > 1) continue;
+            shadow[layerBase + py * sw + px] = 1;
           }
-          soft[base + y * sw + x] = (sum * 255) / 9;
         }
       }
     }
-  }
 
-  renderStats.shadow = performance.now() - tMark;
+    // A binary block shadow has a four-pixel staircase for an edge, and at 1:1
+    // that reads as a hole cut in the floor. Blurring the quarter-res mask into
+    // a coverage value gives the penumbra somewhere to land, so the dither can
+    // feather it instead of stepping it.
+    {
+      const shadow = frame.shadow;
+      const soft = frame.soft;
+      const sw = frame.sw;
+      const sh = frame.sh;
+      const n = sw * sh;
+      for (let layer = 0; layer < planes.length; layer++) {
+        const base = layer * n;
+        if (!shadowUsed[layer]) {
+          // A reused frame still holds last frame's mask for a plane that has
+          // lost its caster; a receiver must never read it.
+          soft.fill(0, base, base + n);
+          continue;
+        }
+        for (let y = 0; y < sh; y++) {
+          const y0 = y > 0 ? y - 1 : 0;
+          const y1 = y < sh - 1 ? y + 1 : sh - 1;
+          for (let x = 0; x < sw; x++) {
+            const x0 = x > 0 ? x - 1 : 0;
+            const x1 = x < sw - 1 ? x + 1 : sw - 1;
+            let sum = 0;
+            for (let yy = y0; yy <= y1; yy++) {
+              const r = base + yy * sw;
+              sum += shadow[r + x0] + shadow[r + x] + shadow[r + x1];
+            }
+            soft[base + y * sw + x] = (sum * 255) / 9;
+          }
+        }
+      }
+    }
+
+    frame.shadowKey = shadowKey;
+    frame.shadowScene = scene;
+    renderStats.shadow = performance.now() - tMark;
+  } else {
+    renderStats.shadow = 0;
+  }
   tMark = performance.now();
 
   const paintTri = (T: Tri) => {
@@ -609,7 +665,7 @@ export function renderFrame(
 
   renderStats.outline = performance.now() - tMark;
   tMark = performance.now();
-  if (opts.showPath) drawPath(frame, scene, b, pix, offX, offY);
+  if (opts.showPath) drawPath(frame, scene, b, pix, offX, offY, opts.path ?? scene.room.path, opts.pathDecks);
 
   // Fire after the ink sweep on purpose. The sweep reads depth only, so it
   // would ink the seam between two overlapping tongues — on a tongue two pixels
@@ -758,8 +814,16 @@ function firePass(frame: Frame, b: Basis, pix: number, lights: FireLight[]) {
 }
 
 /* ------------------------------------------------------------------- path */
-function drawPath(frame: Frame, scene: Scene, b: Basis, pix: number, offX: number, offY: number) {
-  const path = scene.room.path;
+function drawPath(
+  frame: Frame,
+  scene: Scene,
+  b: Basis,
+  pix: number,
+  offX: number,
+  offY: number,
+  path: [number, number][],
+  decks?: number[] | null,
+) {
   if (path.length === 0) return;
   const dot = COLOUR_OF[(9 << 4) + 5];
   const hot = COLOUR_OF[(9 << 4) + 9];
@@ -768,11 +832,11 @@ function drawPath(frame: Frame, scene: Scene, b: Basis, pix: number, offX: numbe
   // A path is walked, so each dot stands on whatever the previous dot could
   // step onto. That is what lets a dotted move climb a stair — the dots rise
   // because the surfaces do, not because anything here knows what a stair is.
-  let deck = 0;
-  const screen = path.map(([cx, cz]) => {
+  let deck = decks?.[0] ?? 0;
+  const screen = path.map(([cx, cz], n) => {
     const x = cx + 0.5;
     const z = cz + 0.5;
-    deck = surfaceAt(scene, x, z, deck, 0.5);
+    deck = decks?.[n] ?? surfaceAt(scene, x, z, deck, 0.5);
     return {
       x: Math.round(projectX(b, x, z) * pix + offX),
       y: Math.round(projectY(b, x, deck + 0.02, z) * pix + offY),
@@ -822,6 +886,7 @@ function drawPath(frame: Frame, scene: Scene, b: Basis, pix: number, offX: numbe
  * coals, flames — is geometry, so an orbit cannot disagree with it.
  */
 type Billboard = {
+  id: string;
   depth: number;
   sprite: Sprite;
   left: number;
@@ -831,11 +896,11 @@ type Billboard = {
 
 const spriteCache = new Map<string, { w: number; h: number; rgba: Uint32Array }>();
 
-function bodySprite(spec: Scene['tokens'][number]['spec'], facing: Facing, shift: number) {
-  const key = `${spec.id}|${facing}|${shift}`;
+function bodySprite(spec: Scene['tokens'][number]['spec'], facing: Facing, shift: number, pose: number) {
+  const key = `${spec.id}|${facing}|${shift}|${pose}`;
   const hit = spriteCache.get(key);
   if (hit) return hit;
-  const body = renderBody(spec, facing, shift);
+  const body = renderBody(spec, facing, shift, pose);
   const out = { w: BODY_W, h: BODY_H, rgba: body.col };
   spriteCache.set(key, out);
   return out;
@@ -941,20 +1006,35 @@ function drawSprites(
   };
 
   for (const tok of scene.tokens) {
-    const sx = Math.round(projectX(b, tok.x, tok.z) * pix + frame.offX);
-    const sy = Math.round(projectY(b, tok.x, tok.y + 0.01, tok.z) * pix + frame.offY);
+    // A move is an override, not a mutation: the cached scene keeps the authored
+    // position, so a paint without motion (or after the walk lands) is the room
+    // as the document has it.
+    const m = opts.motion?.[tok.id];
+    const tx = m?.x ?? tok.x;
+    const ty = m?.y ?? tok.y;
+    const tz = m?.z ?? tok.z;
+    const tf = m?.facing ?? tok.facing;
+    const step = m?.step ?? 0;
 
-    groundShadow(frame, b, pix, tok.x, tok.y, tok.z, 0.34);
+    const sx = Math.round(projectX(b, tx, tz) * pix + frame.offX);
+    const sy = Math.round(projectY(b, tx, ty + 0.01, tz) * pix + frame.offY);
 
-    const facing = facingFor(tok.facing, b);
-    const shift = shiftAt(tok.x, tok.y + 0.7, tok.z);
-    const sprite = bodySprite(tok.spec, facing, shift);
-    const anchor = depthOf(b, tok.x, tok.y + 0.02, tok.z);
+    groundShadow(frame, b, pix, tx, ty, tz, 0.34);
+
+    const facing = facingFor(tf, b);
+    const shift = shiftAt(tx, ty + 0.7, tz);
+    const sprite = bodySprite(tok.spec, facing, shift, step);
+    const anchor = depthOf(b, tx, ty + 0.02, tz);
+    // The body rides highest over the passing leg and lands on the stride; the
+    // contact shadow stays on the floor, and that gap is what reads as a step
+    // rather than a slide.
+    const bob = m && (step === 0 || step === 2) ? -1 : 0;
     list.push({
+      id: tok.id,
       depth: anchor,
       sprite,
       left: Math.round(sx - sprite.w / 2),
-      top: Math.round(sy - sprite.h + 1),
+      top: Math.round(sy - sprite.h + 1) + bob,
       d: anchor - 0.05,
     });
   }
@@ -979,15 +1059,20 @@ function drawSprites(
         col[k] = c;
       }
     }
+    frame.hits.push({ id: s.id, left: s.left, top: s.top, depth: s.depth, sprite });
   }
   // Selection chevron, drawn after every sprite so nothing covers it.
   const selected = opts.selectedToken;
   if (selected) {
     const tok = scene.tokens.find((t) => t.id === selected);
     if (tok) {
-      const sx = Math.round(projectX(b, tok.x, tok.z) * pix + frame.offX);
-      const sy = Math.round(projectY(b, tok.x, tok.y + 0.01, tok.z) * pix + frame.offY);
-      const d = depthOf(b, tok.x, tok.y + 0.02, tok.z) - 0.1;
+      const m = opts.motion?.[tok.id];
+      const tx = m?.x ?? tok.x;
+      const ty = m?.y ?? tok.y;
+      const tz = m?.z ?? tok.z;
+      const sx = Math.round(projectX(b, tx, tz) * pix + frame.offX);
+      const sy = Math.round(projectY(b, tx, ty + 0.01, tz) * pix + frame.offY);
+      const d = depthOf(b, tx, ty + 0.02, tz) - 0.1;
       for (let i = 0; i < 9; i++) {
         const half = i < 4 ? i + 1 : 10 - i;
         for (let k = 0; k < half; k++) {
@@ -1112,8 +1197,60 @@ export class Board3D {
     return [x, z];
   }
 
-  solidAtCell(x: number, z: number): boolean {
-    return solidAt(this.scene, x, z);
+  /**
+   * A board pixel → the world point of the surface actually visible there.
+   *
+   * `worldAt` answers for the floor plane, which is wrong the moment a room has
+   * a storey: clicking a gallery would land on the ground under it. The depth
+   * buffer is the missing third coordinate, and the camera basis is orthonormal,
+   * so the inverse projection is its transpose. One lookup, no ray march.
+   */
+  pickAt(bx: number, by: number): { x: number; y: number; z: number; cell: [number, number] } | null {
+    const f = this.frame;
+    if (!f) return null;
+    const px = Math.floor(bx);
+    const py = Math.floor(by);
+    if (px < 0 || py < 0 || px >= f.w || py >= f.h) return null;
+    const d = f.depth[py * f.w + px];
+    if (d > 1e8) return null;
+    const b = this.basis;
+    const X = (px + 0.5 - f.offX) / this.pix;
+    const Y = (py + 0.5 - f.offY) / this.pix;
+    const x = b.rx * X - b.ux * Y + b.fx * d;
+    const y = -b.uy * Y + b.fy * d;
+    const z = b.rz * X - b.uz * Y + b.fz * d;
+    const cx = Math.floor(x);
+    const cz = Math.floor(z);
+    if (cx < 0 || cz < 0 || cx >= this.scene.cols || cz >= this.scene.rows) return null;
+    return { x, y, z, cell: [cx, cz] };
+  }
+
+  /** The token under a board pixel, nearest first. Sprite alpha is tested, so
+   *  the transparent corners of a card are not a hit, and a token behind a wall
+   *  cannot be clicked through the wall that hides it. */
+  tokenAt(bx: number, by: number): string | null {
+    const f = this.frame;
+    if (!f) return null;
+    const px = Math.floor(bx);
+    const py = Math.floor(by);
+    if (px < 0 || py < 0 || px >= f.w || py >= f.h) return null;
+    const k = py * f.w + px;
+    let found: string | null = null;
+    // Hits are pushed far to near, so the last one that matches is the nearest.
+    for (let n = 0; n < f.hits.length; n++) {
+      const h = f.hits[n];
+      const i = px - h.left;
+      const j = py - h.top;
+      if (i < 0 || j < 0 || i >= h.sprite.w || j >= h.sprite.h) continue;
+      if ((h.sprite.rgba[j * h.sprite.w + i] >>> 24) === 0) continue;
+      if (h.depth - 0.05 >= f.depth[k]) continue;
+      found = h.id;
+    }
+    return found;
+  }
+
+  solidAtCell(x: number, z: number, y = 0): boolean {
+    return solidAt(this.scene, x, z, y);
   }
 
   cellAt(x: number, z: number): number {

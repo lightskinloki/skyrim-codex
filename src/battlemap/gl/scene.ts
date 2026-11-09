@@ -101,6 +101,9 @@ export type Collider = {
   base: number;
   /** Top of the solid, in cells — also the surface a token can stand on. */
   top: number;
+  /** A run of steps, not a wall: a walker may climb it even when one cell of it
+   *  rises more than a single step. `walk.ts` reads this; nothing else does. */
+  climb?: boolean;
 };
 
 export type SceneLight = {
@@ -145,6 +148,10 @@ export type Scene = {
 };
 
 export const WALL_H = 1.875;
+
+/** The clear height of a doorway, in cells. The wooden frame and the masonry
+ *  above it both stop here, so the head cannot disagree with the opening. */
+export const DOOR_H = 1.5;
 /** Near walls are cut down to a curb so the room can be seen into. */
 export const CURB_H = 0.16;
 const PX = 32;
@@ -409,8 +416,9 @@ const addCollider = (
   z1: number,
   top: number,
   base = 0,
+  climb = false,
 ) => {
-  c.push({ x0, z0, x1, z1, base, top });
+  c.push(climb ? { x0, z0, x1, z1, base, top, climb } : { x0, z0, x1, z1, base, top });
 };
 
 /**
@@ -570,10 +578,10 @@ function buildProp(
         const top = ((s + 1) / steps) * rise;
         if (along === 'z') {
           addBox(tris, x0, z0 + a, x0 + w, z0 + b, 0, top, M_STONE_PROP, tex.stone);
-          addCollider(colliders, x0, z0 + a, x0 + w, z0 + b, top);
+          addCollider(colliders, x0, z0 + a, x0 + w, z0 + b, top, 0, true);
         } else {
           addBox(tris, x0 + a, z0, x0 + b, z0 + w, 0, top, M_STONE_PROP, tex.stone);
-          addCollider(colliders, x0 + a, z0, x0 + b, z0 + w, top);
+          addCollider(colliders, x0 + a, z0, x0 + b, z0 + w, top, 0, true);
         }
       }
       break;
@@ -714,6 +722,36 @@ const cellAt = (g: Uint8Array, cols: number, rows: number, cx: number, cy: numbe
   return g[cy * cols + cx];
 };
 
+/**
+ * The near wall of a room is cut to a curb so the table can see in. This is the
+ * same test `buildWalls` uses, exposed to the doorway heads: masonry must not
+ * hang above a wall the camera has already cut away.
+ */
+const curbedWall = (
+  grid: Uint8Array,
+  cols: number,
+  rows: number,
+  cx: number,
+  cy: number,
+  yaw: number,
+): boolean => {
+  const a = (yaw * Math.PI) / 180;
+  const fx = -Math.sin(a);
+  const fz = -Math.cos(a);
+  const dirs: [number, number, number, number][] = [
+    [0, -1, 0, -1],
+    [0, 1, 0, 1],
+    [-1, 0, -1, 0],
+    [1, 0, 1, 0],
+  ];
+  for (const [dx, dz, ox, oz] of dirs) {
+    // Only a void neighbour is an exterior face; a floor neighbour is the room.
+    const outside = cellAt(grid, cols, rows, cx + dx, cy + dz) === 0;
+    if (outside && ox * fx + oz * fz < -0.001) return true;
+  }
+  return false;
+};
+
 /** `v` runs from the top of the block down in world pixels, not normalised, so
  *  a coping course is the same height on a curb and on a two-cell wall. */
 const wallUv = (topY: number, alongX: boolean): UvFn => (p) => [
@@ -736,12 +774,6 @@ function buildWalls(
   const a = (yaw * Math.PI) / 180;
   const fx = -Math.sin(a);
   const fz = -Math.cos(a);
-  const dirs: [number, number, number, number][] = [
-    [0, -1, 0, -1],
-    [0, 1, 0, 1],
-    [-1, 0, -1, 0],
-    [1, 0, 1, 0],
-  ];
 
   for (let cy = 0; cy < rows; cy++) {
     for (let cx = 0; cx < cols; cx++) {
@@ -770,13 +802,10 @@ function buildWalls(
         const side = (cx + 0.5 - cols / 2) * fx + (cy + 0.5 - rows / 2) * fz;
         if (side < 0) continue;
       } else {
-        for (const [dx, dz, ox, oz] of dirs) {
-          // Only a *void* neighbour is an exterior face. A floor neighbour is
-          // the inside of the room, and testing that instead curbed every wall
-          // cell in the ring — which is exactly how the first pass lost height.
-          const outside = cellAt(grid, cols, rows, cx + dx, cy + dz) === 0;
-          if (outside && ox * fx + oz * fz < -0.001) curb = true;
-        }
+        // Only a *void* neighbour is an exterior face. A floor neighbour is
+        // the inside of the room, and testing that instead curbed every wall
+        // cell in the ring — which is exactly how the first pass lost height.
+        curb = curbedWall(grid, cols, rows, cx, cy, yaw);
       }
 
       if (rock && curb) continue;
@@ -819,6 +848,151 @@ function buildWalls(
     }
   }
 }
+
+type DoorFace = 'n' | 's' | 'e' | 'w';
+
+/**
+ * Which face of a house a doorstep stands in front of, if any. Village doors are
+ * porch frames rather than gaps in a terrain wall, so there is no pair of wall
+ * cells to read the passage from — the nearest building face is the one the
+ * frame belongs to. Dormers aside, a doorstep is within a cell of its face.
+ */
+const houseFaceAt = (room: Room, dx: number, dz: number): DoorFace | null => {
+  const px = dx + 0.5;
+  const pz = dz + 0.5;
+  let best: DoorFace | null = null;
+  let bestD = 2.4;
+  for (const p of room.props) {
+    if (p.rule !== 'house') continue;
+    const w = p.w ?? 4;
+    const h = p.h ?? 3;
+    const x0 = p.at[0];
+    const z0 = p.at[1];
+    const x1 = x0 + w;
+    const z1 = z0 + h;
+    const inX = px >= x0 - 0.75 && px <= x1 + 0.75;
+    const inZ = pz >= z0 - 0.75 && pz <= z1 + 0.75;
+    const faces: [DoorFace, number, boolean][] = [
+      ['n', Math.abs(pz - z0), inX],
+      ['s', Math.abs(pz - z1), inX],
+      ['w', Math.abs(px - x0), inZ],
+      ['e', Math.abs(px - x1), inZ],
+    ];
+    for (const [side, d, spans] of faces) {
+      // A door inside the footprint is not standing at a face.
+      if (!spans || d < 0.2) continue;
+      if (d < bestD) {
+        bestD = d;
+        best = side;
+      }
+    }
+  }
+  return best;
+};
+
+/**
+ * Which way a doorway passes: true when you walk north-south, false when you
+ * walk east-west. A gap in a wall is decided by the two cells collinear with
+ * it, because those are the wall the hole was cut in; failing that, a house
+ * face decides, and only then the nearest solid. The frame and the masonry
+ * above it both read this, so they cannot disagree about which way the opening
+ * faces.
+ */
+const doorPassageAlongZ = (room: Room, colliders: Collider[], dx: number, dz: number): boolean => {
+  const { cells, cols, rows } = room.grid;
+  const wallW = cellAt(cells, cols, rows, dx - 1, dz) === 2;
+  const wallE = cellAt(cells, cols, rows, dx + 1, dz) === 2;
+  const wallN = cellAt(cells, cols, rows, dx, dz - 1) === 2;
+  const wallS = cellAt(cells, cols, rows, dx, dz + 1) === 2;
+  if (wallW && wallE) return true;
+  if (wallN && wallS) return false;
+
+  const face = houseFaceAt(room, dx, dz);
+  if (face) return face === 'n' || face === 's';
+
+  const solidNear = (px: number, pz: number) =>
+    colliders.some((c) => px >= c.x0 && px <= c.x1 && pz >= c.z0 && pz <= c.z1 && c.top > 0.3);
+  if (solidNear(dx + 0.5, dz - 0.5) || solidNear(dx + 0.5, dz + 1.5)) return true;
+  if (solidNear(dx - 0.5, dz + 0.5) || solidNear(dx + 1.5, dz + 0.5)) return false;
+  return false;
+};
+
+/**
+ * True when the door cell is part of a terrain wall run: the cell itself is
+ * masonry, or the two cells collinear with it are. This is the difference
+ * between a doorway cut through a wall and a porch standing in front of a
+ * house; the wall case needs a full-depth head, the porch does not.
+ */
+const doorIsWallGap = (room: Room, dx: number, dz: number, alongZ: boolean): boolean => {
+  const { cells, cols, rows } = room.grid;
+  if (cells[dz * cols + dx] === 2) return true;
+  return alongZ
+    ? cellAt(cells, cols, rows, dx - 1, dz) === 2 && cellAt(cells, cols, rows, dx + 1, dz) === 2
+    : cellAt(cells, cols, rows, dx, dz - 1) === 2 && cellAt(cells, cols, rows, dx, dz + 1) === 2;
+};
+
+/**
+ * The wall over a doorway. A gap in a wall is a hole through a volume, not the
+ * absence of a wall: the opening has a head, and without it the doorway reads
+ * as a missing cell with a frame standing in the breeze. Only openings cut into
+ * terrain walls get one — a porch on a house already has the house's stone
+ * lintel — detected by the same flanking cells that orient the frame. The near
+ * wall is cut to a curb, and gets none, or the head would float over the cut.
+ */
+const buildDoorHeads = (
+  room: Room,
+  cols: number,
+  rows: number,
+  yaw: number,
+  tex: Textures,
+  tris: Tri[],
+  colliders: Collider[],
+  wallH: number,
+  doorH: number,
+) => {
+  if (!room.doors?.length || wallH - doorH < 0.02) return;
+  const { cells } = room.grid;
+  const seen = new Set<number>();
+  for (const door of room.doors) {
+    const dx = Math.round(door.at[0]);
+    const dz = Math.round(door.at[1]);
+    if (dx < 0 || dz < 0 || dx >= cols || dz >= rows) continue;
+    const key = dz * cols + dx;
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    const cell = cells[key];
+    const alongZ = doorPassageAlongZ(room, colliders, dx, dz);
+    if (!doorIsWallGap(room, dx, dz, alongZ)) continue;
+
+    // The cutaway removes masonry on the camera's side only.
+    if (cell === 2 && curbedWall(cells, cols, rows, dx, dz, yaw)) continue;
+    if (curbedWall(cells, cols, rows, alongZ ? dx - 1 : dx, alongZ ? dz : dz - 1, yaw)) continue;
+    if (curbedWall(cells, cols, rows, alongZ ? dx + 1 : dx, alongZ ? dz : dz + 1, yaw)) continue;
+
+    // Inset a hair: the flanking walls already own the boundary planes, and two
+    // coplanar faces z-fight into a stitched seam.
+    const d = 0.004;
+    const x0 = dx + d;
+    const x1 = dx + 1 - d;
+    const z0 = dz + d;
+    const z1 = dz + 1 - d;
+    const faceUv = wallUv(wallH, true);
+    const sideUv = wallUv(wallH, false);
+    // Built face by face rather than with addBox: the coping texture is anchored
+    // to the top of the wall, so the masonry courses run straight through the
+    // head and into the wall either side instead of restarting at y = 0.
+    addQuad(tris, [x0, wallH, z0], [x1, wallH, z0], [x1, wallH, z1], [x0, wallH, z1], [0, 1, 0], M_WALL, tex.wallTop, uvTop, true, false, true);
+    addQuad(tris, [x0, doorH, z1], [x1, doorH, z1], [x1, doorH, z0], [x0, doorH, z0], [0, -1, 0], M_WALL, tex.wallFace, uvTop, false);
+    addQuad(tris, [x0, doorH, z0], [x1, doorH, z0], [x1, wallH, z0], [x0, wallH, z0], [0, 0, -1], M_WALL, tex.wallFace, faceUv);
+    addQuad(tris, [x1, doorH, z1], [x0, doorH, z1], [x0, wallH, z1], [x1, wallH, z1], [0, 0, 1], M_WALL, tex.wallFace, faceUv);
+    addQuad(tris, [x0, doorH, z1], [x0, doorH, z0], [x0, wallH, z0], [x0, wallH, z1], [-1, 0, 0], M_WALL, tex.wallFace, sideUv);
+    addQuad(tris, [x1, doorH, z0], [x1, doorH, z1], [x1, wallH, z1], [x1, wallH, z0], [1, 0, 0], M_WALL, tex.wallFace, sideUv);
+    // Solid above the opening, open under it: a flier stops at the head, a
+    // walker passes through.
+    addCollider(colliders, dx, dz, dx + 1, dz + 1, wallH, doorH);
+  }
+};
 
 /* ------------------------------------------------------------------ tiers */
 type TierBuild = { tier: Tier; cover: Uint8Array; base: Float32Array };
@@ -969,6 +1143,7 @@ function buildAmbient(
   // and a quarter of a million little allocations is a visible hitch on an
   // orbit, when the scene is rebuilt on every yaw change.
   const nearTop = new Float32Array(colliders.length);
+  const nearBase = new Float32Array(colliders.length);
   const nearOcc = new Float32Array(colliders.length);
   for (let j = 0; j < h; j++) {
     for (let i = 0; i < w; i++) {
@@ -982,6 +1157,7 @@ function buildAmbient(
         const d = Math.sqrt(dx * dx + dz * dz);
         if (d >= R) continue;
         nearTop[count] = c.top;
+        nearBase[count] = c.base;
         nearOcc[count] = 1 - d / R;
         count++;
       }
@@ -990,6 +1166,10 @@ function buildAmbient(
         const y = planes[p];
         let occ = 0;
         for (let k = 0; k < count; k++) {
+          // Only a solid that stands on (or below) this surface can make it
+          // meet the solid. A lintel floating above a doorway must not darken
+          // the floor it happens to be over, or every threshold gets a blob.
+          if (nearBase[k] > y + 0.2) continue;
           if (nearTop[k] > y + 0.01 && nearOcc[k] > occ) occ = nearOcc[k];
         }
         grids[p][j * w + i] = -3.0 * occ * occ + mot;
@@ -1180,6 +1360,9 @@ export function buildScene(room: Room, yaw: number): Scene {
     }
   }
 
+  const wallH = room.wallHeight ?? WALL_H;
+  const doorH = Math.min(DOOR_H, wallH);
+  const cavern = room.tiers !== undefined && room.tiers.length > 0;
   buildWalls(
     room.grid.cells,
     cols,
@@ -1188,8 +1371,8 @@ export function buildScene(room: Room, yaw: number): Scene {
     tex,
     tris,
     colliders,
-    room.wallHeight ?? WALL_H,
-    room.tiers !== undefined && room.tiers.length > 0,
+    wallH,
+    cavern,
     room.doors?.length
       ? new Set(room.doors.map((d) => Math.round(d.at[1]) * cols + Math.round(d.at[0])))
       : undefined,
@@ -1233,47 +1416,50 @@ export function buildScene(room: Room, yaw: number): Scene {
   }
 
   // Doorways stand in the floor cell they occupy: two posts, a lintel, and a
-  // plank door when shut. Orientation comes from the wall either side, so a map
-  // author only places a cell and the frame hangs itself.
+  // plank door when shut. The passage comes from the wall the opening was cut
+  // in — a gap's flanking cells, or the face of the house it serves — so the
+  // frame hangs itself rather than asking the author for an orientation.
   for (const door of room.doors ?? []) {
     const dx = Math.round(door.at[0]);
     const dz = Math.round(door.at[1]);
     if (dx < 0 || dz < 0 || dx >= cols || dz >= rows) continue;
-    // The wall a door belongs to may be terrain or a prop (a house has no wall
-    // cells), so the frame asks the colliders, not just the grid. A solid to the
-    // east or west means the opening runs north-south: jambs on the x edges.
-    const solidNear = (px: number, pz: number) =>
-      colliders.some((c) => px >= c.x0 && px <= c.x1 && pz >= c.z0 && pz <= c.z1 && c.top > 0.3);
-    const wallsNorthSouth = solidNear(dx + 0.5, dz - 0.5) || solidNear(dx + 0.5, dz + 1.5);
-    const wallsEastWest = solidNear(dx - 0.5, dz + 0.5) || solidNear(dx + 1.5, dz + 0.5);
-    const alongZ = wallsNorthSouth
-      ? true
-      : wallsEastWest
-        ? false
-        : cellAt(room.grid.cells, cols, rows, dx - 1, dz) === 2 ||
-          cellAt(room.grid.cells, cols, rows, dx + 1, dz) === 2;
-    const postH = Math.min(1.5, room.wallHeight ?? 1.7);
+    const alongZ = doorPassageAlongZ(room, colliders, dx, dz);
+    const postH = doorH;
     const jamb = 0.11;
     const lintel = 0.14;
+    // A header through a wall has to be as deep as the wall or the gap either
+    // side of it is a slot to the outside. The header of a porch only has open
+    // air around it, so it stays a beam — a full-depth slab up there reads as a
+    // tabletop when the camera looks down at the village.
+    const gap = doorIsWallGap(room, dx, dz, alongZ);
+    const t0 = gap ? 0.06 : 0.4;
+    const t1 = gap ? 0.94 : 0.6;
     if (alongZ) {
       addBox(tris, dx + 0.06, dz + 0.07, dx + 0.06 + jamb, dz + 0.93, 0, postH, M_WOOD_PROP, tex.wood);
       addBox(tris, dx + 0.94 - jamb, dz + 0.07, dx + 0.94, dz + 0.93, 0, postH, M_WOOD_PROP, tex.wood);
-      addBox(tris, dx + 0.06, dz + 0.4, dx + 0.94, dz + 0.6, postH - lintel, postH, M_WOOD_PROP, tex.wood);
+      addBox(tris, dx + 0.06, dz + t0, dx + 0.94, dz + t1, postH - lintel, postH, M_WOOD_PROP, tex.wood);
       if (door.state !== 'open') {
-        addBox(tris, dx + 0.47, dz + 0.1, dx + 0.53, dz + 0.9, 0, postH - lintel, M_WOOD_PROP, tex.wood);
+        // The leaf closes across the passage, in the plane of the frame — not
+        // along it. A door at right angles to its own lintel reads as ajar.
+        addBox(tris, dx + 0.1, dz + 0.47, dx + 0.9, dz + 0.53, 0, postH - lintel, M_WOOD_PROP, tex.wood);
       }
     } else {
       addBox(tris, dx + 0.07, dz + 0.06, dx + 0.93, dz + 0.06 + jamb, 0, postH, M_WOOD_PROP, tex.wood);
       addBox(tris, dx + 0.07, dz + 0.94 - jamb, dx + 0.93, dz + 0.94, 0, postH, M_WOOD_PROP, tex.wood);
-      addBox(tris, dx + 0.4, dz + 0.06, dx + 0.6, dz + 0.94, postH - lintel, postH, M_WOOD_PROP, tex.wood);
+      addBox(tris, dx + t0, dz + 0.06, dx + t1, dz + 0.94, postH - lintel, postH, M_WOOD_PROP, tex.wood);
       if (door.state !== 'open') {
-        addBox(tris, dx + 0.1, dz + 0.47, dx + 0.9, dz + 0.53, 0, postH - lintel, M_WOOD_PROP, tex.wood);
+        addBox(tris, dx + 0.47, dz + 0.1, dx + 0.53, dz + 0.9, 0, postH - lintel, M_WOOD_PROP, tex.wood);
       }
     }
     if (door.to) {
       lights.push({ x: dx + 0.5, y: postH - 0.3, z: dz + 0.5, radius: 1.6, intensity: 0.55, flicker: 0.05 });
     }
   }
+
+  // A cavern has no wall runs, and its mass is cut to a half-plane; a head built
+  // there would survive the cut and hang in the open. Everything else gets the
+  // masonry over its doorways once the frames are in place.
+  if (!cavern) buildDoorHeads(room, cols, rows, yaw, tex, tris, colliders, wallH, doorH);
 
   const tokens: SceneToken[] = room.tokens.map((t) => {
     const x = t.at[0] + 0.5;

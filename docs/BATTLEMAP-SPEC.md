@@ -74,6 +74,17 @@ reach band, a rune or a burning beam at 8 ft has done so whether or not a player
 chose it. The geometry does not care who caused the movement. Only the economy
 and the opportunity attack do.
 
+> **AS BUILT (9 Nov 2026).** The prototype board selects a token and clicks a
+> cell; the planner finds a route on the cell lattice and draws it before the
+> walk is taken. The route is a list of cell centres with a deck per cell, taken
+> from the scene's colliders, so a stair is climbed by the same rule that makes a
+> shelf standable. The body is a billboard with a four-pose cycle, four facings,
+> a one-pixel passing bob and 200 ms per cell; the landing is written to the play
+> file on the wall clock rather than on an animation frame, so a backgrounded tab
+> still finishes its move. This is the presentation half of M9–M10, not the
+> resolver: arbitrary 3D blocks, zones, engagement and drawn-path editing are
+> still 3b–3d.
+
 ---
 
 ## 3. Coordinates
@@ -830,13 +841,29 @@ Shadow subtraction is 3.2 steps, so the darkest floor is still stone.
 
 **R4a. Contact darkening belongs to a plane too.** The baked wash is built once
 per receiving plane, and a solid darkens a surface only when its top rises above
-that surface. That one test is what stops a storey shading itself: a deck's own
-collider tops out at the deck, so it is not a caster for that plane — but the
-wall behind it, a crate standing on it, or a gallery overhead still is. A single
+that surface **and its base does not float above it**. That pair of tests is
+what stops a storey shading itself — a deck's own collider tops out at the deck,
+so it is not a caster for that plane — while the wall behind it, a crate standing
+on it, or a gallery overhead still is. The base test also keeps a doorway's
+masonry head, which starts at the top of the frame, from painting a dark blob on
+the floor it merely hangs over. A single
 flat wash made every raised deck three steps darker than the floor it stood over,
 which is the other half of the "transparent platform" read. All the planes are
 filled in one walk of the colliders, so a five-storey room's rebuild stays near
 the cost of a one-storey room's.
+
+**R4b. The mask is cached against the frame it was made for.** The projection is
+a function of the camera basis, the sun and the geometry — never of time.
+Firelight is the only thing that moves while the table is still, so the mask
+carries the camera, sun and bounds it was built from plus the scene's identity,
+and a matching frame reuses the penumbra instead of reprojecting every caster. A
+moved camera, a moved sun, a rebuilt room or a resized frame all miss. Measured
+on the cavern at yaw 32, tilt 55: 94.6–128.4 ms with the pass forced every frame
+against 76.8–108.9 ms with the cache, a 17.8–21.8 ms saving per idle frame. The
+tavern saves 1.9–4.3 ms: the pass scales with the pixels and the casters, so it
+matters where the room is big. A cached mask is byte-identical to a fresh
+projection at the same camera, which is the check that keeps this from becoming
+a stale-shadow bug.
 
 **R5. Firelight is a globe, not a pool on the floor plane.** A point light is
 smaller than a cell, so corner-interpolated light averages it away; after the
@@ -977,8 +1004,18 @@ ford, not a wall.
 **D10. A door is a cell plus an optional link.** `doors` is a list of
 `{ id, at, state?, label?, to?: { room, door } }`. A door may stand on a floor
 cell or on a wall cell; a wall cell with a door is skipped by the wall builder
-and the frame fills the opening. The room document never resolves a link: the
-room graph does, because a room cannot know which library it is in.
+and the opening is finished rather than left as a missing cell. The passage axis
+comes from the two cells collinear with the opening (the wall is what the hole
+was cut in) or, for a porch, from the face of the house it serves; the wooden
+frame hangs itself from that. An opening in a terrain wall also gets a masonry
+head from the top of the frame to the wall coping, built face by face so the
+courses run through it and into the wall either side. The head is a real volume:
+it collides above the opening, so a flier stops at the lintel while a walker
+passes under it. A doorway in the near wall keeps its frame but gets no head,
+because the camera has already cut that wall to a curb — and a porch on a house
+gets no stone head either, since the house carries its own lintel. The room
+document never resolves a link: the room graph does, because a room cannot know
+which library it is in.
 
 **D11. A token may be a reference.** `ref` is a character-sheet id. When the
 board loads a room, a linked token's `spec` is rebuilt from the live sheet

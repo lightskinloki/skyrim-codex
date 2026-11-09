@@ -35,7 +35,7 @@ const clothAt = (mat: number, n: number) => P(mat, clamp(6 + n, 0, RAMP_LEN[mat]
 
 /* --------------------------------------------------------------- garments */
 
-function drawTorso(m: PartMask, spec: CharacterSpec, w: number, facing: Facing) {
+function drawTorso(m: PartMask, spec: CharacterSpec, w: number, facing: Facing, pose: number) {
   const g = spec.garment;
   const mat = CLOTH_MATERIAL[g.torsoCloth];
   const half = 5 + w;
@@ -61,8 +61,15 @@ function drawTorso(m: PartMask, spec: CharacterSpec, w: number, facing: Facing) 
     rect(m, Math.round(cx + half), 25, 2, 3, skinAt(spec, -1));
   } else {
     const sleeve = g.torso === 'plate' ? clothAt(M_METAL, 1) : clothAt(mat, 0);
-    rect(m, Math.round(cx - half - 2), 17, 2, 9, sleeve);
-    rect(m, Math.round(cx + half), 17, 2, 9, sleeve);
+    // The arms swing against the legs. A pixel at this size is a whole gesture:
+    // the forward-side sleeve drops one and shortens one, and the silhouette
+    // reads as a body in motion instead of a mannequin on a dolly.
+    const swing = pose === 1 ? 1 : pose === 3 ? -1 : 0;
+    const leftY = 17 + (swing > 0 ? 1 : 0);
+    const rightY = 17 + (swing < 0 ? 1 : 0);
+    const len = 9 - (swing === 0 ? 0 : 1);
+    rect(m, Math.round(cx - half - 2), leftY, 2, len, sleeve);
+    rect(m, Math.round(cx + half), rightY, 2, len, sleeve);
   }
 
   if (g.torso === 'vest') rect(m, Math.round(cx - 2), 15, 4, 4, clothAt(CLOTH_MATERIAL.leather, 3));
@@ -73,7 +80,7 @@ function drawTorso(m: PartMask, spec: CharacterSpec, w: number, facing: Facing) 
   if (g.torso === 'tunic') rect(m, Math.round(cx - 1), 17, 2, 8, clothAt(mat, -2));
 }
 
-function drawLegs(m: PartMask, spec: CharacterSpec, w: number) {
+function drawLegs(m: PartMask, spec: CharacterSpec, w: number, pose: number) {
   const g = spec.garment;
   const cx = BODY_W / 2;
   const mat = CLOTH_MATERIAL[g.legsCloth];
@@ -85,18 +92,32 @@ function drawLegs(m: PartMask, spec: CharacterSpec, w: number) {
     }
     rect(m, Math.round(cx - 1), 30, 2, 6, clothAt(mat, 2));
     rect(m, Math.round(cx - 3), 37, 6, 2, P(CLOTH_MATERIAL.leather, 2));
+    // A skirt has no stride to show, so the hem swings instead: one side of the
+    // robe lifts a pixel on each stride. On a body this size that is the whole
+    // difference between walking and gliding.
+    if (pose === 1) rect(m, Math.round(cx - 4 - w), 36, 5 + w, 1, clothAt(mat, -1));
+    if (pose === 3) rect(m, Math.round(cx + 1), 36, 5 + w, 1, clothAt(mat, -1));
     return;
   }
 
   const legMat = g.legs === 'greaves' ? M_METAL : mat;
   const legPart = clothAt(legMat, 0);
   const bootPart = P(CLOTH_MATERIAL.leather, 2);
-  rect(m, Math.round(cx - w - 3), 26, 3, 8, legPart);
-  rect(m, Math.round(cx + w + 1), 26, 3, 8, legPart);
-  rect(m, Math.round(cx - w - 3), 34, 4, 4, bootPart);
-  rect(m, Math.round(cx + w + 1), 34, 4, 4, bootPart);
-  rect(m, Math.round(cx - w - 3), 33, 4, 1, clothAt(legMat, -2));
-  rect(m, Math.round(cx + w + 1), 33, 4, 1, clothAt(legMat, -2));
+  // A stride is one leg extended and one drawn up. The forward boot lands a
+  // pixel lower, the trailing one a pixel higher; the body bob comes from the
+  // billboard, so the feet stay on the floor they are walking over.
+  const stride = pose === 1 ? 1 : pose === 3 ? -1 : 0;
+  const leftLen = 8 + (stride > 0 ? 1 : stride < 0 ? -1 : 0);
+  const rightLen = 8 + (stride < 0 ? 1 : stride > 0 ? -1 : 0);
+  const lx = Math.round(cx - w - 3);
+  const rx = Math.round(cx + w + 1);
+
+  rect(m, lx, 26, 3, leftLen, legPart);
+  rect(m, rx, 26, 3, rightLen, legPart);
+  rect(m, lx, 26 + leftLen, 4, 4, bootPart);
+  rect(m, rx, 26 + rightLen, 4, 4, bootPart);
+  rect(m, lx, 26 + leftLen - 1, 4, 1, clothAt(legMat, -2));
+  rect(m, rx, 26 + rightLen - 1, 4, 1, clothAt(legMat, -2));
 }
 
 /* ------------------------------------------------------------------- head */
@@ -188,9 +209,10 @@ function drawWeapon(m: PartMask, spec: CharacterSpec, facing: Facing) {
 
 const cache = new Map<string, PartMask>();
 
-const keyOf = (spec: CharacterSpec, facing: Facing) =>
+const keyOf = (spec: CharacterSpec, facing: Facing, pose: number) =>
   [
     facing,
+    pose,
     spec.race,
     spec.build,
     spec.skinTone,
@@ -204,15 +226,15 @@ const keyOf = (spec: CharacterSpec, facing: Facing) =>
     spec.weapon,
   ].join('|');
 
-function maskFor(spec: CharacterSpec, facing: Facing): PartMask {
-  const k = keyOf(spec, facing);
+function maskFor(spec: CharacterSpec, facing: Facing, pose = 0): PartMask {
+  const k = keyOf(spec, facing, pose);
   const hit = cache.get(k);
   if (hit) return hit;
   const m = partMask(BODY_W, BODY_H);
   const w = BUILD_WIDTH[spec.build];
   drawWeapon(m, spec, facing);
-  drawLegs(m, spec, w);
-  drawTorso(m, spec, w, facing);
+  drawLegs(m, spec, w, pose);
+  drawTorso(m, spec, w, facing, pose);
   drawBodyRaceBehind(m, spec);
   drawHead(m, spec, facing);
   drawBodyRaceFace(m, spec, facing);
@@ -262,10 +284,11 @@ function paintMask(s: CanvasLike, m: PartMask, px: number, py: number, shift: nu
   }
 }
 
-/** A standalone sprite: the preview card's version of the same render. */
-export function renderBody(spec: CharacterSpec, facing: Facing, shift = 0): CanvasLike {
+/** A standalone sprite: the preview card's version of the same render. `pose`
+ *  is the walk cycle, 0..3; the previews pass nothing and get the stance. */
+export function renderBody(spec: CharacterSpec, facing: Facing, shift = 0, pose = 0): CanvasLike {
   const s: CanvasLike = { w: BODY_W, h: BODY_H, col: new Uint32Array(BODY_W * BODY_H) };
-  paintMask(s, maskFor(spec, facing), 0, 0, shift);
+  paintMask(s, maskFor(spec, facing, pose), 0, 0, shift);
   return s;
 }
 

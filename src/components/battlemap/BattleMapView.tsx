@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Board3D, buildSheet } from '@/battlemap/gl/render';
+import { Board3D, buildSheet, type TokenMotion } from '@/battlemap/gl/render';
 import { MOODS, makeDemoRoom, type Room } from '@/battlemap/room';
 import { LightRig } from '@/battlemap/light';
 import { CELL } from '@/battlemap/paint';
@@ -7,6 +7,14 @@ import { docToJson, newRoomId, parseRoomDoc, toDoc } from '@/battlemap/document'
 import { deleteSave, lastRoomId, listLibrary, rememberRoom, saveDoc, type RoomEntry } from '@/battlemap/library';
 import type { PropRule } from '@/battlemap/props';
 import type { GroundKind, RoomDoor } from '@/battlemap/room';
+import {
+  findWalkPath,
+  landing,
+  motionAt,
+  planWalk,
+  type WalkCell,
+  type WalkPlan,
+} from '@/battlemap/walk';
 import { specFromCharacter } from '@/characters/live';
 import { characterStorage } from '@/utils/characterStorage';
 import {
@@ -33,7 +41,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Brush, DoorOpen, RotateCcw, ZoomIn, ZoomOut, Flame, Eye, EyeOff, RefreshCw, Move3d, Save, Download, Upload, Trash2, Eraser, Undo2 } from 'lucide-react';
+import { Brush, DoorOpen, RotateCcw, ZoomIn, ZoomOut, Flame, Eye, EyeOff, RefreshCw, Move3d, Save, Download, Upload, Trash2, Eraser, Undo2, Footprints } from 'lucide-react';
 
 type View = 'lit' | 'depth' | 'materials';
 
@@ -45,7 +53,7 @@ const MODES: { id: View; label: string }[] = [
 
 const clamp = (v: number, lo: number, hi: number) => (v < lo ? lo : v > hi ? hi : v);
 
-type Tool = 'look' | 'floor' | 'wall' | 'grass' | 'dirt' | 'water' | 'wood' | 'prop' | 'door' | 'erase';
+type Tool = 'look' | 'floor' | 'wall' | 'grass' | 'dirt' | 'water' | 'wood' | 'prop' | 'door' | 'erase' | 'torch';
 
 const GROUND_TOOLS: { id: Tool; label: string; ground: GroundKind }[] = [
   { id: 'grass', label: 'Grass', ground: 'grass' },
@@ -157,6 +165,30 @@ export function BattleMapView() {
   const [propRule, setPropRule] = useState<PropRule['rule']>('crate');
   const [fogOn, setFogOn] = useState(false);
 
+  /* ---------------------------------------------------------------- walking */
+  // The selected body, the route it would take to the cell under the pointer,
+  // and the route it is taking now. A walk is a real path: the preview and the
+  // commit are the same plan, so the dots under the cursor are the move.
+  const [selected, setSelected] = useState<string | null>(null);
+  const [route, setRoute] = useState<WalkCell[] | null>(null);
+  const [walking, setWalking] = useState(false);
+  const [walkSq, setWalkSq] = useState(0);
+  const walk = useRef<WalkPlan | null>(null);
+  const walkCommit = useRef<(plan: WalkPlan) => void>(() => {});
+  const walkTimer = useRef<number | null>(null);
+  const hoverCell = useRef('');
+
+  /** The landing is a timer, not a side effect of the animation. rAF stops in a
+   *  background tab, and a move that never lands leaves the body stuck mid-
+   *  stride and its position unsaved; the clock is wall time, so the landing is
+   *  too. The loop normally beats this by a frame and clears it. */
+  const clearWalkTimer = useCallback(() => {
+    if (walkTimer.current !== null) {
+      window.clearTimeout(walkTimer.current);
+      walkTimer.current = null;
+    }
+  }, []);
+
   const play = playFile[roomId];
   // An edit is a draft of the document, not a mutation of the library: Cancel
   // has to give the room back, and Save is the only thing that writes.
@@ -195,8 +227,19 @@ export function BattleMapView() {
   }, [room, play?.explored]);
 
   // Latest values for the animation loop, without re-creating it.
-  const live = useRef({ rig, view, showPath, cam, pan, tab, fog: fogOn ? fogData : null });
-  live.current = { rig, view, showPath, cam, pan, tab, fog: fogOn ? fogData : null };
+  const live = useRef({
+    rig,
+    view,
+    showPath,
+    cam,
+    pan,
+    tab,
+    fog: fogOn ? fogData : null,
+    selected,
+    route,
+    tool,
+  });
+  live.current = { rig, view, showPath, cam, pan, tab, fog: fogOn ? fogData : null, selected, route, tool };
 
   /* ---------------------------------------------------------------- paint */
   // Stable identity: the animation loop restarts whenever this changes, and a
@@ -208,19 +251,40 @@ export function BattleMapView() {
     const canvas = canvasRef.current;
     const el = wrapRef.current;
     if (!b || !canvas || !el) return;
-    lastPaint.current = performance.now();
+    const now = performance.now();
+    lastPaint.current = now;
     const L = live.current;
     b.yaw = L.cam.yaw;
     b.pitch = L.cam.pitch;
+
+    // A walk is an override on the cached scene: the room document still has
+    // the body where it started, and the frame is drawn where the clock says it
+    // is. The route is the same array that was planned, so the dots on screen
+    // and the path walked cannot diverge.
+    const plan = walk.current;
+    let motion: Record<string, TokenMotion> | null = null;
+    if (plan) {
+      const m = motionAt(plan, now);
+      motion = { [plan.id]: { x: m.x, y: m.y, z: m.z, facing: m.facing, step: m.step } };
+    }
+    const cells = L.route && L.route.length > 1 ? L.route : plan ? plan.cells : null;
+    const dots: [number, number][] = cells
+      ? cells.map((c) => [Math.floor(c.x), Math.floor(c.z)] as [number, number])
+      : [];
+    const decks: number[] | null = cells ? cells.map((c) => c.y) : null;
+
     b.render(L.rig, {
       showPath: L.showPath,
-      selectedToken: 'pc-1',
-      time: performance.now() / 1000,
+      selectedToken: L.selected,
+      time: now / 1000,
       // The ink sweep reads the depth buffer, which is only stale while the
       // camera is actually moving. Skipping it mid-drag buys back a fifth of
       // the frame; the pointer-up frame puts the lines back.
       outline: !drag.current?.moved,
       fog: L.fog,
+      motion,
+      path: L.showPath ? dots : [],
+      pathDecks: L.showPath ? decks : null,
     });
     if (L.view !== 'lit') b.debug(L.view);
 
@@ -254,10 +318,76 @@ export function BattleMapView() {
     (id: string) => {
       if (id === roomId) return;
       persistHere();
+      // A body cannot keep walking through a load: the route belongs to the room
+      // it was planned in, and the next room has no such cells.
+      clearWalkTimer();
+      walk.current = null;
+      setWalking(false);
+      setWalkSq(0);
+      setRoute(null);
+      hoverCell.current = '';
       setRoomId(id);
     },
     [persistHere, roomId],
   );
+
+  /* ---------------------------------------------------------------- walking */
+  /** A route from the selected body to a point on the board. The start is the
+   *  body's own position, not its cell's centre: a token authored off centre
+   *  should rejoin the lattice on its first step, not jump onto it. */
+  const pathTo = useCallback(
+    (x: number, z: number): WalkCell[] | null => {
+      const b = boardRef.current;
+      if (!b || !selected) return null;
+      const tok = b.scene.tokens.find((t) => t.id === selected);
+      if (!tok) return null;
+      // Two bodies cannot share a square. Walking *through* a body is not
+      // modelled yet, but ending on one would bury the token underneath.
+      const gx = Math.floor(x);
+      const gz = Math.floor(z);
+      const occupied = b.scene.tokens.some(
+        (t) => t.id !== selected && Math.floor(t.x) === gx && Math.floor(t.z) === gz,
+      );
+      if (occupied) return null;
+      return findWalkPath(b.scene, { x: tok.x, y: tok.y, z: tok.z }, { x, z });
+    },
+    [selected],
+  );
+
+  const startWalk = useCallback((id: string, path: WalkCell[]) => {
+    if (path.length < 2) return;
+    const tok = boardRef.current?.scene.tokens.find((t) => t.id === id);
+    const start = tok ? { x: tok.x, y: tok.y, z: tok.z } : path[0];
+    // The planner speaks in squares; the body may be authored off centre. One
+    // short segment rejoins the lattice, and the distance clock keeps it short.
+    const off = Math.abs(start.x - path[0].x) > 0.02 || Math.abs(start.z - path[0].z) > 0.02;
+    const plan = planWalk(id, off ? [start, ...path] : path, performance.now());
+    clearWalkTimer();
+    walk.current = plan;
+    walkTimer.current = window.setTimeout(() => {
+      if (walk.current !== plan) return;
+      walk.current = null;
+      walkTimer.current = null;
+      walkCommit.current(plan);
+    }, Math.max(0, plan.endsAt - performance.now()) + 60);
+    setWalking(true);
+    setWalkSq(path.length - 1);
+    setRoute(null);
+    hoverCell.current = '';
+  }, [clearWalkTimer]);
+
+  // Where the body lands, written when the clock reaches the end. The room is
+  // the session's copy, so this is a play-file write, never a document edit.
+  walkCommit.current = (plan) => {
+    const land = landing(plan);
+    const tokenAt = tokenPositions(room);
+    tokenAt[plan.id] = { at: land.at, facing: land.facing, y: land.y };
+    writePlay(roomId, { tokenAt });
+    setWalking(false);
+    setWalkSq(0);
+    // The walker was already selected to start the move. Selecting it again here
+    // would steal the selection back if the table clicked another body mid-walk.
+  };
 
   // A reload lands in the same environment. Written on switch, not on mount, so
   // a first visit is not immediately remembered as a choice the table made.
@@ -393,6 +523,15 @@ export function BattleMapView() {
     setMood(null);
     setPan({ x: 0, y: 0 });
     setNameDraft(entry?.name ?? '');
+    clearWalkTimer();
+    walk.current = null;
+    setWalking(false);
+    setWalkSq(0);
+    setRoute(null);
+    hoverCell.current = '';
+    // The party leads: the body a turn starts with is selected on arrival, so
+    // the first click on the floor is a move and not a mystery.
+    setSelected(room.tokens.find((t) => t.party)?.id ?? room.tokens[0]?.id ?? null);
     const v = entry?.doc.view;
     // 1x is fit: below it the board floats inside the panel with blank canvas
     // around it, which is never useful and is easy to mistake for a broken view.
@@ -404,6 +543,23 @@ export function BattleMapView() {
     const t = setTimeout(() => setNotice(null), 6000);
     return () => clearTimeout(t);
   }, [notice]);
+
+  // Navigating away mid-walk must not leave a timer holding the old room's
+  // commit closure.
+  useEffect(() => clearWalkTimer, [clearWalkTimer]);
+
+  // Escape is the way out of a selection: with a body selected, a stray click
+  // would walk it, so the board needs a plain "never mind".
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      setSelected(null);
+      setRoute(null);
+      hoverCell.current = '';
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   useEffect(() => {
     const b = new Board3D(room);
@@ -448,17 +604,32 @@ export function BattleMapView() {
     let fpsAt = 0;
     const loop = (now: number) => {
       raf = requestAnimationFrame(loop);
-      if (live.current.tab !== 'room') return;
-      // Firelight is the only thing that moves between commits, and 30 Hz is
-      // plenty for it.
-      if (now - last < 26) return;
-      last = now;
-      paint();
-      frames++;
-      if (now - fpsAt > 1000) {
-        setFps(Math.round((frames * 1000) / (now - fpsAt)));
-        frames = 0;
-        fpsAt = now;
+      if (live.current.tab === 'room') {
+        // Idle, firelight is the only thing that moves and 30 Hz is plenty. A
+        // walking body takes every frame the browser gives us, or the clock
+        // would keep moving while the picture stutters.
+        const moving = walk.current !== null;
+        if (!moving && now - last < 26) return;
+        last = now;
+        paint();
+        frames++;
+        if (now - fpsAt > 1000) {
+          setFps(Math.round((frames * 1000) / (now - fpsAt)));
+          frames = 0;
+          fpsAt = now;
+        }
+      }
+      // Land the move after the final frame is drawn. Commit first and the next
+      // paint would show the old position for a frame, which reads as a stumble
+      // backwards at the end of every walk.
+      const plan = walk.current;
+      if (plan && now >= plan.endsAt) {
+        walk.current = null;
+        if (walkTimer.current !== null) {
+          window.clearTimeout(walkTimer.current);
+          walkTimer.current = null;
+        }
+        walkCommit.current(plan);
       }
     };
     raf = requestAnimationFrame(loop);
@@ -507,17 +678,18 @@ export function BattleMapView() {
     setRig((r) => ({ ...r, ambient: m.rig.ambient, sun: { ...m.rig.sun } }));
   }, []);
 
-  const addTorch = useCallback(
-    (clientX: number, clientY: number) => {
-      const canvas = canvasRef.current;
+  const addTorchAt = useCallback(
+    (x: number, z: number, y: number) => {
       const b = boardRef.current;
-      if (!canvas || !b) return;
-      const rect = canvas.getBoundingClientRect();
-      const [bx, by] = b.frameAt(clientX - rect.left, clientY - rect.top);
-      const [x, z] = b.worldAt(bx, by);
+      if (!b) return;
       // Colliders are real now: a torch cannot be placed inside a wall or a
-      // table, because the scene knows where they are.
-      if (b.cellAt(x, z) !== 1 || b.solidAtCell(x, z)) return;
+      // table, because the scene knows where they are. The pick's height is the
+      // surface under the cursor, so a torch on a gallery is tested against the
+      // gallery and not against the ground beneath it.
+      if (b.cellAt(x, z) !== 1 || b.solidAtCell(x, z, y)) {
+        setNotice({ tone: 'err', text: 'A torch needs a clear patch of floor.' });
+        return;
+      }
       setRig((r) => ({
         ...r,
         points: [
@@ -659,9 +831,43 @@ export function BattleMapView() {
       // The pointer is already gone; the drag still ends on pointerup/cancel.
     }
   };
+  /** While a body is selected, the floor under the pointer carries its route.
+   *  The planner runs only when the pointer crosses a cell, not per event. */
+  const updateHover = (clientX: number, clientY: number) => {
+    const canvas = canvasRef.current;
+    const b = boardRef.current;
+    if (!canvas || !b) return;
+    if (tool !== 'look' || !selected || walk.current) {
+      if (hoverCell.current) {
+        hoverCell.current = '';
+        setRoute(null);
+      }
+      return;
+    }
+    const rect = canvas.getBoundingClientRect();
+    const [bx, by] = b.frameAt(clientX - rect.left, clientY - rect.top);
+    // A body under the pointer is a thing to select, not a place to stand.
+    if (b.tokenAt(bx, by)) {
+      if (hoverCell.current) {
+        hoverCell.current = '';
+        setRoute(null);
+      }
+      return;
+    }
+    const p = b.pickAt(bx, by);
+    const key = p ? `${p.cell[0]},${p.cell[1]}` : '';
+    if (key === hoverCell.current) return;
+    hoverCell.current = key;
+    setRoute(p ? pathTo(p.x, p.z) : null);
+  };
+
   const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     const d = drag.current;
-    if (!d || e.pointerId !== d.id) return;
+    if (!d) {
+      updateHover(e.clientX, e.clientY);
+      return;
+    }
+    if (e.pointerId !== d.id) return;
     // A pointerup that never arrived (window blur, OS menu) leaves no buttons
     // down; drop the drag instead of orbiting on every later hover.
     if ((e.buttons & 3) === 0) {
@@ -703,27 +909,51 @@ export function BattleMapView() {
 
     const canvas = canvasRef.current;
     const b = boardRef.current;
-    if (canvas && b) {
-      const rect = canvas.getBoundingClientRect();
-      const [bx, by] = b.frameAt(e.clientX - rect.left, e.clientY - rect.top);
-      const [x, z] = b.worldAt(bx, by);
-      if (tool !== 'look') {
-        applyTool(x, z);
+    if (!canvas || !b) return;
+    const rect = canvas.getBoundingClientRect();
+    const [bx, by] = b.frameAt(e.clientX - rect.left, e.clientY - rect.top);
+
+    if (tool === 'look') {
+      // A body first: its card is taller than its cell, so clicking the head is
+      // still a click on the body.
+      const hit = b.tokenAt(bx, by);
+      if (hit) {
+        setSelected(hit);
+        setRoute(null);
+        hoverCell.current = '';
         return;
       }
+      // The depth buffer, not the floor plane: a click on a gallery has to
+      // target the gallery.
+      const p = b.pickAt(bx, by);
+      if (!p) return;
       // A door is a target in play mode and geometry in build mode. Clicking the
       // cell is the load; there is no walking animation across a threshold.
-      const cx = Math.floor(x);
-      const cz = Math.floor(z);
       const door = (room.doors ?? []).find(
-        (dd) => Math.round(dd.at[0]) === cx && Math.round(dd.at[1]) === cz,
+        (dd) => Math.round(dd.at[0]) === p.cell[0] && Math.round(dd.at[1]) === p.cell[1],
       );
       if (door) {
         goThroughDoor(door);
         return;
       }
+      if (!selected || walk.current) return;
+      const path = pathTo(p.x, p.z);
+      if (path && path.length > 1) {
+        startWalk(selected, path);
+      } else {
+        setNotice({ tone: 'err', text: 'No walkable route to that cell.' });
+      }
+      return;
     }
-    addTorch(e.clientX, e.clientY);
+
+    if (tool === 'torch') {
+      const p = b.pickAt(bx, by);
+      if (p) addTorchAt(p.x, p.z, p.y);
+      return;
+    }
+
+    const [x, z] = b.worldAt(bx, by);
+    applyTool(x, z);
   };
 
   const reset = () => {
@@ -798,12 +1028,16 @@ export function BattleMapView() {
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
             onPointerCancel={endDrag}
+            onPointerLeave={() => {
+              hoverCell.current = '';
+              setRoute(null);
+            }}
             onContextMenu={(e) => e.preventDefault()}
           >
             <canvas ref={canvasRef} className="touch-none select-none" style={{ imageRendering: 'pixelated' }} />
             <div className="pointer-events-none absolute bottom-2 left-3 text-[11px] text-neutral-500">
-              drag to orbit · right-drag or shift-drag to pan · scroll to zoom (fit recentres) · click a door to go
-              through · click the floor to place a torch · {fps} fps ·{' '}
+              drag to orbit · right-drag or shift-drag to pan · scroll to zoom (fit recentres) · click a token to
+              select · click a floor cell to walk · click a door to go through · {fps} fps ·{' '}
               {(fit * cam.zoom).toFixed(2)}×
             </div>
           </div>
@@ -873,14 +1107,22 @@ export function BattleMapView() {
               <h3 className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-neutral-400">
                 <Brush className="h-3 w-3" /> Build
               </h3>
-              <div className="grid grid-cols-3 gap-1">
+              <div className="grid grid-cols-4 gap-1">
                 <Button
                   size="sm"
                   variant={tool === 'look' ? 'secondary' : 'outline'}
                   onClick={() => setTool('look')}
-                  title="Play: click a door to go through, the floor to place a torch"
+                  title="Play: select a token and click the floor to walk, or click a door to go through"
                 >
                   Look
+                </Button>
+                <Button
+                  size="sm"
+                  variant={tool === 'torch' ? 'secondary' : 'outline'}
+                  onClick={() => setTool('torch')}
+                  title="Place a torch light on the floor"
+                >
+                  <Flame className="h-3 w-3" />
                 </Button>
                 <Button
                   size="sm"
@@ -1023,8 +1265,29 @@ export function BattleMapView() {
             <section className="space-y-2">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Tokens</h3>
               {room.tokens.map((t) => (
-                <div key={t.id} className="flex items-center gap-1 rounded border border-white/10 p-2">
-                  <span className="w-16 shrink-0 truncate text-[11px] text-neutral-300">{t.spec.name}</span>
+                <div
+                  key={t.id}
+                  className={
+                    selected === t.id
+                      ? 'flex items-center gap-1 rounded border border-amber-400/40 bg-amber-400/5 p-2'
+                      : 'flex items-center gap-1 rounded border border-white/10 p-2'
+                  }
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelected(t.id);
+                      setRoute(null);
+                    }}
+                    title="Select this token"
+                    className={
+                      selected === t.id
+                        ? 'w-16 shrink-0 truncate text-left text-[11px] font-semibold text-amber-200'
+                        : 'w-16 shrink-0 truncate text-left text-[11px] text-neutral-300 hover:text-amber-200'
+                    }
+                  >
+                    {t.spec.name}
+                  </button>
                   <select
                     value={t.ref ?? ''}
                     onChange={(e) => setTokenRef(t.id, e.target.value)}
@@ -1042,6 +1305,45 @@ export function BattleMapView() {
               <p className="text-[11px] leading-relaxed text-neutral-500">
                 A linked token reads race, build, weapon and armour from the sheet every time the room loads.
               </p>
+            </section>
+
+            <section className="space-y-2">
+              <h3 className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-neutral-400">
+                <Footprints className="h-3 w-3" /> Move
+              </h3>
+              {selected ? (
+                <>
+                  <div className="flex items-center gap-2 rounded border border-white/10 p-2 text-[11px]">
+                    <span className="flex-1 truncate text-neutral-300">
+                      {room.tokens.find((t) => t.id === selected)?.spec.name ?? selected}
+                    </span>
+                    <span className="tabular-nums text-neutral-500">
+                      {walking
+                        ? `walking · ${walkSq} sq`
+                        : route && route.length > 1
+                          ? `${route.length - 1} sq · ${(route.length - 1) * 5} ft`
+                          : 'ready'}
+                    </span>
+                    <button
+                      className="text-neutral-500 hover:text-amber-300"
+                      title="Deselect (Esc)"
+                      onClick={() => {
+                        setSelected(null);
+                        setRoute(null);
+                      }}
+                    >
+                      <Undo2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                  <p className="text-[11px] leading-relaxed text-neutral-500">
+                    Click a floor cell to walk there. The route is drawn before it is taken: it goes around walls and
+                    props, climbs stairs, and will not step off a drop over five feet. A move is one action however
+                    far the path goes.
+                  </p>
+                </>
+              ) : (
+                <p className="text-[11px] text-neutral-500">Click a token on the board to select it.</p>
+              )}
             </section>
 
             <section className="space-y-2">
