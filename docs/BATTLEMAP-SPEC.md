@@ -792,11 +792,18 @@ facing and a four-facing sprite sheet, and a billboard is how four facings becom
 one draw. Nothing else may be one, because a card has a position but no body.
 
 **R2. One camera, free orbit.** Yaw is continuous (0–360°), tilt 20–84°, zoom
-0.4–4×, pan in screen pixels. Drag orbits, shift-drag pans, the wheel zooms. The
-wall cut-away is recomputed from the yaw (`buildWalls`), so the near walls become
-curbs as they come between the camera and the floor — that is a rule about
-occlusion, not a fixed four-view set. Textures are cached by seed, so an orbit
-rebuilds geometry only.
+1–4×, pan in screen pixels. Left-drag orbits; right-drag or shift-drag pans; the
+wheel zooms. 1× fits the room from *every* angle: the fit is sampled over yaw and
+tilt once per room and panel size, so turning or tilting the camera never
+rescales the board under the hand. The canvas fills the panel and the board is
+drawn inside it, which is why pan can be free without uncovering blank pixels.
+Pan is unbounded; 1× recentres the board, and scrolling out once already at fit
+recentres too, so a free pan can never lose the room permanently. Right-drag is
+a camera gesture only — no tool ever fires on the right button. The wall
+cut-away is recomputed from the yaw
+(`buildWalls`), so the near walls become curbs as they come between the camera
+and the floor — that is a rule about occlusion, not a fixed four-view set.
+Textures are cached by seed, so an orbit rebuilds geometry only.
 
 **R3. Light is per face, not per pixel, and the palette is the only output.**
 Each triangle carries a normal; the sun term is `exposure + (ndl − flat) · relief`
@@ -896,3 +903,127 @@ PNG and a steady-state frame time so tuning does not rely on a browser
 screenshot. The next scaling step is not more geometry: it is rendering at a
 lower pixel scale and upscaling inside the palette, which costs a fraction of a
 frame and loses none of the art.
+
+## 18. A room is a document
+
+§17 made the room geometry. This makes it **data** — the difference between a
+board that can only be whatever the code says today and one that can be saved,
+shared, reopened, or eventually cut from an SVC.
+
+**D1. The unit is `RoomDoc`.** `format`, `version`, `id`, `name`, `terrain`,
+`seed`, `props`, `tokens`, `path`, `rig`, optional `tiers`, `wallHeight`, and an
+optional `view` (the camera to open at — a hint, not part of the room). Anything
+`Board3D` can draw is expressible in it.
+
+**D2. Terrain is run-length rows.** One string per row, north to south:
+`"2*4,1*20,2*4"` is four solid cells, twenty floor, four solid. The width is
+implied by row 0, so a document cannot disagree with itself about how wide the
+room is, and a ragged grid is a parse error rather than a half-drawn map. A
+tavern is 5.4 kb; a four-storey cavern is 6.7 kb.
+
+**D3. One way in.** `parseRoomDoc` is the only decoder, and every source —
+shipped JSON, localStorage, an import — goes through it. It rejects what cannot
+be drawn (a ragged row, a foreign format, a newer version, more than 160 cells a
+side) and repairs what can (a prop with no id, duplicate ids, an unknown race, a
+storey poking outside the grid), reporting every repair. It never throws and
+never returns half a room.
+
+**D4. Enum repair is not cosmetic.** A token's `race` indexes `RACE_SHAPE`; an
+unknown string there is `undefined`, and reading a field of `undefined` takes the
+token renderer down. So the enums in `characters/spec.ts` have runtime arrays and
+the parser validates against those instead of trusting the file.
+
+**D5. Output is canonical.** Props and specs are rebuilt field by field in a
+fixed order, numbers quantised to three decimals, and `docToJson` is two-space
+JSON with a trailing newline. Parse a file and write it back and the bytes are
+identical, so a save is a fixed point and a diff means someone changed the room.
+`test:rooms` asserts this, and asserts the shipped JSON still equals what its
+builder produces — a stale export cannot pass.
+
+**D6. Builders author; documents ship.** `makeDemoRoom()` and `makeCaveRoom()`
+are recipes run by `npm run rooms:export`; the app loads `rooms/*.json`. Edit a
+builder and re-export, or the drift check fails.
+
+**D7. Ids are part of the schema.** Every prop and token carries one, because a
+save, an editor and a sync message all have to point at a specific object. A prop
+without one is given `p<n>` on the way in.
+
+**D8. Saves are local; export is the wire.** Saves live in this browser under
+`skyrim-codex.room.v1.<id>` as `{ doc, savedAt }`. The board can save, duplicate,
+delete, export and import. Export is the same `RoomDoc` the shipped rooms use, so
+a room that leaves one browser opens in another with no conversion.
+
+**D9. Ground is a layer, not terrain.** `ground` is one run-length row per
+terrain row, values indexing `GROUND_KINDS` (stone, grass, dirt, water, wood). It
+is optional; absent means stone, so every room written before the village still
+loads. Water is drawn a few centimetres below the bank and remains walkable: a
+ford, not a wall.
+
+**D10. A door is a cell plus an optional link.** `doors` is a list of
+`{ id, at, state?, label?, to?: { room, door } }`. A door may stand on a floor
+cell or on a wall cell; a wall cell with a door is skipped by the wall builder
+and the frame fills the opening. The room document never resolves a link: the
+room graph does, because a room cannot know which library it is in.
+
+**D11. A token may be a reference.** `ref` is a character-sheet id. When the
+board loads a room, a linked token's `spec` is rebuilt from the live sheet
+(`characters/live.ts`) — race, build, weapon and armour follow the character.
+The embedded spec remains the fallback for a sheet that is not in this browser.
+
+## 19. A village, a graph, and a table
+
+**V1. Three rooms, one place.** Ivarstead is `ivarstead.json` (34 × 44 cells,
+grass and dirt over a river), `vilemyr-inn.json` and `trader-hall.json`. The two
+interiors are reached through doors and back again. All three are ordinary
+`RoomDoc`s: nothing about them is a special case in the renderer.
+
+**V2. The river is ground, the bridge is a storey.** The Treva is water-ground on
+walkable cells. The bridge is a wood-decked tier at 0.45 cells over the river,
+with a stair at each bank, so the bridge has a volume and tokens stand on its
+deck rather than on a decal.
+
+**V3. Houses are volumes; the door is the target.** A `house` prop is a stone
+plinth, limewashed walls, a pitched thatch or shingle roof, gable ends, a plank
+door and lit windows. It is solid. Entering is a transition, not a wall-hack, and
+the doorway frame is the affordance.
+
+**V4. Doors are loading screens.** Clicking a linked door (or its row in the
+Doors panel) persists the current room's rig, token positions and seen mask,
+loads the target room, and places the party one cell inside the destination
+door. Locked doors say so and do nothing.
+
+**V5. The session is a separate layer.** `play.ts` stores, per room id in this
+browser: the rig (including placed torches), token positions, and a base64 seen
+mask. The document is the map; this is the game on top of it. Nothing here is
+ever written into the shipped JSON.
+
+**V6. Fog is 2D line of sight.** Each party token casts rays at quarter-cell
+steps out to `FOG_RADIUS_CELLS`; walls block and are themselves marked seen when
+they block. Seen cells stay seen. The renderer turns a floor pixel's cell into
+black (unseen) or a two-step ink dither (seen, not currently visible). The GM can
+turn fog off, reveal everything, or forget a room.
+
+**V7. The editor is a draft.** Build tools paint floor finish, carve floor and
+wall, place/erase props and place doors; the map is cloned into a draft and only
+Save calls `toDoc`. Revert gives the library's room back untouched.
+
+**V8. A save shadows a built-in of the same id.** Door links name room ids, so
+one id must resolve to one room. Saving Ivarstead writes `skyrim-codex.room.v1.ivarstead`;
+the library drops the shipped document of that id and shows the save. Delete the
+save and the shipped room returns. Saving a built-in no longer forks it under a
+new id, because a fork would break every door that points at it.
+
+**V9. Every environment is one click away.** A strip above the canvas lists
+every room in the library — the five shipped documents and any save in this
+browser — with the current one lit. Clicking another persists the room you are
+leaving (rig, token positions, seen mask) and loads the next, exactly as a door
+does. The last room visited is remembered under `skyrim-codex.room.last`, so a
+reload returns to the environment you were in rather than to the first entry in
+the list; a remembered id that is no longer in the library (a deleted save)
+falls back to the first room. The strip is the only switcher — the room panel's
+dropdown was removed rather than left as a second control that could disagree.
+
+**Open.** No multi-storey village yet (the bridge is the only tier), and no
+token dragging. Fog is a floor-plane mask: a prop standing over a seen cell is
+not separately occluded. The editor does not yet author `tiers`, `rig` points or
+token links in-world — those still come from JSON or the roster.

@@ -28,7 +28,15 @@ export type RampId =
   | 'hairBrown'
   | 'hairBlack'
   | 'olive' // the green every third villager in Skyrim wears
-  | 'slate'; // neutral cloth grey — stone is violet and must not be worn
+  | 'slate' // neutral cloth grey — stone is violet and must not be worn
+  // ---- the village. Ivarstead is grass, mud, water and lime plaster, and it
+  // must not look like the tavern's flagstones with a green tint on them.
+  | 'grass'
+  | 'dirt'
+  | 'water'
+  | 'plaster'
+  | 'thatch'
+  | 'autumn';
 
 export const RAMP_HEX: Record<RampId, string[]> = {
   stone: [
@@ -92,6 +100,36 @@ export const RAMP_HEX: Record<RampId, string[]> = {
   slate: [
     '#08090b', '#0e1013', '#15181c', '#1d2126', '#272c32', '#333940', '#414850',
     '#525a63', '#666e78', '#7d858f', '#959da6', '#b0b7bf', '#ccd2d8',
+  ],
+
+  // Ivarstead's ground. Grass keeps a cold blue-green shadow so it sits in the
+  // same light as the stone, then warms toward straw at the top — the village
+  // is autumn, not high summer.
+  grass: [
+    '#0a0f08', '#10170c', '#161f11', '#1d2a16', '#25341b', '#2e4021', '#394d28',
+    '#455c30', '#536c39', '#637d43', '#75904f', '#8aa55f', '#a3bb74',
+  ],
+  dirt: [
+    '#130f0b', '#1b150f', '#261d14', '#322719', '#3f3220', '#4e3f28', '#5f4d31',
+    '#725e3b', '#876f46', '#9d8254', '#b39766', '#c9ad7b', '#ddc493',
+  ],
+  water: [
+    '#04080d', '#060d15', '#08131d', '#0b1a27', '#0f2332', '#142d3f', '#1a394e',
+    '#21475f', '#295671', '#336780', '#3f7a91', '#5291a6', '#6cabbd',
+  ],
+  // Limewash, not snow: warm cream in the light and a green-grey shadow, which
+  // is what separates a plastered house from the stone wall beside it.
+  plaster: [
+    '#0f0d0a', '#161310', '#1e1a15', '#28231c', '#332d24', '#40392d', '#4f4638',
+    '#605545', '#736653', '#87795f', '#9d8e70', '#b5a585', '#ccbd9c',
+  ],
+  thatch: [
+    '#14100a', '#1c170e', '#271f13', '#33291a', '#413422', '#514129', '#624f32',
+    '#755f3c', '#8a7047', '#a08554', '#b79b64', '#cdb078', '#e2c78f',
+  ],
+  autumn: [
+    '#180c04', '#221107', '#2e170a', '#3c1f0d', '#4b2811', '#5c3315', '#6f3f1a',
+    '#834c20', '#985a27', '#ad6a2f', '#c17c39', '#d39147', '#e5a95c',
   ],
 };
 

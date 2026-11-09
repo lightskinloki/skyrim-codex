@@ -86,6 +86,17 @@ export const M_HAIR_BLACK = 16;
 export const M_OLIVE = 17;
 export const M_SLATE = 18;
 
+/* The village. Stone and wood still do the vertical work; these are the ground
+ * and the two wall finishes that make Ivarstead read as a place of grass, mud
+ * and limewash rather than a tavern with the roof off. */
+export const M_GRASS = 19;
+export const M_DIRT = 20;
+export const M_WATER = 21;
+export const M_PLASTER = 22;
+export const M_THATCH = 23;
+export const M_FOLIAGE = 24;
+export const M_AUTUMN = 25;
+
 export const MATERIALS: Material[] = [
   rampToMaterial(M_VOID, 'void', 'void'),
   rampToMaterial(M_INK, 'ink', 'ink'),
@@ -106,6 +117,13 @@ export const MATERIALS: Material[] = [
   rampToMaterial(M_HAIR_BLACK, 'black hair', 'hairBlack'),
   rampToMaterial(M_OLIVE, 'olive cloth', 'olive'),
   rampToMaterial(M_SLATE, 'grey cloth', 'slate'),
+  rampToMaterial(M_GRASS, 'grass', 'grass'),
+  rampToMaterial(M_DIRT, 'dirt', 'dirt'),
+  rampToMaterial(M_WATER, 'water', 'water'),
+  rampToMaterial(M_PLASTER, 'plaster', 'plaster'),
+  rampToMaterial(M_THATCH, 'thatch', 'thatch'),
+  rampToMaterial(M_FOLIAGE, 'foliage', 'grass'),
+  rampToMaterial(M_AUTUMN, 'autumn leaves', 'autumn'),
 ];
 
 export const MATERIAL_COUNT = MATERIALS.length;

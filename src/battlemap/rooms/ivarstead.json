@@ -1,0 +1,743 @@
+{
+  "format": "skyrim-codex.room",
+  "version": 1,
+  "id": "ivarstead",
+  "name": "Ivarstead",
+  "terrain": [
+    "2*34",
+    "2,1*32,2",
+    "2,1*32,2",
+    "2,1*32,2",
+    "2,1*32,2",
+    "2,1*32,2",
+    "2,1*32,2",
+    "2,1*32,2",
+    "2,1*32,2",
+    "2,1*32,2",
+    "2,1*32,2",
+    "2,1*32,2",
+    "2,1*32,2",
+    "2,1*32,2",
+    "2,1*32,2",
+    "2,1*32,2",
+    "2,1*32,2",
+    "2,1*32,2",
+    "2,1*32,2",
+    "2,1*32,2",
+    "2,1*32,2",
+    "2,1*32,2",
+    "2,1*32,2",
+    "2,1*32,2",
+    "2,1*32,2",
+    "2,1*32,2",
+    "2,1*32,2",
+    "2,1*32,2",
+    "2,1*32,2",
+    "2,1*32,2",
+    "2,1*32,2",
+    "2,1*32,2",
+    "2,1*32,2",
+    "2,1*32,2",
+    "2,1*32,2",
+    "2,1*32,2",
+    "2,1*32,2",
+    "2,1*32,2",
+    "2,1*32,2",
+    "2,1*32,2",
+    "2,1*32,2",
+    "2,1*32,2",
+    "2,1*32,2",
+    "2*34"
+  ],
+  "seed": 27548929,
+  "props": [
+    {
+      "id": "p1",
+      "rule": "stairs",
+      "at": [
+        8,
+        21
+      ],
+      "w": 3,
+      "rise": 0.45,
+      "run": 1.2,
+      "along": "x",
+      "dir": -1
+    },
+    {
+      "id": "p2",
+      "rule": "stairs",
+      "at": [
+        1.8,
+        21
+      ],
+      "w": 3,
+      "rise": 0.45,
+      "run": 1.2,
+      "along": "x",
+      "dir": 1
+    },
+    {
+      "id": "p3",
+      "rule": "bench",
+      "at": [
+        3.2,
+        21.03
+      ],
+      "y": 0.45,
+      "w": 4.6
+    },
+    {
+      "id": "p4",
+      "rule": "bench",
+      "at": [
+        3.2,
+        23.4
+      ],
+      "y": 0.45,
+      "w": 4.6
+    },
+    {
+      "id": "p5",
+      "rule": "house",
+      "at": [
+        16,
+        12
+      ],
+      "w": 7,
+      "h": 5,
+      "roof": "thatch",
+      "door": "s"
+    },
+    {
+      "id": "p6",
+      "rule": "house",
+      "at": [
+        24,
+        17
+      ],
+      "w": 5,
+      "h": 4,
+      "roof": "wood",
+      "door": "s"
+    },
+    {
+      "id": "p7",
+      "rule": "house",
+      "at": [
+        22,
+        7
+      ],
+      "w": 4,
+      "h": 4,
+      "roof": "thatch",
+      "door": "s"
+    },
+    {
+      "id": "p8",
+      "rule": "house",
+      "at": [
+        9,
+        29
+      ],
+      "w": 5,
+      "h": 4,
+      "roof": "thatch",
+      "door": "s"
+    },
+    {
+      "id": "p9",
+      "rule": "house",
+      "at": [
+        27,
+        28
+      ],
+      "w": 4,
+      "h": 3,
+      "roof": "wood",
+      "door": "w"
+    },
+    {
+      "id": "p10",
+      "rule": "house",
+      "at": [
+        11,
+        5
+      ],
+      "w": 4,
+      "h": 3,
+      "roof": "thatch",
+      "door": "e"
+    },
+    {
+      "id": "p11",
+      "rule": "tree",
+      "at": [
+        8.4,
+        3.2
+      ],
+      "size": 3,
+      "autumn": true
+    },
+    {
+      "id": "p12",
+      "rule": "tree",
+      "at": [
+        9.4,
+        4.6
+      ],
+      "size": 2,
+      "autumn": false
+    },
+    {
+      "id": "p13",
+      "rule": "tree",
+      "at": [
+        13.2,
+        3.4
+      ],
+      "size": 3,
+      "autumn": true
+    },
+    {
+      "id": "p14",
+      "rule": "tree",
+      "at": [
+        28.4,
+        5.2
+      ],
+      "size": 3,
+      "autumn": false
+    },
+    {
+      "id": "p15",
+      "rule": "tree",
+      "at": [
+        30.2,
+        9.4
+      ],
+      "size": 2,
+      "autumn": true
+    },
+    {
+      "id": "p16",
+      "rule": "tree",
+      "at": [
+        29.4,
+        13.2
+      ],
+      "size": 3,
+      "autumn": true
+    },
+    {
+      "id": "p17",
+      "rule": "tree",
+      "at": [
+        30.4,
+        20.2
+      ],
+      "size": 2,
+      "autumn": false
+    },
+    {
+      "id": "p18",
+      "rule": "tree",
+      "at": [
+        31.2,
+        25.4
+      ],
+      "size": 3,
+      "autumn": true
+    },
+    {
+      "id": "p19",
+      "rule": "tree",
+      "at": [
+        29.6,
+        33.4
+      ],
+      "size": 2,
+      "autumn": false
+    },
+    {
+      "id": "p20",
+      "rule": "tree",
+      "at": [
+        31.4,
+        37.2
+      ],
+      "size": 3,
+      "autumn": true
+    },
+    {
+      "id": "p21",
+      "rule": "tree",
+      "at": [
+        24.4,
+        35.4
+      ],
+      "size": 3,
+      "autumn": true
+    },
+    {
+      "id": "p22",
+      "rule": "tree",
+      "at": [
+        20.2,
+        38.2
+      ],
+      "size": 2,
+      "autumn": false
+    },
+    {
+      "id": "p23",
+      "rule": "tree",
+      "at": [
+        8.4,
+        12.2
+      ],
+      "size": 2,
+      "autumn": false
+    },
+    {
+      "id": "p24",
+      "rule": "tree",
+      "at": [
+        8.2,
+        17.4
+      ],
+      "size": 3,
+      "autumn": true
+    },
+    {
+      "id": "p25",
+      "rule": "tree",
+      "at": [
+        1.4,
+        5.2
+      ],
+      "size": 2,
+      "autumn": false
+    },
+    {
+      "id": "p26",
+      "rule": "tree",
+      "at": [
+        1.4,
+        12.4
+      ],
+      "size": 3,
+      "autumn": true
+    },
+    {
+      "id": "p27",
+      "rule": "tree",
+      "at": [
+        1.6,
+        30.4
+      ],
+      "size": 2,
+      "autumn": true
+    },
+    {
+      "id": "p28",
+      "rule": "tree",
+      "at": [
+        2.2,
+        39.2
+      ],
+      "size": 2,
+      "autumn": false
+    },
+    {
+      "id": "p29",
+      "rule": "tree",
+      "at": [
+        13.4,
+        18.2
+      ],
+      "size": 2,
+      "autumn": true
+    },
+    {
+      "id": "p30",
+      "rule": "tree",
+      "at": [
+        12.4,
+        25.2
+      ],
+      "size": 1,
+      "autumn": false
+    },
+    {
+      "id": "p31",
+      "rule": "barrel",
+      "at": [
+        17.2,
+        18.1
+      ]
+    },
+    {
+      "id": "p32",
+      "rule": "barrel",
+      "at": [
+        17.9,
+        18.35
+      ]
+    },
+    {
+      "id": "p33",
+      "rule": "crate",
+      "at": [
+        28.6,
+        22.2
+      ]
+    },
+    {
+      "id": "p34",
+      "rule": "crate",
+      "at": [
+        28.7,
+        22.9
+      ]
+    },
+    {
+      "id": "p35",
+      "rule": "bench",
+      "at": [
+        21.2,
+        24.2
+      ],
+      "w": 2.4
+    },
+    {
+      "id": "p36",
+      "rule": "bench",
+      "at": [
+        21.2,
+        24.8
+      ],
+      "w": 2.4
+    },
+    {
+      "id": "p37",
+      "rule": "brazier",
+      "at": [
+        20.5,
+        22.3
+      ],
+      "lit": true
+    },
+    {
+      "id": "p38",
+      "rule": "rubble",
+      "at": [
+        7.4,
+        26.2
+      ],
+      "size": 2
+    },
+    {
+      "id": "p39",
+      "rule": "rubble",
+      "at": [
+        27.3,
+        16.1
+      ],
+      "size": 1
+    }
+  ],
+  "tokens": [
+    {
+      "id": "pc-1",
+      "spec": {
+        "id": "knight",
+        "name": "Sigrid",
+        "race": "nord",
+        "build": "burly",
+        "skinTone": "fair",
+        "hair": "black",
+        "hairStyle": "braid",
+        "beard": "none",
+        "garment": {
+          "torso": "plate",
+          "torsoCloth": "metal",
+          "legs": "greaves",
+          "legsCloth": "metal"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        16.4,
+        39.4
+      ],
+      "facing": 1,
+      "party": true
+    },
+    {
+      "id": "guard-1",
+      "spec": {
+        "id": "merchant",
+        "name": "Corvus",
+        "race": "breton",
+        "build": "average",
+        "skinTone": "tan",
+        "hair": "brown",
+        "hairStyle": "short",
+        "beard": "stubble",
+        "garment": {
+          "torso": "vest",
+          "torsoCloth": "olive",
+          "legs": "trousers",
+          "legsCloth": "leather"
+        },
+        "weapon": "none"
+      },
+      "at": [
+        7.4,
+        22.5
+      ],
+      "facing": 2
+    },
+    {
+      "id": "innkeeper-1",
+      "spec": {
+        "id": "innkeep",
+        "name": "Runa",
+        "race": "imperial",
+        "build": "slim",
+        "skinTone": "pale",
+        "hair": "ginger",
+        "hairStyle": "long",
+        "beard": "none",
+        "garment": {
+          "torso": "tunic",
+          "torsoCloth": "wool",
+          "legs": "skirt",
+          "legsCloth": "navy"
+        },
+        "weapon": "none"
+      },
+      "at": [
+        18.4,
+        19.2
+      ],
+      "facing": 3
+    },
+    {
+      "id": "trader-1",
+      "spec": {
+        "id": "smith",
+        "name": "Alvar",
+        "race": "nord",
+        "build": "burly",
+        "skinTone": "fair",
+        "hair": "grey",
+        "hairStyle": "short",
+        "beard": "long",
+        "garment": {
+          "torso": "tank",
+          "torsoCloth": "grey",
+          "legs": "trousers",
+          "legsCloth": "navy"
+        },
+        "weapon": "hammer"
+      },
+      "at": [
+        26.2,
+        22.2
+      ],
+      "facing": 0
+    }
+  ],
+  "path": [
+    [
+      16,
+      40
+    ],
+    [
+      16,
+      36
+    ],
+    [
+      17,
+      32
+    ],
+    [
+      17,
+      28
+    ],
+    [
+      16,
+      24
+    ],
+    [
+      14,
+      22
+    ],
+    [
+      12,
+      22
+    ],
+    [
+      10,
+      22
+    ],
+    [
+      8,
+      22
+    ],
+    [
+      6,
+      22
+    ],
+    [
+      4,
+      22
+    ],
+    [
+      2,
+      22
+    ]
+  ],
+  "rig": {
+    "ambient": 0.36,
+    "sun": {
+      "azimuth": 232,
+      "elevation": 54,
+      "intensity": 1.04
+    },
+    "points": [
+      {
+        "x": 668.8,
+        "y": 76.8,
+        "radius": 134.4,
+        "intensity": 1.25,
+        "id": "square-fire",
+        "flicker": 0.4
+      },
+      {
+        "x": 624,
+        "y": 64,
+        "radius": 108.8,
+        "intensity": 0.85,
+        "id": "inn-lamp",
+        "flicker": 0.12
+      }
+    ]
+  },
+  "ground": [
+    "0*34",
+    "0,1*2,3*4,1*26,0",
+    "0,1*2,3*4,1*26,0",
+    "0,1*2,3*4,1*26,0",
+    "0,1*2,3*4,1*26,0",
+    "0,1*2,3*4,1*26,0",
+    "0,1*2,3*4,1*26,0",
+    "0,1*2,3*4,1*26,0",
+    "0,1*2,3*4,1*26,0",
+    "0,1*2,3*4,1*26,0",
+    "0,1*2,3*4,1*26,0",
+    "0,1*2,3*4,1*26,0",
+    "0,1*2,3*4,1*26,0",
+    "0,1*2,3*4,1*26,0",
+    "0,1*2,3*4,1*26,0",
+    "0,1*2,3*4,1*26,0",
+    "0,1*2,3*4,1*26,0",
+    "0,1*2,3*4,1*10,2*3,1*13,0",
+    "0,1*2,3*4,1*10,2*3,1*13,0",
+    "0,1*2,3*4,1*10,2*3,1*13,0",
+    "0,1*2,3*4,1*10,2*3,1*13,0",
+    "0,1,0,3*4,0*2,2*22,1*2,0",
+    "0,1,0,3*4,0*2,2*22,1*2,0",
+    "0,1,0,3*4,0*2,2*22,1*2,0",
+    "0,1*2,3*4,1*8,2*4,1*6,2*3,1*5,0",
+    "0,1*2,3*4,1*8,2*4,1*6,2*3,1*5,0",
+    "0,1*2,3*4,1*8,2*4,1*14,0",
+    "0,1*2,3*4,1*8,2*4,1*14,0",
+    "0,1*2,3*4,1*8,2*4,1*14,0",
+    "0,1*2,3*4,1*8,2*4,1*14,0",
+    "0,1*2,3*4,1*8,2*4,1*14,0",
+    "0,1*2,3*4,1*8,2*4,1*14,0",
+    "0,1*2,3*4,1*8,2*4,1*14,0",
+    "0,1*2,3*4,1*8,2*4,1*14,0",
+    "0,1*2,3*4,1*8,2*4,1*14,0",
+    "0,1*2,3*4,1*8,2*4,1*14,0",
+    "0,1*2,3*4,1*8,2*4,1*14,0",
+    "0,1*2,3*4,1*8,2*4,1*14,0",
+    "0,1*2,3*4,1*8,2*4,1*14,0",
+    "0,1*2,3*4,1*8,2*4,1*14,0",
+    "0,1*2,3*4,1*8,2*4,1*14,0",
+    "0,1*2,3*4,1*8,2*4,1*14,0",
+    "0,1*2,3*4,1*8,2*4,1*14,0",
+    "0*34"
+  ],
+  "doors": [
+    {
+      "id": "inn-door",
+      "at": [
+        19,
+        18
+      ],
+      "label": "Vilemyr Inn",
+      "to": {
+        "room": "vilemyr-inn",
+        "door": "inn-exit"
+      }
+    },
+    {
+      "id": "trader-door",
+      "at": [
+        26,
+        22
+      ],
+      "label": "Ivarstead Traders",
+      "to": {
+        "room": "trader-hall",
+        "door": "trader-exit"
+      }
+    },
+    {
+      "id": "hunt-door",
+      "at": [
+        23,
+        12
+      ],
+      "label": "Hunter's cottage",
+      "state": "locked"
+    },
+    {
+      "id": "south-house-door",
+      "at": [
+        11,
+        34
+      ],
+      "label": "Cottage",
+      "state": "locked"
+    },
+    {
+      "id": "shed-door",
+      "at": [
+        26,
+        29
+      ],
+      "label": "Storehouse",
+      "state": "locked"
+    }
+  ],
+  "tiers": [
+    {
+      "y": 0.45,
+      "deck": "wood",
+      "rects": [
+        [
+          3,
+          21,
+          5,
+          3
+        ]
+      ]
+    }
+  ],
+  "wallHeight": 1.15
+}

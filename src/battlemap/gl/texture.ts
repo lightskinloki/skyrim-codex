@@ -383,3 +383,150 @@ export type Sprite = {
   /** Packed RGBA; alpha 0 is transparent. */
   rgba: Uint32Array;
 };
+
+/* ---------------------------------------------------------------- village */
+/**
+ * Ivarstead's surfaces. Everything here is authored on the same 64 px period as
+ * the masonry, so a village square does not reveal a smaller tile than the inn
+ * floor does.
+ */
+
+/** Grass: a mottled field with tufts, not a green noise. The tufts are short
+ *  vertical strokes, which is the one shape a field has at 32 px/cell. */
+export function grassTexture(seed: number): Tex {
+  const w = 64;
+  const h = 64;
+  const t = field(w, h, 5);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      let s = 5;
+      const broad = hf(seed ^ 0x1c2d, x >> 2, y >> 2);
+      if (broad > 0.72) s = 6;
+      else if (broad < 0.24) s = 4;
+      const fine = hf(seed ^ 0x77a1, x, y);
+      if (fine > 0.9) s = 6;
+      else if (fine < 0.1) s = 4;
+      // A tuft: three pixels reaching up from a lit base.
+      if (fine > 0.965) {
+        s = 7;
+        if (y > 0 && hf(seed ^ 0x33b9, x, y - 1) > 0.4) t.idx[(y - 1) * w + x] = 7;
+      }
+      t.idx[y * w + x] = clamp(s, 0, 12);
+    }
+  }
+  return t;
+}
+
+/** A trodden path: packed earth, small stones, and a wheel rut every so often. */
+export function dirtTexture(seed: number): Tex {
+  const w = 64;
+  const h = 64;
+  const t = field(w, h, 6);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      let s = 6;
+      const n = hf(seed ^ 0x4a17, x, y);
+      if (n > 0.86) s = 7;
+      else if (n < 0.14) s = 5;
+      // Pebbles sit proud of the mud and catch the sun.
+      if (hf(seed ^ 0x6d2b, x >> 1, y >> 1) > 0.982) s = 8;
+      if (hf(seed ^ 0x2e9f, x, y) < 0.012) s = 3;
+      t.idx[y * w + x] = clamp(s, 0, 12);
+    }
+  }
+  return t;
+}
+
+/** Water: long horizontal ripples, with the light caught on the crests. */
+export function waterTexture(seed: number): Tex {
+  const w = 64;
+  const h = 64;
+  const t = field(w, h, 7);
+  for (let y = 0; y < h; y++) {
+    const band = Math.sin(y * 0.28) * 0.5 + 0.5;
+    for (let x = 0; x < w; x++) {
+      let s = 6 + Math.round(band * 2);
+      const ripple = hf(seed ^ 0x5b13, x >> 1, y);
+      if (ripple > 0.9) s += 1;
+      else if (ripple < 0.08) s -= 1;
+      // A crest is a short dash, one or two pixels, never a full line.
+      if (hf(seed ^ 0x8c41, x >> 2, y) > 0.955) s = 10;
+      t.idx[y * w + x] = clamp(s, 0, 12);
+    }
+  }
+  return t;
+}
+
+/** Limewash: almost flat, with the fine tooth of a brush and a hairline crack. */
+export function plasterTexture(seed: number): Tex {
+  const w = 64;
+  const h = 64;
+  const t = field(w, h, 8);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      let s = 8;
+      const n = hf(seed ^ 0x3b57, x, y);
+      if (n > 0.72) s = 9;
+      else if (n < 0.28) s = 7;
+      if (hf(seed ^ 0x6e21, x >> 1, y >> 1) > 0.965) s = 10;
+      // Damp creeping up from the sill: a band of green-grey, two steps down.
+      if (y > 52 && hf(seed ^ 0x1f8d, x, y) > 0.35) s -= 1;
+      t.idx[y * w + x] = clamp(s, 0, 12);
+    }
+  }
+  // One crack, wandering from the top edge. It reaches the tile edge so two
+  // plaster faces can share a fracture.
+  let cx = 7;
+  for (let y = 0; y < h; y++) {
+    t.idx[y * w + (cx & 63)] = 4;
+    if (hf(seed ^ 0x9a11, y, 3) > 0.72) cx += 1;
+    else if (hf(seed ^ 0x9a11, y, 9) > 0.82) cx -= 1;
+  }
+  return t;
+}
+
+/** Thatch: straw laid in diagonal courses, with a dark seam where each course
+ *  is pegged down. The diagonal is what stops it reading as wooden shingles. */
+export function thatchTexture(seed: number): Tex {
+  const w = 64;
+  const h = 64;
+  const t = field(w, h, 7);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      let s = 7;
+      const course = (y + x) % 11;
+      if (course === 0) s = 4;
+      else if (course < 3) s = 6;
+      else if (course > 8) s = 8;
+      if (hf(seed ^ 0x2bb1, x, y) > 0.9) s += 1;
+      else if (hf(seed ^ 0x2bb1, x, y) < 0.07) s -= 1;
+      // A few loose straws catch the light past the eave.
+      if (hf(seed ^ 0x7c3d, x >> 1, y) > 0.985) s = 10;
+      t.idx[y * w + x] = clamp(s, 0, 12);
+    }
+  }
+  return t;
+}
+
+/** A canopy: clumped leaves with real holes between them, lit from one side.
+ *  `autumn` swaps the ramp's material at the call site, not the pattern. */
+export function leafTexture(seed: number, autumn: boolean): Tex {
+  const w = 64;
+  const h = 64;
+  const t = field(w, h, autumn ? 8 : 6);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      let s = autumn ? 8 : 6;
+      const clump = hf(seed ^ 0x51c7, x >> 2, y >> 2);
+      if (clump > 0.62) s += 1;
+      else if (clump < 0.38) s -= 2;
+      const leaf = hf(seed ^ 0x73a9, x, y);
+      if (leaf > 0.9) s += 2;
+      else if (leaf < 0.1) s -= 2;
+      // Gaps, so a canopy is not a solid green ball.
+      if (hf(seed ^ 0x1d4f, x >> 1, y >> 1) < 0.045) s = 2;
+      t.idx[y * w + x] = clamp(s, 0, 12);
+    }
+  }
+  return t;
+}

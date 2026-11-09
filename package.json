@@ -12,7 +12,9 @@
     "test:damage": "esbuild scripts/test-damage.ts --bundle --platform=node --format=cjs --alias:@=./src --outfile=node_modules/.test-damage.cjs && node node_modules/.test-damage.cjs",
     "preview": "vite preview",
     "test:encounter": "esbuild scripts/test-encounter.ts --bundle --platform=node --format=cjs --alias:@=./src --outfile=node_modules/.test-encounter.cjs && node node_modules/.test-encounter.cjs",
-    "test:props": "esbuild scripts/test-props.ts --bundle --platform=node --format=cjs --alias:@=./src --outfile=node_modules/.test-props.cjs && node node_modules/.test-props.cjs"
+    "test:props": "esbuild scripts/test-props.ts --bundle --platform=node --format=cjs --alias:@=./src --outfile=node_modules/.test-props.cjs && node node_modules/.test-props.cjs",
+    "test:rooms": "esbuild scripts/test-rooms.ts --bundle --platform=node --format=cjs --alias:@=./src --outfile=node_modules/.test-rooms.cjs && node node_modules/.test-rooms.cjs",
+    "rooms:export": "esbuild scripts/export-rooms.ts --bundle --platform=node --format=cjs --alias:@=./src --outfile=node_modules/.export-rooms.cjs && node node_modules/.export-rooms.cjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

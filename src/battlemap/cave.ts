@@ -105,7 +105,7 @@ export function makeCaveRoom(): Room {
   ];
 
   const tokens: TokenPlacement[] = [
-    { id: 'pc-1', spec: preset('knight'), at: [18, 16.4], facing: 1, y: 0 },
+    { id: 'pc-1', spec: preset('knight'), at: [18, 16.4], facing: 1, y: 0, party: true },
     { id: 'npc-1', spec: preset('smith'), at: [13, 3.4], facing: 0, y: 2.1 },
     { id: 'npc-2', spec: PRESETS[2], at: [30, 15.4], facing: 2, y: 4.2 },
     { id: 'npc-3', spec: PRESETS[1] as CharacterSpec, at: [31, 9], facing: 3, y: 6.3 },

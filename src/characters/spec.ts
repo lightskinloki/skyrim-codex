@@ -58,6 +58,26 @@ export type CharacterSpec = {
   weapon: 'none' | 'hammer' | 'sword' | 'bow';
 };
 
+/**
+ * Runtime lists of every enum above. A room document is data from the outside
+ * world, and `RACE_SHAPE` is a lookup, not a switch: an unknown race would index
+ * `undefined` and take the token renderer down. These are the values the parser
+ * accepts, so the lists and the types cannot drift.
+ */
+export const RACES: Race[] = [
+  'nord', 'breton', 'imperial', 'redguard', 'high-elf',
+  'wood-elf', 'dark-elf', 'orc', 'khajiit', 'argonian',
+];
+export const BUILDS: Build[] = ['slim', 'average', 'burly'];
+export const SKIN_TONES: SkinTone[] = ['deep', 'brown', 'tan', 'fair', 'pale'];
+export const HAIR_COLOURS: HairColour[] = ['grey', 'ginger', 'brown', 'black'];
+export const HAIR_STYLES: HairStyle[] = ['bald', 'short', 'long', 'braid'];
+export const BEARDS: Beard[] = ['none', 'stubble', 'full', 'long'];
+export const CLOTHS: Cloth[] = ['grey', 'olive', 'wool', 'navy', 'metal', 'leather', 'skin'];
+export const TORSOS: Garment['torso'][] = ['tank', 'tunic', 'vest', 'plate'];
+export const LEGS: Garment['legs'][] = ['trousers', 'skirt', 'greaves'];
+export const WEAPONS: CharacterSpec['weapon'][] = ['none', 'hammer', 'sword', 'bow'];
+
 /** Ramp step the face is authored around, per tone. The face then uses
  *  `base + n` for its lit and shadowed planes, so every tone shades alike. */
 export const SKIN_BASE: Record<SkinTone, number> = {

@@ -163,10 +163,20 @@ function boundsOf(scene: Scene, b: Basis, pix: number) {
   };
 }
 
+/** What the table has seen. `seen` is the persistent memory, `visible` is the
+ *  party's line of sight this frame; both are one bit per cell. */
+export type FogView = {
+  cols: number;
+  rows: number;
+  seen: Uint8Array;
+  visible: Uint8Array;
+};
+
 export type RenderOpts = {
   showPath?: boolean;
   selectedToken?: string | null;
   time?: number;
+  fog?: FogView | null;
   /** Set false while the camera is moving; the outline sweep is a fifth of the frame. */
   outline?: boolean;
   /** Keep the per-pixel material id, which only the debug view reads. */
@@ -567,7 +577,62 @@ export function renderFrame(
   drawSprites(frame, scene, camera, b, exposure, flat, sunI, sunW, lights, opts);
   renderStats.sprites = performance.now() - tMark;
 
+  if (opts.fog) {
+    const t = performance.now();
+    fogPass(frame, b, opts.fog);
+    renderStats.fog = performance.now() - t;
+  }
+
   return frame;
+}
+
+/**
+ * Fog of war, as a pixel mask derived from the same inverse projection the
+ * shadow decal uses: a pixel is tested against the floor cell under it.
+ *
+ * That is deliberately a floor-plane test. A wall in front of unseen ground is
+ * seen from the near side, and the far side of it is pixels whose floor cell is
+ * also unseen; the near face of the last visible wall therefore stays lit and
+ * the room ends at the wall instead of at an arbitrary contour. Memory is a dim
+ * ink dither, not black: a place you have been is dark, not gone.
+ */
+function fogPass(frame: Frame, b: Basis, fog: FogView) {
+  const { w, h, col, offX, offY, pix } = frame;
+  const det = b.rx * b.uz - b.rz * b.ux;
+  if (Math.abs(det) < 1e-6) return;
+  const inv = 1 / det;
+  const unseen = COLOUR_OF[0];
+  const dim = COLOUR_OF[(M_INK << 4) + 2];
+  const edge = COLOUR_OF[(M_INK << 4) + 3];
+
+  for (let py = 0; py < h; py++) {
+    const sy = (py + 0.5 - offY) / pix;
+    const bY = -sy;
+    const row = py * w;
+    for (let px = 0; px < w; px++) {
+      const sx = (px + 0.5 - offX) / pix;
+      const wx = (sx * b.uz - b.rz * bY) * inv;
+      const wz = (b.rx * bY - b.ux * sx) * inv;
+      const cx = Math.floor(wx);
+      const cz = Math.floor(wz);
+      const i = row + px;
+      if (cx < 0 || cz < 0 || cx >= fog.cols || cz >= fog.rows) {
+        col[i] = unseen;
+        continue;
+      }
+      const c = cz * fog.cols + cx;
+      if (!fog.seen[c]) {
+        col[i] = unseen;
+        continue;
+      }
+      if (fog.visible[c]) continue;
+      // A two-step dither: the boundary between seen and remembered is soft,
+      // because a hard line across a floor reads as a bug.
+      const t = BAYER4[((py & 3) << 2) | (px & 3)];
+      if (t < 2) col[i] = edge;
+      else if (t < 7) col[i] = dim;
+    }
+  }
 }
 
 /**
@@ -901,6 +966,10 @@ export class Board3D {
   private offX = 0;
   private offY = 0;
   private pix = CELL;
+  /** Where the board's top-left corner landed in the viewport, in canvas px. */
+  private boardX = 0;
+  private boardY = 0;
+  private screenScale = 1;
   private readonly src: HTMLCanvasElement;
   private readonly sctx: CanvasRenderingContext2D;
   private img: ImageData | null = null;
@@ -938,6 +1007,43 @@ export class Board3D {
   }
   get pixPerCell() {
     return this.pix;
+  }
+  get boardLeft() {
+    return this.boardX;
+  }
+  get boardTop() {
+    return this.boardY;
+  }
+  get drawScale() {
+    return this.screenScale;
+  }
+
+  /**
+   * The largest scale at which the room still fits the viewport from *every*
+   * camera angle. Fitting to the frame we happen to be showing makes the board
+   * grow and shrink as the camera orbits, which reads as the view fighting the
+   * hand. Sampling the angles once, per room and panel size, keeps the scale
+   * fixed for the whole orbit: 1× always means "the room, all of it".
+   */
+  fitScale(viewW: number, viewH: number): number {
+    if (viewW <= 0 || viewH <= 0) return 1;
+    const scene = this.scene;
+    let best = Infinity;
+    for (let yaw = 0; yaw < 360; yaw += 15) {
+      for (let pitch = 20; pitch <= 84; pitch += 8) {
+        const b = boundsOf(scene, basisOf(yaw, pitch), CELL);
+        const s = Math.min(viewW / b.w, viewH / b.h);
+        if (s < best) best = s;
+      }
+    }
+    // Above 1:1 keep whole steps, or a nearest-neighbour upscale gives some
+    // pixels two screen pixels and some one, and the dither starts to crawl.
+    return best >= 1 ? Math.floor(best) : Math.max(0.05, best);
+  }
+
+  /** A point in canvas pixels → the frame's pixel space, for hit tests. */
+  frameAt(cssX: number, cssY: number): [number, number] {
+    return [(cssX - this.boardX) / this.screenScale, (cssY - this.boardY) / this.screenScale];
   }
 
   render(rig: LightRig, opts: RenderOpts = {}) {
@@ -992,7 +1098,13 @@ export class Board3D {
     }
   }
 
-  present(canvas: HTMLCanvasElement, scale: number, panX: number, panY: number) {
+  /**
+   * Draw the frame into a canvas that fills the panel. The board is free to be
+   * panned because it is no longer the canvas: there is always an opaque sheet
+   * of the app's background behind it, so moving the board can never expose the
+   * transparent canvas that used to read as a black hole.
+   */
+  present(canvas: HTMLCanvasElement, viewW: number, viewH: number, scale: number, panX: number, panY: number) {
     const f = this.frame;
     if (!f) return;
     if (this.src.width !== f.w || this.src.height !== f.h) {
@@ -1006,18 +1118,28 @@ export class Board3D {
     }
     this.sctx.putImageData(this.img, 0, 0);
 
+    const vw = Math.max(1, Math.round(viewW));
+    const vh = Math.max(1, Math.round(viewH));
+    if (canvas.width !== vw) canvas.width = vw;
+    if (canvas.height !== vh) canvas.height = vh;
+    if (canvas.style.width !== `${vw}px`) canvas.style.width = `${vw}px`;
+    if (canvas.style.height !== `${vh}px`) canvas.style.height = `${vh}px`;
+
     const dw = Math.max(1, Math.round(f.w * scale));
     const dh = Math.max(1, Math.round(f.h * scale));
-    if (canvas.width !== dw) canvas.width = dw;
-    if (canvas.height !== dh) canvas.height = dh;
-    if (canvas.style.width !== `${dw}px`) canvas.style.width = `${dw}px`;
-    if (canvas.style.height !== `${dh}px`) canvas.style.height = `${dh}px`;
+    const dx = Math.round((vw - dw) / 2 + panX);
+    const dy = Math.round((vh - dh) / 2 + panY);
+    this.boardX = dx;
+    this.boardY = dy;
+    this.screenScale = scale;
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    ctx.setTransform(scale, 0, 0, scale, -Math.round(panX), -Math.round(panY));
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.fillStyle = '#0a090e';
+    ctx.fillRect(0, 0, vw, vh);
     ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(this.src, 0, 0);
+    ctx.drawImage(this.src, dx, dy, dw, dh);
   }
 }
 

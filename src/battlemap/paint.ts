@@ -27,6 +27,9 @@ export type RoomGrid = {
   /** 0 void, 1 floor, 2 wall */
   cells: Uint8Array;
   seed: number;
+  /** What the floor is made of, one entry per cell, indexing `GROUND_KINDS`.
+   *  Absent means stone, which is every room before the village. */
+  ground?: Uint8Array;
 };
 
 export const cellAt = (g: RoomGrid, cx: number, cy: number): number => {

@@ -14,6 +14,40 @@ export type TokenPlacement = {
   /** Height of the surface the token stands on, in cells. Defaults to the deck
    *  under it; set it to author a token on a ledge. */
   y?: number;
+  /** This token is the party, so it moves between rooms and its eyes are what
+   *  fog of war reveals from. */
+  party?: boolean;
+  /** A character-sheet id. When set, the board resolves `spec` from the live
+   *  character on load; the embedded spec is the fallback for a sheet that is
+   *  not in this browser. */
+  ref?: string;
+};
+
+/** The floor under a cell. Cells stay 0/1/2 (void/floor/wall); this is the
+ *  finish on the floor, so a village can be grass and a dungeon stone in the
+ *  same schema. */
+export type GroundKind = 'stone' | 'grass' | 'dirt' | 'water' | 'wood';
+
+export const GROUND_KINDS: GroundKind[] = ['stone', 'grass', 'dirt', 'water', 'wood'];
+
+export type DoorState = 'open' | 'closed' | 'locked';
+
+export type DoorLink = { room: string; door: string };
+
+/**
+ * A doorway is a floor cell that is a gap in a wall, plus a link to the room on
+ * the other side. Walking into it — or clicking it — is the load.
+ *
+ * The cell, not the wall, is the door: an opening is walkable, and the two wall
+ * cells either side are what give it a frame. That keeps doors placeable in a
+ * painted map with no extra edge geometry to disagree with the grid.
+ */
+export type RoomDoor = {
+  id: string;
+  at: [number, number];
+  to?: DoorLink;
+  state?: DoorState;
+  label?: string;
 };
 
 export type Deck = 'stone' | 'wood';
@@ -46,6 +80,10 @@ export type Room = {
   tiers?: Tier[];
   /** Perimeter wall height, in cells. Tall rooms need tall walls. */
   wallHeight?: number;
+  /** Per-cell floor finish, aligned with `grid.cells`. 0 (stone) when omitted. */
+  ground?: Uint8Array;
+  /** Doorways, as gaps in a wall that lead somewhere else. */
+  doors?: RoomDoor[];
 };
 
 const makeGrid = (cols: number, rows: number, seed: number): RoomGrid => ({
@@ -136,7 +174,7 @@ export function makeDemoRoom(): Room {
   points.push({ id: 'shaft', x: 14.5 * CELL, y: 3.2 * CELL, radius: 7 * CELL, intensity: 1.1, flicker: 0 });
 
   const tokens: TokenPlacement[] = [
-    { id: 'pc-1', spec: preset('knight'), at: [12.4, 11.2], facing: 1 },
+    { id: 'pc-1', spec: preset('knight'), at: [12.4, 11.2], facing: 1, party: true },
     { id: 'npc-1', spec: preset('smith'), at: [15.2, 4.4], facing: 0 },
     { id: 'npc-2', spec: PRESETS[2], at: [18.3, 12.4], facing: 2 },
   ];

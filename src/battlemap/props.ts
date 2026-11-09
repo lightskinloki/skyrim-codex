@@ -1,10 +1,14 @@
 import {
   FACE,
+  M_AUTUMN,
   M_CLOTH_NAVY,
   M_CLOTH_RED,
   M_FIRE,
+  M_FOLIAGE,
   M_METAL,
+  M_PLASTER,
   M_STONE_PROP,
+  M_THATCH,
   M_WOOD_PROP,
   Mask,
   Surface,
@@ -44,8 +48,12 @@ import { toCameraRect } from './camera';
  * `at` is the north-west corner of the footprint. `y` is the height of the
  * surface the prop stands on and defaults to whatever deck is under it, so a
  * crate on a gallery sits on the gallery without being told.
+ *
+ * `id` is optional while authoring in code and assigned by the room document,
+ * where every prop needs a stable name a save, an editor or a sync message can
+ * point at.
  */
-type PropBase = { at: [number, number]; y?: number };
+type PropBase = { at: [number, number]; y?: number; id?: string };
 
 export type PropRule = PropBase &
   (
@@ -62,6 +70,12 @@ export type PropRule = PropBase &
     /** Rises from its own deck to `rise` above it. Steps are real, and each one
      *  is a surface a token can stand on. */
     | { rule: 'stairs'; w?: number; rise: number; run?: number; along?: 'x' | 'z'; dir?: -1 | 1 }
+    /** A whole building: plaster walls, a pitched thatch or shingle roof and a
+     *  doorway on one side. Solid — you enter it through the door, not by
+     *  walking through the geometry. */
+    | { rule: 'house'; w?: number; h?: number; roof?: 'thatch' | 'wood'; door?: 'n' | 's' | 'e' | 'w' }
+    /** A tree, as a trunk and a polygonal canopy. `autumn` picks the ramp. */
+    | { rule: 'tree'; size?: number; autumn?: boolean }
   );
 
 /* ------------------------------------------------------------------ steps */
@@ -492,6 +506,41 @@ const artOf = (p: PropRule, seed: number): Art => {
         spec: 2,
         flat: true,
         outline: false,
+      };
+    }
+    // Houses and trees have real geometry in `gl/scene.ts`; these are the flat
+    // stand-ins the legacy prop path needs to stay exhaustive.
+    case 'house': {
+      const w = p.w ?? 4;
+      const h = p.h ?? 3;
+      const mw = Math.round(w * CELL);
+      const mh = Math.round(h * CELL);
+      const top = makeMask(mw, mh);
+      maskRect(top, 0, 0, mw, mh, 8);
+      maskRect(top, 0, 0, mw, 3, 10);
+      for (let y = 3; y < mh; y++) for (let x = 0; x < mw; x++) if (hf(id, x, y) > 0.9) top.data[y * mw + x] = 9;
+      return {
+        cellsX: w,
+        cellsY: h,
+        height: 40,
+        mat: p.roof === 'wood' ? M_THATCH : M_PLASTER,
+        top,
+        side: flatSide,
+        spec: 6,
+      };
+    }
+    case 'tree': {
+      const m = makeMask(CELL, CELL);
+      maskEllipse(m, CELL / 2, CELL / 2, CELL * 0.44, CELL * 0.44, 7);
+      maskEllipse(m, CELL / 2 - 2, CELL / 2 - 2, CELL * 0.3, CELL * 0.3, 9);
+      return {
+        cellsX: 1,
+        cellsY: 1,
+        height: 48 + (p.size ?? 2) * 8,
+        mat: p.autumn ? M_AUTUMN : M_FOLIAGE,
+        top: m,
+        side: flatSide,
+        spec: 4,
       };
     }
   }

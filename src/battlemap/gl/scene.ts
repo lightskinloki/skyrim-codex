@@ -1,10 +1,18 @@
 import {
+  M_AUTUMN,
   M_CLOTH_NAVY,
   M_CLOTH_RED,
+  M_DIRT,
+  M_FIRE,
   M_FLOOR,
+  M_FOLIAGE,
+  M_GRASS,
   M_METAL,
+  M_PLASTER,
   M_STONE_PROP,
+  M_THATCH,
   M_WALL,
+  M_WATER,
   M_WOOD_FLOOR,
   M_WOOD_PROP,
   M_WOOD_WALL,
@@ -14,15 +22,21 @@ import type { Facing, Room, Tier, TokenPlacement } from '../room';
 import {
   Tex,
   clothTexture,
+  dirtTexture,
   floorTexture,
+  grassTexture,
+  leafTexture,
   ledgeTexture,
   metalTexture,
+  plasterTexture,
   rockFaceTexture,
   rockTopTexture,
   rugTexture,
   stoneTexture,
+  thatchTexture,
   wallFaceTexture,
   wallTopTexture,
+  waterTexture,
   woodTexture,
 } from './texture';
 
@@ -166,6 +180,39 @@ const addQuad = (
   add(a, c, d, q0[0], q0[1], q2[0], q2[1], q3[0], q3[1]);
 };
 
+/** A single triangle, for gables and anything a quad cannot close. */
+const addTri = (
+  tris: Tri[],
+  a: Vec3,
+  b: Vec3,
+  c: Vec3,
+  n: Vec3,
+  mat: number,
+  tex: Tex,
+  uv: UvFn,
+  cast = true,
+) => {
+  const q0 = uv(a);
+  const q1 = uv(b);
+  const q2 = uv(c);
+  tris.push({
+    p0: a,
+    p1: b,
+    p2: c,
+    u0: q0[0],
+    v0: q0[1],
+    u1: q1[0],
+    v1: q1[1],
+    u2: q2[0],
+    v2: q2[1],
+    n,
+    mat,
+    tex,
+    cast,
+    receives: false,
+  });
+};
+
 const addBox = (
   tris: Tri[],
   x0: number,
@@ -298,6 +345,13 @@ type Textures = {
   metal: Tex;
   clothRed: Tex;
   clothNavy: Tex;
+  grass: Tex;
+  dirt: Tex;
+  water: Tex;
+  plaster: Tex;
+  thatch: Tex;
+  leaf: Tex;
+  leafAutumn: Tex;
 };
 
 const texCache = new Map<number, Textures>();
@@ -317,6 +371,13 @@ const texturesFor = (seed: number): Textures => {
       metal: metalTexture(seed ^ 0x77dd),
       clothRed: clothTexture(seed ^ 0x331f, false),
       clothNavy: clothTexture(seed ^ 0x8811, true),
+      grass: grassTexture(seed ^ 0x4d21),
+      dirt: dirtTexture(seed ^ 0x19b7),
+      water: waterTexture(seed ^ 0x6f03),
+      plaster: plasterTexture(seed ^ 0x2ac9),
+      thatch: thatchTexture(seed ^ 0x5d51),
+      leaf: leafTexture(seed ^ 0x7c1d, false),
+      leafAutumn: leafTexture(seed ^ 0x7c1d, true),
     };
     texCache.set(seed, t);
   }
@@ -533,6 +594,99 @@ function buildProp(
       addCollider(colliders, x0, z0, x0 + span, z0 + span, 0.1);
       break;
     }
+    case 'house': {
+      const w = p.w ?? 4;
+      const h = p.h ?? 3;
+      const x1 = x0 + w;
+      const z1 = z0 + h;
+      const inset = 0.06;
+      const plinth = 0.17;
+      const eave = 1.72;
+      // Stone footing, then limewash above it: the two courses are why a house
+      // reads as built rather than as a painted block.
+      addBox(tris, x0, z0, x1, z1, 0, plinth, M_STONE_PROP, tex.stone);
+      addBox(tris, x0 + inset, z0 + inset, x1 - inset, z1 - inset, plinth, eave, M_PLASTER, tex.plaster);
+
+      const ov = 0.2;
+      const ridge = eave + Math.min(w, h) * 0.3 + 0.42;
+      const roofMat = p.roof === 'wood' ? M_WOOD_PROP : M_THATCH;
+      const roofTex = p.roof === 'wood' ? tex.wood : tex.thatch;
+      const alongX = w >= h;
+      if (alongX) {
+        const zc = (z0 + z1) / 2;
+        // The two slopes gable toward ±z; normals lean with the pitch so the
+        // sun rakes the south side and the north side falls into its own ramp.
+        addQuad(tris, [x0 - ov, eave, z1 + ov], [x1 + ov, eave, z1 + ov], [x1 + ov, ridge, zc], [x0 - ov, ridge, zc], [0, 1, 1], roofMat, roofTex, uvTop);
+        addQuad(tris, [x1 + ov, eave, z0 - ov], [x0 - ov, eave, z0 - ov], [x0 - ov, ridge, zc], [x1 + ov, ridge, zc], [0, 1, -1], roofMat, roofTex, uvTop);
+        addTri(tris, [x0 + inset, eave, z0 + inset], [x0 + inset, eave, z1 - inset], [x0 + inset, ridge - 0.04, zc], [-1, 0, 0], M_PLASTER, tex.plaster, uvTop);
+        addTri(tris, [x1 - inset, eave, z1 - inset], [x1 - inset, eave, z0 + inset], [x1 - inset, ridge - 0.04, zc], [1, 0, 0], M_PLASTER, tex.plaster, uvTop);
+        addBox(tris, x0 - ov, zc - 0.055, x1 + ov, zc + 0.055, ridge - 0.07, ridge + 0.02, M_WOOD_PROP, tex.wood);
+      } else {
+        const xc = (x0 + x1) / 2;
+        addQuad(tris, [x1 + ov, eave, z0 - ov], [x1 + ov, eave, z1 + ov], [xc, ridge, z1 + ov], [xc, ridge, z0 - ov], [1, 1, 0], roofMat, roofTex, uvTop);
+        addQuad(tris, [x0 - ov, eave, z1 + ov], [x0 - ov, eave, z0 - ov], [xc, ridge, z0 - ov], [xc, ridge, z1 + ov], [-1, 1, 0], roofMat, roofTex, uvTop);
+        addTri(tris, [x0 + inset, eave, z0 + inset], [x1 - inset, eave, z0 + inset], [xc, ridge - 0.04, z0 + inset], [0, 0, -1], M_PLASTER, tex.plaster, uvTop);
+        addTri(tris, [x1 - inset, eave, z1 - inset], [x0 + inset, eave, z1 - inset], [xc, ridge - 0.04, z1 - inset], [0, 0, 1], M_PLASTER, tex.plaster, uvTop);
+        addBox(tris, xc - 0.055, z0 - ov, xc + 0.055, z1 + ov, ridge - 0.07, ridge + 0.02, M_WOOD_PROP, tex.wood);
+      }
+
+      // A door is a plank panel on one face with a stone lintel over it, and a
+      // lit window either side. The panel is what the transition triggers on; it
+      // is not a hole, because entering is a load, not a walk.
+      const side = p.door ?? 's';
+      const dw = Math.min(0.95, w * 0.32);
+      const dh = 1.28;
+      const cx = (x0 + x1) / 2;
+      const cz = (z0 + z1) / 2;
+      const panel = (ax: number, az: number, bx: number, bz: number, n: Vec3) => {
+        addQuad(tris, [ax, plinth, az], [bx, plinth, bz], [bx, dh, bz], [ax, dh, az], n, M_WOOD_PROP, tex.wood, uvTop);
+        addQuad(tris, [ax - 0.04, dh, az], [bx + 0.04, dh, bz], [bx + 0.04, dh + 0.11, bz], [ax - 0.04, dh + 0.11, az], n, M_STONE_PROP, tex.stone, uvTop);
+      };
+      if (side === 's') panel(cx - dw / 2, z1 - inset + 0.012, cx + dw / 2, z1 - inset + 0.012, [0, 0, 1]);
+      else if (side === 'n') panel(cx + dw / 2, z0 + inset - 0.012, cx - dw / 2, z0 + inset - 0.012, [0, 0, -1]);
+      else if (side === 'e') panel(x1 - inset + 0.012, cz + dw / 2, x1 - inset + 0.012, cz - dw / 2, [1, 0, 0]);
+      else panel(x0 + inset - 0.012, cz - dw / 2, x0 + inset - 0.012, cz + dw / 2, [-1, 0, 0]);
+
+      const winY = 1.0;
+      const winH = 0.3;
+      const winW = 0.34;
+      const windows: [number, number, number, number][] = [
+        [x0 + w * 0.26, z1 - inset + 0.014, 0, winW],
+        [x0 + w * 0.74, z1 - inset + 0.014, 0, winW],
+      ];
+      for (const [wx, wz, , ww] of windows) {
+        addQuad(tris, [wx - ww / 2, winY, wz], [wx + ww / 2, winY, wz], [wx + ww / 2, winY + winH, wz], [wx - ww / 2, winY + winH, wz], [0, 0, 1], M_FIRE, tex.wood, uvTop, false);
+      }
+      lights.push({ x: cx, y: 1.15, z: z1 + 0.35, radius: 2.3, intensity: 1.35, flicker: 0.1 });
+      addCollider(colliders, x0, z0, x1, z1, eave);
+      break;
+    }
+    case 'tree': {
+      const size = p.size ?? 2;
+      const cx = x0 + 0.5;
+      const cz = z0 + 0.5;
+      const trunkH = 0.6 + size * 0.16;
+      addCylinder(tris, cx, cz, 0.07 + size * 0.016, 0.05 + size * 0.012, 0, trunkH, M_WOOD_PROP, tex.wood, 8, false);
+      const leafTex = p.autumn ? tex.leafAutumn : tex.leaf;
+      const mat = p.autumn ? M_AUTUMN : M_FOLIAGE;
+      const r = 0.26 + size * 0.17;
+      const base = trunkH * 0.5;
+      // Five overlapping layers with staggered centres and a real trunk below.
+      // Three neat cones read as a pumpkin; a canopy is a mass of clumps, and
+      // the silhouette matters more than the volume where leaves meet.
+      const tiers: [number, number, number, number, number][] = [
+        [r * 0.94, base, base + 0.22, 0.05, -0.03],
+        [r * 1.0, base + 0.14, base + 0.42, -0.04, 0.04],
+        [r * 0.84, base + 0.34, base + 0.64, 0.06, 0.05],
+        [r * 0.62, base + 0.56, base + 0.86, -0.03, -0.05],
+        [r * 0.36, base + 0.78, base + 1.04, 0.02, 0.02],
+      ];
+      for (const [rad, y0, y1, ox, oz] of tiers) {
+        addCylinder(tris, cx + ox, cz + oz, rad, rad * 0.86, y0, y1, mat, leafTex, 10);
+      }
+      addCollider(colliders, cx - 0.15, cz - 0.15, cx + 0.15, cz + 0.15, trunkH);
+      break;
+    }
     case 'rug': {
       const w = p.w ?? 2;
       const h = p.h ?? 2;
@@ -578,6 +732,7 @@ function buildWalls(
   colliders: Collider[],
   wallH: number,
   rock: boolean,
+  doorCells?: Set<number>,
 ) {
   const a = (yaw * Math.PI) / 180;
   const fx = -Math.sin(a);
@@ -592,6 +747,9 @@ function buildWalls(
   for (let cy = 0; cy < rows; cy++) {
     for (let cx = 0; cx < cols; cx++) {
       if (grid[cy * cols + cx] !== 2) continue;
+      // A doorway is a gap in the wall, not an object leaning against it. The
+      // cell is skipped entirely and the door frame fills the opening.
+      if (doorCells?.has(cy * cols + cx)) continue;
 
       // A block whose outside faces the camera would hide the room. Cut it to a
       // curb: the room keeps an edge, and the interior is legible from every
@@ -914,11 +1072,31 @@ export function buildScene(room: Room, yaw: number): Scene {
     }
   }
 
+  const ground = room.grid.ground;
   for (let cy = 0; cy < rows; cy++) {
     for (let cx = 0; cx < cols; cx++) {
       if (room.grid.cells[cy * cols + cx] !== 1) continue;
       const v = hf(seed ^ 0x51ed, cx, cy);
-      const t = v < 0.08 ? floors[0] : v > 0.92 ? floors[2] : v > 0.84 ? floors[3] : v > 0.76 ? floors[4] : floors[1];
+      let mat = M_FLOOR;
+      let t = v < 0.08 ? floors[0] : v > 0.92 ? floors[2] : v > 0.84 ? floors[3] : v > 0.76 ? floors[4] : floors[1];
+      let fy = 0;
+      const g = ground ? ground[cy * cols + cx] : 0;
+      if (g === 1) {
+        mat = M_GRASS;
+        t = tex.grass;
+      } else if (g === 2) {
+        mat = M_DIRT;
+        t = tex.dirt;
+      } else if (g === 3) {
+        // Water sits a few centimetres below the bank so the edge is a lip and
+        // not a colour change. The cell is still walkable: a ford, not a wall.
+        mat = M_WATER;
+        t = tex.water;
+        fy = -0.055;
+      } else if (g === 4) {
+        mat = M_WOOD_FLOOR;
+        t = tex.wood;
+      }
       const n = nearLight.has(cy * cols + cx) ? 2 : 1;
       const step = 1 / n;
       for (let sz = 0; sz < n; sz++) {
@@ -927,12 +1105,12 @@ export function buildScene(room: Room, yaw: number): Scene {
           const z0 = cy + sz * step;
           addQuad(
             tris,
-            [x0, 0, z0],
-            [x0 + step, 0, z0],
-            [x0 + step, 0, z0 + step],
-            [x0, 0, z0 + step],
+            [x0, fy, z0],
+            [x0 + step, fy, z0],
+            [x0 + step, fy, z0 + step],
+            [x0, fy, z0 + step],
             [0, 1, 0],
-            M_FLOOR,
+            mat,
             t,
             (p) => [(p[0] - cx) * PX, (p[2] - cy) * PX],
             false,
@@ -955,6 +1133,9 @@ export function buildScene(room: Room, yaw: number): Scene {
     colliders,
     room.wallHeight ?? WALL_H,
     room.tiers !== undefined && room.tiers.length > 0,
+    room.doors?.length
+      ? new Set(room.doors.map((d) => Math.round(d.at[1]) * cols + Math.round(d.at[0])))
+      : undefined,
   );
 
   // Everything a prop builds is authored from its own deck up, so the whole
@@ -991,6 +1172,49 @@ export function buildScene(room: Room, yaw: number): Scene {
       }
       for (let i = f0; i < fires.length; i++) fires[i].y += base;
       for (let i = l0; i < lights.length; i++) lights[i].y += base;
+    }
+  }
+
+  // Doorways stand in the floor cell they occupy: two posts, a lintel, and a
+  // plank door when shut. Orientation comes from the wall either side, so a map
+  // author only places a cell and the frame hangs itself.
+  for (const door of room.doors ?? []) {
+    const dx = Math.round(door.at[0]);
+    const dz = Math.round(door.at[1]);
+    if (dx < 0 || dz < 0 || dx >= cols || dz >= rows) continue;
+    // The wall a door belongs to may be terrain or a prop (a house has no wall
+    // cells), so the frame asks the colliders, not just the grid. A solid to the
+    // east or west means the opening runs north-south: jambs on the x edges.
+    const solidNear = (px: number, pz: number) =>
+      colliders.some((c) => px >= c.x0 && px <= c.x1 && pz >= c.z0 && pz <= c.z1 && c.top > 0.3);
+    const wallsNorthSouth = solidNear(dx + 0.5, dz - 0.5) || solidNear(dx + 0.5, dz + 1.5);
+    const wallsEastWest = solidNear(dx - 0.5, dz + 0.5) || solidNear(dx + 1.5, dz + 0.5);
+    const alongZ = wallsNorthSouth
+      ? true
+      : wallsEastWest
+        ? false
+        : cellAt(room.grid.cells, cols, rows, dx - 1, dz) === 2 ||
+          cellAt(room.grid.cells, cols, rows, dx + 1, dz) === 2;
+    const postH = Math.min(1.5, room.wallHeight ?? 1.7);
+    const jamb = 0.11;
+    const lintel = 0.14;
+    if (alongZ) {
+      addBox(tris, dx + 0.06, dz + 0.07, dx + 0.06 + jamb, dz + 0.93, 0, postH, M_WOOD_PROP, tex.wood);
+      addBox(tris, dx + 0.94 - jamb, dz + 0.07, dx + 0.94, dz + 0.93, 0, postH, M_WOOD_PROP, tex.wood);
+      addBox(tris, dx + 0.06, dz + 0.4, dx + 0.94, dz + 0.6, postH - lintel, postH, M_WOOD_PROP, tex.wood);
+      if (door.state !== 'open') {
+        addBox(tris, dx + 0.47, dz + 0.1, dx + 0.53, dz + 0.9, 0, postH - lintel, M_WOOD_PROP, tex.wood);
+      }
+    } else {
+      addBox(tris, dx + 0.07, dz + 0.06, dx + 0.93, dz + 0.06 + jamb, 0, postH, M_WOOD_PROP, tex.wood);
+      addBox(tris, dx + 0.07, dz + 0.94 - jamb, dx + 0.93, dz + 0.94, 0, postH, M_WOOD_PROP, tex.wood);
+      addBox(tris, dx + 0.4, dz + 0.06, dx + 0.6, dz + 0.94, postH - lintel, postH, M_WOOD_PROP, tex.wood);
+      if (door.state !== 'open') {
+        addBox(tris, dx + 0.1, dz + 0.47, dx + 0.9, dz + 0.53, 0, postH - lintel, M_WOOD_PROP, tex.wood);
+      }
+    }
+    if (door.to) {
+      lights.push({ x: dx + 0.5, y: postH - 0.3, z: dz + 0.5, radius: 1.6, intensity: 0.55, flicker: 0.05 });
     }
   }
 

@@ -1,9 +1,29 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Board3D, buildSheet } from '@/battlemap/gl/render';
 import { MOODS, makeDemoRoom, type Room } from '@/battlemap/room';
-import { makeCaveRoom } from '@/battlemap/cave';
 import { LightRig } from '@/battlemap/light';
 import { CELL } from '@/battlemap/paint';
+import { docToJson, newRoomId, parseRoomDoc, toDoc } from '@/battlemap/document';
+import { deleteSave, lastRoomId, listLibrary, rememberRoom, saveDoc, type RoomEntry } from '@/battlemap/library';
+import type { PropRule } from '@/battlemap/props';
+import type { GroundKind, RoomDoor } from '@/battlemap/room';
+import { specFromCharacter } from '@/characters/live';
+import { characterStorage } from '@/utils/characterStorage';
+import {
+  applyPlay,
+  arrivalCell,
+  decodeMask,
+  encodeMask,
+  FOG_RADIUS_CELLS,
+  loadPlay,
+  mergeExplored,
+  moveParty,
+  savePlay,
+  sourceCells,
+  visibility,
+  type PlayFile,
+  type RoomPlay,
+} from '@/battlemap/play';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import {
@@ -13,7 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { RotateCcw, ZoomIn, ZoomOut, Flame, Eye, RefreshCw, Move3d } from 'lucide-react';
+import { Brush, DoorOpen, RotateCcw, ZoomIn, ZoomOut, Flame, Eye, EyeOff, RefreshCw, Move3d, Save, Download, Upload, Trash2, Eraser, Undo2 } from 'lucide-react';
 
 type View = 'lit' | 'depth' | 'materials';
 
@@ -25,17 +45,92 @@ const MODES: { id: View; label: string }[] = [
 
 const clamp = (v: number, lo: number, hi: number) => (v < lo ? lo : v > hi ? hi : v);
 
-const ROOMS: { id: string; label: string; make: () => Room }[] = [
-  { id: 'tavern', label: 'Tavern', make: makeDemoRoom },
-  { id: 'cavern', label: 'Cavern', make: makeCaveRoom },
+type Tool = 'look' | 'floor' | 'wall' | 'grass' | 'dirt' | 'water' | 'wood' | 'prop' | 'door' | 'erase';
+
+const GROUND_TOOLS: { id: Tool; label: string; ground: GroundKind }[] = [
+  { id: 'grass', label: 'Grass', ground: 'grass' },
+  { id: 'dirt', label: 'Dirt', ground: 'dirt' },
+  { id: 'water', label: 'Water', ground: 'water' },
+  { id: 'wood', label: 'Deck', ground: 'wood' },
+  { id: 'floor', label: 'Stone', ground: 'stone' },
 ];
 
+const PROP_CHOICES: { id: PropRule['rule']; label: string }[] = [
+  { id: 'house', label: 'House' },
+  { id: 'tree', label: 'Tree' },
+  { id: 'table', label: 'Table' },
+  { id: 'bench', label: 'Bench' },
+  { id: 'crate', label: 'Crate' },
+  { id: 'barrel', label: 'Barrel' },
+  { id: 'shelf', label: 'Shelf' },
+  { id: 'chest', label: 'Chest' },
+  { id: 'brazier', label: 'Brazier' },
+  { id: 'rug', label: 'Rug' },
+  { id: 'column', label: 'Column' },
+  { id: 'stairs', label: 'Stairs' },
+  { id: 'rubble', label: 'Rubble' },
+];
+
+const tokenPositions = (room: Room): NonNullable<RoomPlay['tokenAt']> => {
+  const out: NonNullable<RoomPlay['tokenAt']> = {};
+  for (const t of room.tokens) out[t.id] = { at: [t.at[0], t.at[1]], facing: t.facing };
+  return out;
+};
+
+/** Rough footprint test: enough for an eraser, not for collision. */
+const propCovers = (p: PropRule, x: number, z: number): boolean => {
+  const x0 = p.at[0];
+  const z0 = p.at[1];
+  let w = 1;
+  let h = 1;
+  if (p.rule === 'table' || p.rule === 'bench' || p.rule === 'chest' || p.rule === 'shelf') {
+    w = p.w ?? 1;
+    h = 0.75;
+  } else if (p.rule === 'rug') {
+    w = p.w ?? 2;
+    h = p.h ?? 2;
+  } else if (p.rule === 'house') {
+    w = p.w ?? 4;
+    h = p.h ?? 3;
+  } else if (p.rule === 'stairs') {
+    w = p.w ?? 1.6;
+    h = p.run ?? 2;
+  }
+  return x >= Math.floor(x0) && x < Math.ceil(x0 + w) && z >= Math.floor(z0) && z < Math.ceil(z0 + h);
+};
+
+const makeProp = (rule: PropRule['rule'], cx: number, cz: number): PropRule => {
+  const at: [number, number] = [cx, cz];
+  switch (rule) {
+    case 'house':
+      return { rule, at, w: 4, h: 3, roof: 'thatch', door: 's' };
+    case 'tree':
+      return { rule, at, size: 2, autumn: true };
+    case 'stairs':
+      return { rule, at, rise: 2, run: 1.4, along: 'z', dir: 1 };
+    case 'column':
+      return { rule, at, h: 0.94 };
+    case 'brazier':
+      return { rule, at, lit: true };
+    default:
+      return { rule, at } as PropRule;
+  }
+};
+
 export function BattleMapView() {
-  const rooms = useRef<Record<string, Room>>(
-    Object.fromEntries(ROOMS.map((r) => [r.id, r.make()])),
-  ).current;
-  const [roomId, setRoomId] = useState(ROOMS[0].id);
-  const room = rooms[roomId];
+  // Every room the board can show comes from the library: the two shipped
+  // documents, then the saves in this browser. Nothing is built by calling a
+  // function at render time, which is what makes a room something you can own.
+  const initial = useMemo(() => listLibrary(), []);
+  const [library, setLibrary] = useState<RoomEntry[]>(initial);
+  // The last room you were in wins, as long as it is still in the library (a
+  // deleted save must not leave the board pointing at nothing).
+  const [roomId, setRoomId] = useState<string>(() => {
+    const last = lastRoomId();
+    return initial.some((r) => r.id === last) ? (last as string) : initial[0]?.id ?? '';
+  });
+  const entry = library.find((r) => r.id === roomId) ?? library[0];
+  const baseRoom = useMemo<Room>(() => entry?.room ?? makeDemoRoom(), [entry]);
   const boardRef = useRef<Board3D | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
@@ -43,29 +138,77 @@ export function BattleMapView() {
   const fitRef = useRef(1);
 
   const [tab, setTab] = useState<'room' | 'sheet'>('room');
-  const [rig, setRig] = useState<LightRig>(() => JSON.parse(JSON.stringify(room.rig)));
+  const [rig, setRig] = useState<LightRig>(() => JSON.parse(JSON.stringify(baseRoom.rig)));
   const [mood, setMood] = useState<string | null>('noon');
   const [cam, setCam] = useState({ yaw: 32, pitch: 55, zoom: 1 });
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [view, setView] = useState<View>('lit');
   const [showPath, setShowPath] = useState(true);
-  const [torches, setTorches] = useState(0);
   const [fit, setFit] = useState(1);
   const [fps, setFps] = useState(0);
+  const [nameDraft, setNameDraft] = useState(entry?.name ?? '');
+  const [notice, setNotice] = useState<{ tone: 'ok' | 'err'; text: string } | null>(null);
+  const fileRef = useRef<HTMLInputElement | null>(null);
+
+  /* ----------------------------------------------------------- authoring */
+  const [playFile, setPlayFile] = useState<PlayFile>(() => loadPlay());
+  const [draft, setDraft] = useState<Room | null>(null);
+  const [tool, setTool] = useState<Tool>('look');
+  const [propRule, setPropRule] = useState<PropRule['rule']>('crate');
+  const [fogOn, setFogOn] = useState(false);
+
+  const play = playFile[roomId];
+  // An edit is a draft of the document, not a mutation of the library: Cancel
+  // has to give the room back, and Save is the only thing that writes.
+  const room = useMemo<Room>(() => {
+    const base = draft ? draft : applyPlay(baseRoom, play);
+    if (!base.tokens.some((t) => t.ref)) return base;
+    const chars = characterStorage.getAllCharacters();
+    if (!chars.length) return base;
+    const byId = new Map(chars.map((c) => [c.id, c]));
+    const out: Room = JSON.parse(JSON.stringify(base));
+    for (const t of out.tokens) {
+      const c = t.ref ? byId.get(t.ref) : undefined;
+      if (c) t.spec = specFromCharacter(c);
+    }
+    return out;
+  }, [draft, baseRoom, play]);
+  const characters = useMemo(() => characterStorage.getAllCharacters(), [roomId]);
+
+  /** The room the rig and camera were last reset for. Keyed by id, not by object:
+   *  saving replaces the entry, and the board should not jump when it succeeds. */
+  const loaded = useRef<string | null>(null);
+
+  // Torches are in the rig, so the count derives from the rig. A separate
+  // counter drifts the first time a room is saved or a save is opened.
+  const torches = rig.points.filter((p) => p.id?.startsWith('torch-')).length;
+
+  /* ------------------------------------------------------------------ fog */
+  // Visibility is recomputed when the room changes, not per frame: a party
+  // only moves on a transition, and 1,500 ray cells at 30 Hz would cost more
+  // than the whole render.
+  const fogData = useMemo(() => {
+    const cells = room.grid.cols * room.grid.rows;
+    const visible = visibility(room, sourceCells(room), FOG_RADIUS_CELLS);
+    const seen = mergeExplored(decodeMask(play?.explored, cells), visible);
+    return { cols: room.grid.cols, rows: room.grid.rows, visible, seen };
+  }, [room, play?.explored]);
 
   // Latest values for the animation loop, without re-creating it.
-  const live = useRef({ rig, view, showPath, cam, pan, tab });
-  live.current = { rig, view, showPath, cam, pan, tab };
+  const live = useRef({ rig, view, showPath, cam, pan, tab, fog: fogOn ? fogData : null });
+  live.current = { rig, view, showPath, cam, pan, tab, fog: fogOn ? fogData : null };
 
   /* ---------------------------------------------------------------- paint */
   // Stable identity: the animation loop restarts whenever this changes, and a
-  // restart resets the frame clock. Reading `fit` from a ref keeps the loop
-  // alive across the per-frame bounds changes an orbit produces.
+  // restart resets the frame clock. The fit comes from a ref and is recomputed
+  // only when the room or the panel changes, never per frame.
+  const lastPaint = useRef(0);
   const paint = useCallback(() => {
     const b = boardRef.current;
     const canvas = canvasRef.current;
     const el = wrapRef.current;
     if (!b || !canvas || !el) return;
+    lastPaint.current = performance.now();
     const L = live.current;
     b.yaw = L.cam.yaw;
     b.pitch = L.cam.pitch;
@@ -77,37 +220,225 @@ export function BattleMapView() {
       // camera is actually moving. Skipping it mid-drag buys back a fifth of
       // the frame; the pointer-up frame puts the lines back.
       outline: !drag.current?.moved,
+      fog: L.fog,
     });
     if (L.view !== 'lit') b.debug(L.view);
 
-    // The board's buffer changes shape as the camera orbits, so the fit is a
-    // per-frame consequence of the projection rather than a one-time setup.
-    const exact = Math.min(el.clientWidth / b.width, el.clientHeight / b.height);
-    const next = exact >= 1 ? Math.floor(exact) : Math.max(0.2, exact);
-    if (Math.abs(next - fitRef.current) > 0.001) {
-      fitRef.current = next;
-      setFit(next);
-    }
-
-    b.present(canvas, next * L.cam.zoom, L.pan.x, L.pan.y);
+    // 1× is the room fitting at every camera angle, so the scale can only
+    // change when the room or the panel does — never while the camera turns.
+    const scale = fitRef.current * L.cam.zoom;
+    b.present(canvas, el.clientWidth, el.clientHeight, scale, L.pan.x, L.pan.y);
   }, []);
+
+  /* ------------------------------------------------------------- play state */
+  const writePlay = useCallback((id: string, patch: Partial<RoomPlay>) => {
+    setPlayFile((prev) => {
+      const next = { ...prev, [id]: { ...(prev[id] ?? {}), ...patch } };
+      savePlay(next);
+      return next;
+    });
+  }, []);
+
+  const persistHere = useCallback(() => {
+    if (!entry) return;
+    writePlay(entry.id, {
+      rig: JSON.parse(JSON.stringify(rig)),
+      tokenAt: tokenPositions(room),
+      explored: encodeMask(fogData.seen),
+    });
+  }, [entry, rig, room, fogData, writePlay]);
+
+  /** One way to leave a room, whether you click the strip, the dropdown or a
+   *  door: write what this room knows, then hand the board the next document. */
+  const switchRoom = useCallback(
+    (id: string) => {
+      if (id === roomId) return;
+      persistHere();
+      setRoomId(id);
+    },
+    [persistHere, roomId],
+  );
+
+  // A reload lands in the same environment. Written on switch, not on mount, so
+  // a first visit is not immediately remembered as a choice the table made.
+  useEffect(() => {
+    if (roomId) rememberRoom(roomId);
+  }, [roomId]);
+
+  /** A door is a loading screen: persist this room, read the next one, and put
+   *  the party on the floor beside the door they arrived at. */
+  const goThroughDoor = (d: RoomDoor) => {
+    if (!d.to) {
+      setNotice({
+        tone: 'err',
+        text: d.state === 'locked' ? `${d.label ?? 'That door'} is locked.` : 'That door is not linked to another room yet.',
+      });
+      return;
+    }
+    const target = library.find((r) => r.id === d.to!.room) ?? listLibrary().find((r) => r.id === d.to!.room);
+    if (!target) {
+      setNotice({ tone: 'err', text: `That door leads to “${d.to.room}”, which is not in this library.` });
+      return;
+    }
+    persistHere();
+    const baseTarget = applyPlay(target.room, playFile[target.id]);
+    const at = arrivalCell(baseTarget, d.to.door);
+    if (!at) {
+      setNotice({ tone: 'err', text: `${target.name} has no floor at door “${d.to.door}”.` });
+      return;
+    }
+    const arrived = moveParty(baseTarget, at);
+    writePlay(target.id, { tokenAt: tokenPositions(arrived) });
+    setDraft(null);
+    setTool('look');
+    loaded.current = null;
+    setRoomId(target.id);
+    setNotice({ tone: 'ok', text: `Through to ${target.name}.` });
+  };
+
+  /* -------------------------------------------------------------- authoring */
+  const applyTool = (x: number, z: number) => {
+    const base = draft ?? room;
+    const next: Room = JSON.parse(JSON.stringify(base));
+    const cx = Math.floor(x);
+    const cz = Math.floor(z);
+    const { cols, rows } = next.grid;
+    if (cx < 0 || cz < 0 || cx >= cols || cz >= rows) return;
+    const i = cz * cols + cx;
+    const cells = next.grid.cells;
+    const ground = next.grid.ground ?? (next.grid.ground = new Uint8Array(cols * rows));
+
+    if (tool === 'look') return;
+    if (tool === 'floor') {
+      cells[i] = 1;
+      ground[i] = 0;
+    } else if (tool === 'wall') {
+      cells[i] = 2;
+      ground[i] = 0;
+    } else if (tool === 'erase') {
+      cells[i] = 1;
+      ground[i] = 0;
+      next.props = next.props.filter((p) => !propCovers(p, cx, cz));
+      next.doors = (next.doors ?? []).filter((d) => Math.round(d.at[0]) !== cx || Math.round(d.at[1]) !== cz);
+    } else if (tool === 'door') {
+      if (cells[i] === 0) {
+        setNotice({ tone: 'err', text: 'A door needs a floor or a wall to stand in.' });
+        return;
+      }
+      const taken = (next.doors ?? []).some((d) => Math.round(d.at[0]) === cx && Math.round(d.at[1]) === cz);
+      if (!taken) {
+        next.doors = [...(next.doors ?? []), { id: `door-${Date.now().toString(36)}`, at: [cx, cz], state: 'closed' }];
+      }
+    } else if (tool === 'prop') {
+      if (cells[i] !== 1) {
+        setNotice({ tone: 'err', text: 'Props stand on floor. Paint floor first.' });
+        return;
+      }
+      next.props.push(makeProp(propRule, cx, cz));
+    } else {
+      const g = GROUND_TOOLS.find((t) => t.id === tool);
+      if (!g) return;
+      cells[i] = 1;
+      ground[i] = ['stone', 'grass', 'dirt', 'water', 'wood'].indexOf(g.ground);
+    }
+    setDraft(next);
+  };
+
+  const setDoorLink = (doorId: string, toRoom: string, toDoor: string) => {
+    const base = draft ?? room;
+    const next: Room = JSON.parse(JSON.stringify(base));
+    next.doors = (next.doors ?? []).map((d) => {
+      if (d.id !== doorId) return d;
+      const out: RoomDoor = { ...d };
+      if (toRoom) out.to = { room: toRoom, door: toDoor };
+      else delete out.to;
+      return out;
+    });
+    setDraft(next);
+  };
+
+  const setTokenRef = (tokenId: string, ref: string) => {
+    const next: Room = JSON.parse(JSON.stringify(draft ?? room));
+    for (const t of next.tokens) {
+      if (t.id !== tokenId) continue;
+      if (ref) t.ref = ref;
+      else delete t.ref;
+    }
+    setDraft(next);
+  };
+
+  const removeDoor = (doorId: string) => {
+    const next: Room = JSON.parse(JSON.stringify(draft ?? room));
+    next.doors = (next.doors ?? []).filter((d) => d.id !== doorId);
+    setDraft(next);
+  };
+
+  const revealAll = () => {
+    const all = new Uint8Array(room.grid.cols * room.grid.rows).fill(1);
+    writePlay(roomId, { explored: encodeMask(all) });
+    setFogOn(true);
+  };
+
+  const clearExplored = () => {
+    writePlay(roomId, { explored: encodeMask(new Uint8Array(room.grid.cols * room.grid.rows)) });
+  };
 
   /* ---------------------------------------------------------------- setup */
   // A new room brings its own rig, its own scale and its own places to stand.
   useEffect(() => {
-    setRig(JSON.parse(JSON.stringify(room.rig)));
+    if (loaded.current === roomId) return;
+    loaded.current = roomId;
+    setDraft(null);
+    setRig(JSON.parse(JSON.stringify(play?.rig ?? room.rig)));
     setMood(null);
-    setTorches(0);
     setPan({ x: 0, y: 0 });
-  }, [room]);
+    setNameDraft(entry?.name ?? '');
+    const v = entry?.doc.view;
+    // 1x is fit: below it the board floats inside the panel with blank canvas
+    // around it, which is never useful and is easy to mistake for a broken view.
+    if (v) setCam({ yaw: v.yaw, pitch: v.pitch, zoom: Math.max(1, v.zoom) });
+  }, [roomId, room, entry, play?.rig]);
 
   useEffect(() => {
-    boardRef.current = new Board3D(room);
+    if (!notice) return;
+    const t = setTimeout(() => setNotice(null), 6000);
+    return () => clearTimeout(t);
+  }, [notice]);
+
+  useEffect(() => {
+    const b = new Board3D(room);
+    boardRef.current = b;
+    const refit = () => {
+      const el = wrapRef.current;
+      if (!el) return;
+      const next = b.fitScale(el.clientWidth, el.clientHeight);
+      if (Math.abs(next - fitRef.current) > 0.001) {
+        fitRef.current = next;
+        setFit(next);
+      }
+    };
+    refit();
     paint();
-    const observer = new ResizeObserver(() => paint());
+    const observer = new ResizeObserver(() => {
+      refit();
+      paint();
+    });
     if (wrapRef.current) observer.observe(wrapRef.current);
     return () => observer.disconnect();
   }, [paint, room]);
+
+  // 1× means the room fits the panel, so a pan offset at that zoom is only
+  // ever a way to lose the board. Zooming out to fit (or resetting) recentres,
+  // which is the way back from a free pan; while zoomed in, pan is unlimited.
+  useEffect(() => {
+    if (cam.zoom === 1) setPan({ x: 0, y: 0 });
+  }, [cam.zoom]);
+
+  // rAF stops while the panel is backgrounded, and a camera change must still
+  // land when it comes back: paint directly if the loop has gone quiet.
+  useEffect(() => {
+    if (performance.now() - lastPaint.current > 100) paint();
+  }, [cam, pan, fit, paint]);
 
   /* ------------------------------------------------------------ animation */
   useEffect(() => {
@@ -140,7 +471,13 @@ export function BattleMapView() {
     if (!el) return;
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
-      setCam((c) => ({ ...c, zoom: clamp(c.zoom * (e.deltaY > 0 ? 0.9 : 1.1), 0.4, 4) }));
+      if (e.deltaY > 0 && live.current.cam.zoom <= 1) {
+        // Already at fit: the only useful thing zooming out can do is bring
+        // the room back to the middle.
+        setPan({ x: 0, y: 0 });
+        return;
+      }
+      setCam((c) => ({ ...c, zoom: clamp(c.zoom * (e.deltaY > 0 ? 0.9 : 1.1), 1, 4) }));
     };
     el.addEventListener('wheel', onWheel, { passive: false });
     return () => el.removeEventListener('wheel', onWheel);
@@ -176,20 +513,19 @@ export function BattleMapView() {
       const b = boardRef.current;
       if (!canvas || !b) return;
       const rect = canvas.getBoundingClientRect();
-      const scale = fitRef.current * live.current.cam.zoom;
-      const bx = (clientX - rect.left + live.current.pan.x) / scale;
-      const by = (clientY - rect.top + live.current.pan.y) / scale;
+      const [bx, by] = b.frameAt(clientX - rect.left, clientY - rect.top);
       const [x, z] = b.worldAt(bx, by);
       // Colliders are real now: a torch cannot be placed inside a wall or a
       // table, because the scene knows where they are.
       if (b.cellAt(x, z) !== 1 || b.solidAtCell(x, z)) return;
-      setTorches((n) => n + 1);
       setRig((r) => ({
         ...r,
         points: [
           ...r.points,
           {
-            id: `torch-${r.points.length}`,
+            // A timestamp, not the array length: torches are removable once the
+            // room is a document, so two of them can share an index.
+            id: `torch-${Date.now().toString(36)}`,
             x: x * CELL,
             y: z * CELL,
             radius: 3.6 * CELL,
@@ -202,38 +538,192 @@ export function BattleMapView() {
     [],
   );
 
-  const drag = useRef<{ x: number; y: number; moved: boolean; mode: 'orbit' | 'pan' } | null>(null);
-  const onPointerDown = (e: React.PointerEvent) => {
+  /* --------------------------------------------------------------- library */
+  const saveCurrent = useCallback(() => {
+    if (!entry) return;
+    const name = nameDraft.trim() || entry.name;
+    // Saved in place, even for a built-in. A save shadows the shipped document
+    // with the same id instead of forking it: every door link names a room id,
+    // and a copy under a new id would break the graph it belongs to.
+    const id = entry.id;
+    const doc = toDoc(room, { id, name }, { rig, view: { yaw: cam.yaw, pitch: cam.pitch, zoom: cam.zoom } });
+    const error = saveDoc(doc);
+    if (error) {
+      setNotice({ tone: 'err', text: error });
+      return;
+    }
+    // The entry carries the saved rig, not the authored one, so reopening the
+    // room puts the torches back where they were placed.
+    const savedRoom: Room = { ...room, rig: JSON.parse(JSON.stringify(rig)) };
+    const next: RoomEntry = { id, name, source: 'saved', doc, room: savedRoom, savedAt: Date.now() };
+    setLibrary((lib) => {
+      const i = lib.findIndex((r) => r.id === id);
+      if (i < 0) return [...lib, next];
+      const copy = lib.slice();
+      copy[i] = next;
+      return copy;
+    });
+    loaded.current = id;
+    setDraft(null);
+    setRoomId(id);
+    setNotice({ tone: 'ok', text: `Saved “${name}” in this browser. It now shadows the shipped room of the same id.` });
+  }, [cam.pitch, cam.yaw, cam.zoom, entry, nameDraft, rig, room]);
+
+  const exportCurrent = useCallback(() => {
+    if (!entry) return;
+    const name = nameDraft.trim() || entry.name;
+    const doc = toDoc(room, { id: entry.id, name }, { rig, view: { yaw: cam.yaw, pitch: cam.pitch, zoom: cam.zoom } });
+    const blob = new Blob([docToJson(doc)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${doc.id}.room.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    setNotice({ tone: 'ok', text: `Exported ${doc.id}.room.json — the room is that file.` });
+  }, [cam.pitch, cam.yaw, cam.zoom, entry, nameDraft, rig, room]);
+
+  const importFile = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      e.target.value = '';
+      if (!file) return;
+      let raw: unknown;
+      try {
+        raw = JSON.parse(await file.text());
+      } catch {
+        setNotice({ tone: 'err', text: `${file.name} is not JSON.` });
+        return;
+      }
+      const res = parseRoomDoc(raw);
+      if (res.status === 'bad') {
+        const first = res.errors[0];
+        setNotice({ tone: 'err', text: `${file.name}: ${first.path} ${first.message}` });
+        return;
+      }
+      // An import arrives; it does not merge. A colliding id gets a fresh one.
+      const taken = library.some((r) => r.id === res.doc.id);
+      const id = taken ? newRoomId(res.doc.name) : res.doc.id;
+      const doc = { ...res.doc, id };
+      const error = saveDoc(doc);
+      if (error) {
+        setNotice({ tone: 'err', text: error });
+        return;
+      }
+      setLibrary(listLibrary());
+      loaded.current = null;
+      setRoomId(id);
+      const repairs = res.warnings.length;
+      setNotice({
+        tone: 'ok',
+        text: repairs
+          ? `Imported ${doc.name} with ${repairs} repair${repairs === 1 ? '' : 's'}.`
+          : `Imported ${doc.name}.`,
+      });
+    },
+    [library],
+  );
+
+  const removeCurrent = useCallback(() => {
+    if (!entry || entry.source !== 'saved') return;
+    if (!window.confirm(`Delete “${entry.name}” from this browser? An exported copy is not affected.`)) return;
+    const at = library.findIndex((r) => r.id === entry.id);
+    deleteSave(entry.id);
+    const rest = listLibrary();
+    setLibrary(rest);
+    loaded.current = null;
+    setRoomId(rest[Math.min(at, rest.length - 1)]?.id ?? '');
+  }, [entry, library]);
+
+  const drag = useRef<{ id: number; x: number; y: number; moved: boolean; mode: 'orbit' | 'pan' } | null>(null);
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    // Left orbits and right pans. A middle click is the browser's, not ours.
+    if (e.button !== 0 && e.button !== 2) return;
+    // A press always starts a new gesture. A stale drag can only survive here
+    // if the previous release was lost outside the window, and refusing the
+    // press is exactly the "sometimes it won't move" bug.
     drag.current = {
+      id: e.pointerId,
       x: e.clientX,
       y: e.clientY,
       moved: false,
       mode: e.button === 2 || e.shiftKey ? 'pan' : 'orbit',
     };
-    (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+    // Capture on the wrapper, which owns these handlers and is never re-created:
+    // capturing on the canvas is how a release over the sidebar used to go missing.
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // The pointer is already gone; the drag still ends on pointerup/cancel.
+    }
   };
-  const onPointerMove = (e: React.PointerEvent) => {
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     const d = drag.current;
-    if (!d) return;
+    if (!d || e.pointerId !== d.id) return;
+    // A pointerup that never arrived (window blur, OS menu) leaves no buttons
+    // down; drop the drag instead of orbiting on every later hover.
+    if ((e.buttons & 3) === 0) {
+      drag.current = null;
+      return;
+    }
     const dx = e.clientX - d.x;
     const dy = e.clientY - d.y;
     if (Math.abs(dx) + Math.abs(dy) > 3) d.moved = true;
     if (!d.moved) return;
-    drag.current = { x: e.clientX, y: e.clientY, moved: true, mode: d.mode };
+    d.x = e.clientX;
+    d.y = e.clientY;
     if (d.mode === 'pan') {
-      setPan((p) => ({ x: p.x - dx, y: p.y - dy }));
+      // The board follows the hand, with no artificial edge. Once the canvas
+      // filled the panel there was nothing left to protect against: what a
+      // free pan uncovers is the app's own background, not a transparent hole.
+      setPan((p) => ({ x: p.x + dx, y: p.y + dy }));
     } else {
       setCam((c) => ({
         ...c,
-        yaw: (c.yaw + dx * 0.45 + 360) % 360,
+        // Wrap, don't add 360: a fast flick can overshoot zero and a negative
+        // yaw is not the same angle to the quarter-turn geometry.
+        yaw: (((c.yaw + dx * 0.45) % 360) + 360) % 360,
         pitch: clamp(c.pitch - dy * 0.35, 20, 84),
       }));
     }
   };
-  const onPointerUp = (e: React.PointerEvent) => {
+  const endDrag = () => {
+    drag.current = null;
+  };
+  const onPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
     const d = drag.current;
     drag.current = null;
-    if (d && !d.moved) addTorch(e.clientX, e.clientY);
+    if (!d || e.pointerId !== d.id) return;
+    // Right-drag is a camera gesture only: it must never erase, place or light
+    // anything, even when the hand barely moved.
+    if (e.button !== 0) return;
+    if (d.moved) return;
+
+    const canvas = canvasRef.current;
+    const b = boardRef.current;
+    if (canvas && b) {
+      const rect = canvas.getBoundingClientRect();
+      const [bx, by] = b.frameAt(e.clientX - rect.left, e.clientY - rect.top);
+      const [x, z] = b.worldAt(bx, by);
+      if (tool !== 'look') {
+        applyTool(x, z);
+        return;
+      }
+      // A door is a target in play mode and geometry in build mode. Clicking the
+      // cell is the load; there is no walking animation across a threshold.
+      const cx = Math.floor(x);
+      const cz = Math.floor(z);
+      const door = (room.doors ?? []).find(
+        (dd) => Math.round(dd.at[0]) === cx && Math.round(dd.at[1]) === cz,
+      );
+      if (door) {
+        goThroughDoor(door);
+        return;
+      }
+    }
+    addTorch(e.clientX, e.clientY);
   };
 
   const reset = () => {
@@ -252,18 +742,7 @@ export function BattleMapView() {
         </div>
 
         <div className="ml-auto flex items-center gap-2">
-          <div className="flex items-center gap-1 rounded-md border border-white/10 p-0.5">
-            {ROOMS.map((r) => (
-              <Button
-                key={r.id}
-                size="sm"
-                variant={roomId === r.id ? 'secondary' : 'ghost'}
-                onClick={() => setRoomId(r.id)}
-              >
-                {r.label}
-              </Button>
-            ))}
-          </div>
+          <span className="text-xs text-neutral-400">{entry?.name ?? 'No room'}</span>
           <Button size="sm" variant={tab === 'room' ? 'secondary' : 'ghost'} onClick={() => setTab('room')}>
             Room
           </Button>
@@ -274,23 +753,297 @@ export function BattleMapView() {
       </header>
 
       {tab === 'room' ? (
-        <div className="flex min-h-0 flex-1">
+        <>
+          {/* Every environment in the library, one click away. The board is the
+              same document format for a tavern, a village and a four-storey
+              cavern, so switching is a load, not a different app. */}
+          <nav
+            aria-label="Environments"
+            className="flex shrink-0 items-center gap-1.5 overflow-x-auto border-b border-white/10 bg-black/25 px-3 py-1.5"
+          >
+            <span className="mr-1 shrink-0 text-[10px] font-semibold uppercase tracking-wider text-neutral-500">
+              Environments
+            </span>
+            {library.map((r) => {
+              const active = r.id === entry?.id;
+              return (
+                <button
+                  key={r.id}
+                  type="button"
+                  aria-current={active ? 'page' : undefined}
+                  title={r.source === 'saved' ? 'Saved in this browser' : 'Shipped room'}
+                  onClick={() => switchRoom(r.id)}
+                  className={
+                    'shrink-0 rounded border px-2 py-0.5 text-[11px] leading-5 transition-colors ' +
+                    (active
+                      ? 'border-amber-400/45 bg-amber-400/15 text-amber-200'
+                      : 'border-white/10 text-neutral-400 hover:border-white/25 hover:text-neutral-200')
+                  }
+                >
+                  {r.name}
+                  {r.source === 'saved' && (
+                    <span className="ml-1 text-[9px] font-semibold uppercase tracking-wide text-emerald-400/80">
+                      saved
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </nav>
+          <div className="flex min-h-0 flex-1">
           <div
             ref={wrapRef}
             className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden"
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
+            onPointerCancel={endDrag}
             onContextMenu={(e) => e.preventDefault()}
           >
             <canvas ref={canvasRef} className="touch-none select-none" style={{ imageRendering: 'pixelated' }} />
             <div className="pointer-events-none absolute bottom-2 left-3 text-[11px] text-neutral-500">
-              drag to orbit · shift-drag to pan · scroll to zoom · click the floor to place a torch · {fps} fps ·{' '}
+              drag to orbit · right-drag or shift-drag to pan · scroll to zoom (fit recentres) · click a door to go
+              through · click the floor to place a torch · {fps} fps ·{' '}
               {(fit * cam.zoom).toFixed(2)}×
             </div>
           </div>
 
           <aside className="w-72 shrink-0 space-y-5 overflow-y-auto border-l border-white/10 p-4 text-sm">
+            <section className="space-y-2">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Room</h3>
+              <input
+                value={nameDraft}
+                onChange={(e) => setNameDraft(e.target.value)}
+                placeholder="Room name"
+                spellCheck={false}
+                className="h-8 w-full rounded-md border border-white/15 bg-transparent px-2 text-xs text-neutral-200 placeholder:text-neutral-600 focus:outline-none focus:ring-1 focus:ring-amber-400/40"
+              />
+              <div className="grid grid-cols-4 gap-1">
+                <Button size="sm" variant="outline" title="Save in this browser" aria-label="Save room in this browser" onClick={saveCurrent}>
+                  <Save className="h-3 w-3" />
+                </Button>
+                <Button size="sm" variant="outline" title="Export .room.json" aria-label="Export room as JSON" onClick={exportCurrent}>
+                  <Download className="h-3 w-3" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  title="Import .room.json"
+                  aria-label="Import a room JSON file"
+                  onClick={() => fileRef.current?.click()}
+                >
+                  <Upload className="h-3 w-3" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  title="Delete this saved room"
+                  aria-label="Delete this saved room"
+                  disabled={entry?.source !== 'saved'}
+                  onClick={removeCurrent}
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              </div>
+              <input
+                ref={fileRef}
+                type="file"
+                accept=".json,application/json"
+                className="hidden"
+                onChange={importFile}
+              />
+              {notice && (
+                <p
+                  className={
+                    notice.tone === 'err'
+                      ? 'text-[11px] leading-snug text-rose-400'
+                      : 'text-[11px] leading-snug text-emerald-400'
+                  }
+                >
+                  {notice.text}
+                </p>
+              )}
+              <p className="text-[11px] leading-relaxed text-neutral-500">
+                A room is a JSON document — terrain, props, tokens, lights and storeys. Saves live in this browser;
+                export one to move it to another machine or hand it to a player.
+              </p>
+            </section>
+
+            <section className="space-y-2">
+              <h3 className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-neutral-400">
+                <Brush className="h-3 w-3" /> Build
+              </h3>
+              <div className="grid grid-cols-3 gap-1">
+                <Button
+                  size="sm"
+                  variant={tool === 'look' ? 'secondary' : 'outline'}
+                  onClick={() => setTool('look')}
+                  title="Play: click a door to go through, the floor to place a torch"
+                >
+                  Look
+                </Button>
+                <Button
+                  size="sm"
+                  variant={tool === 'erase' ? 'secondary' : 'outline'}
+                  onClick={() => setTool('erase')}
+                  title="Remove props and doors, and put the floor back"
+                >
+                  <Eraser className="h-3 w-3" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant={tool === 'door' ? 'secondary' : 'outline'}
+                  onClick={() => setTool('door')}
+                  title="Place a doorway on a floor or wall cell"
+                >
+                  <DoorOpen className="h-3 w-3" />
+                </Button>
+              </div>
+              <p className="text-[11px] text-neutral-500">Floor finish</p>
+              <div className="grid grid-cols-5 gap-1">
+                {GROUND_TOOLS.map((g) => (
+                  <Button
+                    key={g.id}
+                    size="sm"
+                    variant={tool === g.id ? 'secondary' : 'outline'}
+                    className="px-0 text-[10px]"
+                    onClick={() => setTool(g.id)}
+                  >
+                    {g.label}
+                  </Button>
+                ))}
+              </div>
+              <div className="flex gap-1">
+                <select
+                  value={propRule}
+                  onChange={(e) => {
+                    setPropRule(e.target.value as PropRule['rule']);
+                    setTool('prop');
+                  }}
+                  className="h-8 min-w-0 flex-1 rounded-md border border-white/15 bg-[#14121a] px-1 text-xs"
+                >
+                  {PROP_CHOICES.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.label}
+                    </option>
+                  ))}
+                </select>
+                <Button
+                  size="sm"
+                  variant={tool === 'prop' ? 'secondary' : 'outline'}
+                  onClick={() => setTool('prop')}
+                >
+                  Place
+                </Button>
+                <Button size="sm" variant="outline" title="Wall cell" onClick={() => setTool('wall')}>
+                  Wall
+                </Button>
+              </div>
+              {draft && (
+                <div className="flex items-center gap-2 rounded border border-amber-400/30 bg-amber-400/5 p-2 text-[11px] text-amber-300">
+                  <span className="flex-1">Unsaved map edits</span>
+                  <Button size="sm" variant="ghost" className="h-6 px-1 text-[11px]" onClick={() => setDraft(null)}>
+                    <Undo2 className="h-3 w-3" /> Revert
+                  </Button>
+                </div>
+              )}
+              <p className="text-[11px] leading-relaxed text-neutral-500">
+                Click the board with a tool selected. Drag still orbits. Save writes the document.
+              </p>
+            </section>
+
+            {(room.doors?.length ?? 0) > 0 && (
+              <section className="space-y-2">
+                <h3 className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-neutral-400">
+                  <DoorOpen className="h-3 w-3" /> Doors
+                </h3>
+                {room.doors!.map((d) => {
+                  const target = library.find((r) => r.id === d.to?.room);
+                  return (
+                    <div key={d.id} className="space-y-1 rounded border border-white/10 p-2">
+                      <div className="flex items-center gap-1 text-[11px]">
+                        <span className="flex-1 truncate text-neutral-300">{d.label ?? d.id}</span>
+                        <span className="text-neutral-600">
+                          {Math.round(d.at[0])},{Math.round(d.at[1])}
+                        </span>
+                        <button
+                          className="text-neutral-500 hover:text-amber-300 disabled:opacity-30"
+                          title={d.to ? 'Go through this door' : 'Not linked'}
+                          disabled={!d.to}
+                          onClick={() => goThroughDoor(d)}
+                        >
+                          <DoorOpen className="h-3 w-3" />
+                        </button>
+                        <button
+                          className="text-neutral-500 hover:text-rose-400"
+                          title="Remove door"
+                          onClick={() => removeDoor(d.id)}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </div>
+                      <select
+                        value={d.to?.room ?? ''}
+                        onChange={(e) => {
+                          const rid = e.target.value;
+                          const next = rid ? library.find((r) => r.id === rid) : undefined;
+                          setDoorLink(d.id, rid, next?.doc.doors?.[0]?.id ?? '');
+                        }}
+                        className="h-7 w-full rounded border border-white/15 bg-[#14121a] px-1 text-[11px]"
+                      >
+                        <option value="">Not linked</option>
+                        {library
+                          .filter((r) => r.id !== entry?.id)
+                          .map((r) => (
+                            <option key={r.id} value={r.id}>
+                              {r.name}
+                            </option>
+                          ))}
+                      </select>
+                      {target && (
+                        <select
+                          value={d.to?.door ?? ''}
+                          onChange={(e) => setDoorLink(d.id, target.id, e.target.value)}
+                          className="h-7 w-full rounded border border-white/15 bg-[#14121a] px-1 text-[11px]"
+                        >
+                          <option value="">Arrive at…</option>
+                          {(target.doc.doors ?? []).map((o) => (
+                            <option key={o.id} value={o.id}>
+                              {o.label ?? o.id}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                    </div>
+                  );
+                })}
+              </section>
+            )}
+
+            <section className="space-y-2">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Tokens</h3>
+              {room.tokens.map((t) => (
+                <div key={t.id} className="flex items-center gap-1 rounded border border-white/10 p-2">
+                  <span className="w-16 shrink-0 truncate text-[11px] text-neutral-300">{t.spec.name}</span>
+                  <select
+                    value={t.ref ?? ''}
+                    onChange={(e) => setTokenRef(t.id, e.target.value)}
+                    className="h-7 min-w-0 flex-1 rounded border border-white/15 bg-[#14121a] px-1 text-[11px]"
+                  >
+                    <option value="">Embedded copy</option>
+                    {characters.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ))}
+              <p className="text-[11px] leading-relaxed text-neutral-500">
+                A linked token reads race, build, weapon and armour from the sheet every time the room loads.
+              </p>
+            </section>
+
             <section className="space-y-2">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Mood</h3>
               <div className="grid grid-cols-2 gap-2">
@@ -361,7 +1114,7 @@ export function BattleMapView() {
                 onChange={(v) => setCam((c) => ({ ...c, pitch: v }))}
               />
               <div className="flex gap-2">
-                <Button size="sm" variant="outline" className="flex-1" onClick={() => setCam((c) => ({ ...c, zoom: Math.max(0.4, c.zoom - 0.25) }))}>
+                <Button size="sm" variant="outline" className="flex-1" onClick={() => setCam((c) => ({ ...c, zoom: Math.max(1, c.zoom - 0.25) }))}>
                   <ZoomOut className="h-3 w-3" />
                 </Button>
                 <Button size="sm" variant="outline" className="flex-1" onClick={() => setCam((c) => ({ ...c, zoom: Math.min(4, c.zoom + 0.25) }))}>
@@ -391,19 +1144,38 @@ export function BattleMapView() {
                 <Button size="sm" variant="outline" className="flex-1" onClick={() => setShowPath((p) => !p)}>
                   <Eye className="mr-1 h-3 w-3" /> {showPath ? 'Path on' : 'Path off'}
                 </Button>
+                <Button size="sm" variant={fogOn ? 'secondary' : 'outline'} onClick={() => setFogOn((f) => !f)}>
+                  {fogOn ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                </Button>
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() => {
-                    setTorches(0);
                     setRig(JSON.parse(JSON.stringify(room.rig)));
-                    setMood('noon');
+                    setMood(null);
                   }}
                   title="Reset lights"
                 >
                   <RefreshCw className="h-3 w-3" />
                 </Button>
               </div>
+            </section>
+
+            <section className="space-y-2">
+              <h3 className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-neutral-400">
+                {fogOn ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />} Fog of war
+              </h3>
+              <div className="grid grid-cols-2 gap-1">
+                <Button size="sm" variant="outline" onClick={revealAll}>
+                  Reveal all
+                </Button>
+                <Button size="sm" variant="outline" onClick={clearExplored}>
+                  Forget
+                </Button>
+              </div>
+              <p className="text-[11px] leading-relaxed text-neutral-500">
+                Seen cells stay seen after the party leaves. A door saves this room before the next one loads.
+              </p>
             </section>
 
             <section className="space-y-1 border-t border-white/10 pt-3 text-[11px] leading-relaxed text-neutral-500">
@@ -416,7 +1188,8 @@ export function BattleMapView() {
               </p>
             </section>
           </aside>
-        </div>
+          </div>
+        </>
       ) : (
         <div className="min-h-0 flex-1 overflow-auto p-4">
           <p className="mb-3 max-w-3xl text-xs leading-relaxed text-neutral-400">
