@@ -3,6 +3,14 @@ import cavernDoc from './rooms/cavern.json';
 import ivarsteadDoc from './rooms/ivarstead.json';
 import innDoc from './rooms/vilemyr-inn.json';
 import traderDoc from './rooms/trader-hall.json';
+import kvCausewayDoc from './rooms/korvanjund-causeway.json';
+import kvShaftDoc from './rooms/korvanjund-shaft.json';
+import kvArmoryDoc from './rooms/korvanjund-armory.json';
+import kvEmbalmingDoc from './rooms/korvanjund-embalming.json';
+import kvDescentDoc from './rooms/korvanjund-descent.json';
+import kvLandingDoc from './rooms/korvanjund-landing.json';
+import kvCryptDoc from './rooms/korvanjund-crypt.json';
+import kvThroneDoc from './rooms/korvanjund-throne.json';
 import { parseRoomDoc, type RoomDoc } from './document';
 import type { Room } from './room';
 
@@ -31,7 +39,15 @@ export type RoomEntry = {
 const PREFIX = 'skyrim-codex.room.v1.';
 const LAST_KEY = 'skyrim-codex.room.last';
 
-const BUILT_IN_DOCUMENTS: unknown[] = [tavernDoc, cavernDoc, ivarsteadDoc, innDoc, traderDoc];
+const BUILT_IN_DOCUMENTS: unknown[] = [
+  tavernDoc,
+  cavernDoc,
+  ivarsteadDoc,
+  innDoc,
+  traderDoc,
+  // Korvanjund, in play order (src/battlemap/korvanjund.ts).
+  kvCausewayDoc, kvShaftDoc, kvArmoryDoc, kvEmbalmingDoc, kvDescentDoc, kvLandingDoc, kvCryptDoc, kvThroneDoc,
+];
 
 /** localStorage is absent in Node (the tests) and can throw in locked-down browsers. */
 const store = (): Storage | null => {

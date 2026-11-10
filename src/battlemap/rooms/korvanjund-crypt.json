@@ -1,0 +1,1092 @@
+{
+  "format": "skyrim-codex.room",
+  "version": 1,
+  "id": "korvanjund-crypt",
+  "name": "Korvanjund: The Great Crypt",
+  "terrain": [
+    "2*10,1,2*11",
+    "2,1*20,2",
+    "2,1*20,2",
+    "2,1*20,2",
+    "2,1*20,2",
+    "2,1*20,2",
+    "2,1*20,2",
+    "2,1*20,2",
+    "2,1*20,2",
+    "2,1*20,2",
+    "2,1*20,2",
+    "2,1*20,2",
+    "2,1*20,2",
+    "2,1*20,2",
+    "2,1*20,2",
+    "2,1*20,2",
+    "2,1*20,2",
+    "2,1*20,2",
+    "2,1*20,2",
+    "2,1*20,2",
+    "2,1*20,2",
+    "2,1*20,2",
+    "2,1*20,2",
+    "2,1*20,2",
+    "2,1*20,2",
+    "2,1*20,2",
+    "2,1*20,2",
+    "2,1*20,2",
+    "2,1*20,2",
+    "2,1*20,2",
+    "2,1*20,2",
+    "2,1*20,2",
+    "2,1*20,2",
+    "2*10,1,2*11"
+  ],
+  "seed": 12745584,
+  "props": [
+    {
+      "id": "p1",
+      "rule": "stairs",
+      "at": [
+        6,
+        14
+      ],
+      "w": 1.6,
+      "rise": 2,
+      "run": 2,
+      "along": "x",
+      "dir": 1
+    },
+    {
+      "id": "p2",
+      "rule": "stairs",
+      "at": [
+        14,
+        20
+      ],
+      "w": 1.6,
+      "rise": 2,
+      "run": 2,
+      "along": "x",
+      "dir": -1
+    },
+    {
+      "id": "p3",
+      "rule": "sarcophagus",
+      "at": [
+        4,
+        1
+      ],
+      "face": "s"
+    },
+    {
+      "id": "p4",
+      "rule": "sarcophagus",
+      "at": [
+        16,
+        32.35
+      ],
+      "face": "n"
+    },
+    {
+      "id": "p5",
+      "rule": "sarcophagus",
+      "at": [
+        1.5,
+        1
+      ],
+      "face": "s"
+    },
+    {
+      "id": "p6",
+      "rule": "sarcophagus",
+      "at": [
+        19.5,
+        32.35
+      ],
+      "face": "n"
+    },
+    {
+      "id": "p7",
+      "rule": "column",
+      "at": [
+        5,
+        6
+      ],
+      "h": 8
+    },
+    {
+      "id": "p8",
+      "rule": "column",
+      "at": [
+        16,
+        6
+      ],
+      "h": 8
+    },
+    {
+      "id": "p9",
+      "rule": "column",
+      "at": [
+        5,
+        13
+      ],
+      "h": 8
+    },
+    {
+      "id": "p10",
+      "rule": "column",
+      "at": [
+        16,
+        13
+      ],
+      "h": 8
+    },
+    {
+      "id": "p11",
+      "rule": "column",
+      "at": [
+        5,
+        20
+      ],
+      "h": 8
+    },
+    {
+      "id": "p12",
+      "rule": "column",
+      "at": [
+        16,
+        20
+      ],
+      "h": 8
+    },
+    {
+      "id": "p13",
+      "rule": "column",
+      "at": [
+        5,
+        27
+      ],
+      "h": 8
+    },
+    {
+      "id": "p14",
+      "rule": "column",
+      "at": [
+        16,
+        27
+      ],
+      "h": 8
+    },
+    {
+      "id": "p15",
+      "rule": "rubble",
+      "at": [
+        4,
+        9
+      ],
+      "size": 3
+    },
+    {
+      "id": "p16",
+      "rule": "rubble",
+      "at": [
+        6.5,
+        23
+      ],
+      "size": 2
+    },
+    {
+      "id": "p17",
+      "rule": "rubble",
+      "at": [
+        15,
+        10.5
+      ],
+      "size": 3
+    },
+    {
+      "id": "p18",
+      "rule": "rubble",
+      "at": [
+        17,
+        17
+      ],
+      "size": 2
+    },
+    {
+      "id": "p19",
+      "rule": "rubble",
+      "at": [
+        4,
+        29
+      ],
+      "size": 2
+    },
+    {
+      "id": "p20",
+      "rule": "rubble",
+      "at": [
+        14.5,
+        30
+      ],
+      "size": 1
+    },
+    {
+      "id": "p21",
+      "rule": "rubble",
+      "at": [
+        6,
+        4
+      ],
+      "size": 1
+    },
+    {
+      "id": "p22",
+      "rule": "sprite",
+      "at": [
+        3.5,
+        18
+      ],
+      "sprite": "rocks"
+    },
+    {
+      "id": "p23",
+      "rule": "sprite",
+      "at": [
+        16.5,
+        24
+      ],
+      "sprite": "rocks"
+    },
+    {
+      "id": "p24",
+      "rule": "brazier",
+      "at": [
+        8.2,
+        8
+      ],
+      "lit": true
+    },
+    {
+      "id": "p25",
+      "rule": "brazier",
+      "at": [
+        13.2,
+        8
+      ],
+      "lit": true
+    },
+    {
+      "id": "p26",
+      "rule": "brazier",
+      "at": [
+        8.2,
+        24
+      ],
+      "lit": true
+    },
+    {
+      "id": "p27",
+      "rule": "brazier",
+      "at": [
+        13.2,
+        24
+      ],
+      "lit": true
+    }
+  ],
+  "tokens": [
+    {
+      "id": "deathlord-1",
+      "spec": {
+        "id": "draugr-deathlord",
+        "name": "Draugr Deathlord",
+        "race": "nord",
+        "build": "burly",
+        "skinTone": "pale",
+        "hair": "grey",
+        "hairStyle": "braid",
+        "beard": "long",
+        "garment": {
+          "torso": "plate",
+          "torsoCloth": "metal",
+          "legs": "greaves",
+          "legsCloth": "metal"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        9.2,
+        1.4
+      ],
+      "facing": 0
+    },
+    {
+      "id": "deathlord-2",
+      "spec": {
+        "id": "draugr-deathlord",
+        "name": "Draugr Deathlord",
+        "race": "nord",
+        "build": "burly",
+        "skinTone": "pale",
+        "hair": "grey",
+        "hairStyle": "braid",
+        "beard": "long",
+        "garment": {
+          "torso": "plate",
+          "torsoCloth": "metal",
+          "legs": "greaves",
+          "legsCloth": "metal"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        11.2,
+        1.4
+      ],
+      "facing": 0
+    },
+    {
+      "id": "thrall-1",
+      "spec": {
+        "id": "draugr-thrall",
+        "name": "Draugr Thrall",
+        "race": "nord",
+        "build": "average",
+        "skinTone": "pale",
+        "hair": "grey",
+        "hairStyle": "long",
+        "beard": "full",
+        "garment": {
+          "torso": "tunic",
+          "torsoCloth": "grey",
+          "legs": "trousers",
+          "legsCloth": "grey"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        9,
+        14
+      ],
+      "facing": 0
+    },
+    {
+      "id": "thrall-2",
+      "spec": {
+        "id": "draugr-thrall",
+        "name": "Draugr Thrall",
+        "race": "nord",
+        "build": "average",
+        "skinTone": "pale",
+        "hair": "grey",
+        "hairStyle": "long",
+        "beard": "full",
+        "garment": {
+          "torso": "tunic",
+          "torsoCloth": "grey",
+          "legs": "trousers",
+          "legsCloth": "grey"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        11,
+        14.4
+      ],
+      "facing": 0
+    },
+    {
+      "id": "thrall-3",
+      "spec": {
+        "id": "draugr-thrall",
+        "name": "Draugr Thrall",
+        "race": "nord",
+        "build": "average",
+        "skinTone": "pale",
+        "hair": "grey",
+        "hairStyle": "long",
+        "beard": "full",
+        "garment": {
+          "torso": "tunic",
+          "torsoCloth": "grey",
+          "legs": "trousers",
+          "legsCloth": "grey"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        12.4,
+        15.6
+      ],
+      "facing": 0
+    },
+    {
+      "id": "thrall-4",
+      "spec": {
+        "id": "draugr-thrall",
+        "name": "Draugr Thrall",
+        "race": "nord",
+        "build": "average",
+        "skinTone": "pale",
+        "hair": "grey",
+        "hairStyle": "long",
+        "beard": "full",
+        "garment": {
+          "torso": "tunic",
+          "torsoCloth": "grey",
+          "legs": "trousers",
+          "legsCloth": "grey"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        8.6,
+        16.8
+      ],
+      "facing": 0
+    },
+    {
+      "id": "thrall-5",
+      "spec": {
+        "id": "draugr-thrall",
+        "name": "Draugr Thrall",
+        "race": "nord",
+        "build": "average",
+        "skinTone": "pale",
+        "hair": "grey",
+        "hairStyle": "long",
+        "beard": "full",
+        "garment": {
+          "torso": "tunic",
+          "torsoCloth": "grey",
+          "legs": "trousers",
+          "legsCloth": "grey"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        10.4,
+        17.4
+      ],
+      "facing": 0
+    },
+    {
+      "id": "thrall-6",
+      "spec": {
+        "id": "draugr-thrall",
+        "name": "Draugr Thrall",
+        "race": "nord",
+        "build": "average",
+        "skinTone": "pale",
+        "hair": "grey",
+        "hairStyle": "long",
+        "beard": "full",
+        "garment": {
+          "torso": "tunic",
+          "torsoCloth": "grey",
+          "legs": "trousers",
+          "legsCloth": "grey"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        12,
+        18.6
+      ],
+      "facing": 0
+    },
+    {
+      "id": "pit-thrall-1",
+      "spec": {
+        "id": "draugr-thrall",
+        "name": "Draugr Thrall",
+        "race": "nord",
+        "build": "average",
+        "skinTone": "pale",
+        "hair": "grey",
+        "hairStyle": "long",
+        "beard": "full",
+        "garment": {
+          "torso": "tunic",
+          "torsoCloth": "grey",
+          "legs": "trousers",
+          "legsCloth": "grey"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        6.4,
+        18.6
+      ],
+      "facing": 3
+    },
+    {
+      "id": "pit-thrall-2",
+      "spec": {
+        "id": "draugr-thrall",
+        "name": "Draugr Thrall",
+        "race": "nord",
+        "build": "average",
+        "skinTone": "pale",
+        "hair": "grey",
+        "hairStyle": "long",
+        "beard": "full",
+        "garment": {
+          "torso": "tunic",
+          "torsoCloth": "grey",
+          "legs": "trousers",
+          "legsCloth": "grey"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        14.6,
+        16
+      ],
+      "facing": 2
+    },
+    {
+      "id": "pit-thrall-3",
+      "spec": {
+        "id": "draugr-thrall",
+        "name": "Draugr Thrall",
+        "race": "nord",
+        "build": "average",
+        "skinTone": "pale",
+        "hair": "grey",
+        "hairStyle": "long",
+        "beard": "full",
+        "garment": {
+          "torso": "tunic",
+          "torsoCloth": "grey",
+          "legs": "trousers",
+          "legsCloth": "grey"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        4,
+        25
+      ],
+      "facing": 3
+    },
+    {
+      "id": "pit-thrall-4",
+      "spec": {
+        "id": "draugr-thrall",
+        "name": "Draugr Thrall",
+        "race": "nord",
+        "build": "average",
+        "skinTone": "pale",
+        "hair": "grey",
+        "hairStyle": "long",
+        "beard": "full",
+        "garment": {
+          "torso": "tunic",
+          "torsoCloth": "grey",
+          "legs": "trousers",
+          "legsCloth": "grey"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        16.4,
+        22
+      ],
+      "facing": 2
+    },
+    {
+      "id": "wight-1",
+      "spec": {
+        "id": "draugr-wight",
+        "name": "Draugr Wight",
+        "race": "nord",
+        "build": "burly",
+        "skinTone": "pale",
+        "hair": "grey",
+        "hairStyle": "long",
+        "beard": "long",
+        "garment": {
+          "torso": "plate",
+          "torsoCloth": "metal",
+          "legs": "greaves",
+          "legsCloth": "metal"
+        },
+        "weapon": "hammer"
+      },
+      "at": [
+        4.4,
+        3
+      ],
+      "facing": 0
+    },
+    {
+      "id": "wight-2",
+      "spec": {
+        "id": "draugr-wight",
+        "name": "Draugr Wight",
+        "race": "nord",
+        "build": "burly",
+        "skinTone": "pale",
+        "hair": "grey",
+        "hairStyle": "long",
+        "beard": "long",
+        "garment": {
+          "torso": "plate",
+          "torsoCloth": "metal",
+          "legs": "greaves",
+          "legsCloth": "metal"
+        },
+        "weapon": "hammer"
+      },
+      "at": [
+        16.4,
+        30.6
+      ],
+      "facing": 1
+    },
+    {
+      "id": "scourge-1",
+      "spec": {
+        "id": "draugr-scourge",
+        "name": "Draugr Scourge",
+        "race": "nord",
+        "build": "slim",
+        "skinTone": "pale",
+        "hair": "grey",
+        "hairStyle": "long",
+        "beard": "long",
+        "garment": {
+          "torso": "vest",
+          "torsoCloth": "leather",
+          "legs": "trousers",
+          "legsCloth": "grey"
+        },
+        "weapon": "bow"
+      },
+      "at": [
+        1.2,
+        9
+      ],
+      "facing": 3
+    },
+    {
+      "id": "scourge-2",
+      "spec": {
+        "id": "draugr-scourge",
+        "name": "Draugr Scourge",
+        "race": "nord",
+        "build": "slim",
+        "skinTone": "pale",
+        "hair": "grey",
+        "hairStyle": "long",
+        "beard": "long",
+        "garment": {
+          "torso": "vest",
+          "torsoCloth": "leather",
+          "legs": "trousers",
+          "legsCloth": "grey"
+        },
+        "weapon": "bow"
+      },
+      "at": [
+        1.2,
+        20
+      ],
+      "facing": 3
+    },
+    {
+      "id": "scourge-3",
+      "spec": {
+        "id": "draugr-scourge",
+        "name": "Draugr Scourge",
+        "race": "nord",
+        "build": "slim",
+        "skinTone": "pale",
+        "hair": "grey",
+        "hairStyle": "long",
+        "beard": "long",
+        "garment": {
+          "torso": "vest",
+          "torsoCloth": "leather",
+          "legs": "trousers",
+          "legsCloth": "grey"
+        },
+        "weapon": "bow"
+      },
+      "at": [
+        19.4,
+        12
+      ],
+      "facing": 2
+    },
+    {
+      "id": "scourge-4",
+      "spec": {
+        "id": "draugr-scourge",
+        "name": "Draugr Scourge",
+        "race": "nord",
+        "build": "slim",
+        "skinTone": "pale",
+        "hair": "grey",
+        "hairStyle": "long",
+        "beard": "long",
+        "garment": {
+          "torso": "vest",
+          "torsoCloth": "leather",
+          "legs": "trousers",
+          "legsCloth": "grey"
+        },
+        "weapon": "bow"
+      },
+      "at": [
+        19.4,
+        25
+      ],
+      "facing": 2
+    },
+    {
+      "id": "galmar",
+      "spec": {
+        "id": "galmar",
+        "name": "Galmar Stone-Fist",
+        "race": "nord",
+        "build": "burly",
+        "skinTone": "fair",
+        "hair": "brown",
+        "hairStyle": "long",
+        "beard": "full",
+        "garment": {
+          "torso": "vest",
+          "torsoCloth": "skin",
+          "legs": "trousers",
+          "legsCloth": "leather"
+        },
+        "weapon": "hammer"
+      },
+      "at": [
+        10.2,
+        27.6
+      ],
+      "facing": 1
+    },
+    {
+      "id": "stormcloak-1",
+      "spec": {
+        "id": "stormcloak",
+        "name": "Stormcloak Veteran",
+        "race": "nord",
+        "build": "average",
+        "skinTone": "fair",
+        "hair": "brown",
+        "hairStyle": "short",
+        "beard": "full",
+        "garment": {
+          "torso": "tunic",
+          "torsoCloth": "navy",
+          "legs": "trousers",
+          "legsCloth": "leather"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        8.6,
+        27.8
+      ],
+      "facing": 1
+    },
+    {
+      "id": "stormcloak-2",
+      "spec": {
+        "id": "stormcloak",
+        "name": "Stormcloak Veteran",
+        "race": "nord",
+        "build": "average",
+        "skinTone": "fair",
+        "hair": "brown",
+        "hairStyle": "short",
+        "beard": "full",
+        "garment": {
+          "torso": "tunic",
+          "torsoCloth": "navy",
+          "legs": "trousers",
+          "legsCloth": "leather"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        11.8,
+        27.8
+      ],
+      "facing": 1
+    },
+    {
+      "id": "stormcloak-3",
+      "spec": {
+        "id": "stormcloak",
+        "name": "Stormcloak Veteran",
+        "race": "nord",
+        "build": "average",
+        "skinTone": "fair",
+        "hair": "brown",
+        "hairStyle": "short",
+        "beard": "full",
+        "garment": {
+          "torso": "tunic",
+          "torsoCloth": "navy",
+          "legs": "trousers",
+          "legsCloth": "leather"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        8.6,
+        29.2
+      ],
+      "facing": 1
+    },
+    {
+      "id": "stormcloak-4",
+      "spec": {
+        "id": "stormcloak",
+        "name": "Stormcloak Veteran",
+        "race": "nord",
+        "build": "average",
+        "skinTone": "fair",
+        "hair": "brown",
+        "hairStyle": "short",
+        "beard": "full",
+        "garment": {
+          "torso": "tunic",
+          "torsoCloth": "navy",
+          "legs": "trousers",
+          "legsCloth": "leather"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        11.8,
+        29.2
+      ],
+      "facing": 1
+    },
+    {
+      "id": "stormcloak-5",
+      "spec": {
+        "id": "stormcloak",
+        "name": "Stormcloak Veteran",
+        "race": "nord",
+        "build": "average",
+        "skinTone": "fair",
+        "hair": "brown",
+        "hairStyle": "short",
+        "beard": "full",
+        "garment": {
+          "torso": "tunic",
+          "torsoCloth": "navy",
+          "legs": "trousers",
+          "legsCloth": "leather"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        9.4,
+        30.4
+      ],
+      "facing": 1
+    },
+    {
+      "id": "stormcloak-6",
+      "spec": {
+        "id": "stormcloak",
+        "name": "Stormcloak Veteran",
+        "race": "nord",
+        "build": "average",
+        "skinTone": "fair",
+        "hair": "brown",
+        "hairStyle": "short",
+        "beard": "full",
+        "garment": {
+          "torso": "tunic",
+          "torsoCloth": "navy",
+          "legs": "trousers",
+          "legsCloth": "leather"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        11,
+        30.4
+      ],
+      "facing": 1
+    },
+    {
+      "id": "hroki",
+      "spec": {
+        "id": "hroki",
+        "name": "Hroki",
+        "race": "nord",
+        "build": "average",
+        "skinTone": "fair",
+        "hair": "brown",
+        "hairStyle": "short",
+        "beard": "stubble",
+        "garment": {
+          "torso": "tunic",
+          "torsoCloth": "navy",
+          "legs": "trousers",
+          "legsCloth": "leather"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        10.2,
+        29.4
+      ],
+      "facing": 1
+    },
+    {
+      "id": "pc-1",
+      "spec": {
+        "id": "knight",
+        "name": "Sigrid",
+        "race": "nord",
+        "build": "burly",
+        "skinTone": "fair",
+        "hair": "black",
+        "hairStyle": "braid",
+        "beard": "none",
+        "garment": {
+          "torso": "plate",
+          "torsoCloth": "metal",
+          "legs": "greaves",
+          "legsCloth": "metal"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        10.2,
+        31.6
+      ],
+      "facing": 1,
+      "party": true
+    }
+  ],
+  "path": [],
+  "rig": {
+    "ambient": 0.16,
+    "sun": {
+      "azimuth": 210,
+      "elevation": 50,
+      "intensity": 0.22
+    },
+    "points": []
+  },
+  "ground": [
+    "0*22",
+    "0,3*20,0",
+    "0,3*20,0",
+    "0,3*20,0",
+    "0,3*20,0",
+    "0,3*20,0",
+    "0,3*20,0",
+    "0,3*20,0",
+    "0,3*20,0",
+    "0,3*20,0",
+    "0,3*20,0",
+    "0,3*20,0",
+    "0,3*20,0",
+    "0,3*20,0",
+    "0,3*20,0",
+    "0,3*20,0",
+    "0,3*20,0",
+    "0,3*20,0",
+    "0,3*20,0",
+    "0,3*20,0",
+    "0,3*20,0",
+    "0,3*20,0",
+    "0,3*20,0",
+    "0,3*20,0",
+    "0,3*20,0",
+    "0,3*20,0",
+    "0,3*20,0",
+    "0,3*20,0",
+    "0,3*20,0",
+    "0,3*20,0",
+    "0,3*20,0",
+    "0,3*20,0",
+    "0,3*20,0",
+    "0*22"
+  ],
+  "doors": [
+    {
+      "id": "entrance",
+      "at": [
+        10,
+        33
+      ],
+      "label": "The landing",
+      "to": {
+        "room": "korvanjund-landing",
+        "door": "crypt-doors"
+      }
+    },
+    {
+      "id": "throne-door",
+      "at": [
+        10,
+        0
+      ],
+      "label": "The Throne Room",
+      "state": "closed",
+      "to": {
+        "room": "korvanjund-throne",
+        "door": "entrance"
+      }
+    }
+  ],
+  "tiers": [
+    {
+      "y": 2,
+      "deck": "stone",
+      "rects": [
+        [
+          8,
+          1,
+          6,
+          32
+        ],
+        [
+          10,
+          0,
+          1,
+          1
+        ],
+        [
+          10,
+          33,
+          1,
+          1
+        ]
+      ]
+    },
+    {
+      "y": 6,
+      "deck": "stone",
+      "rects": [
+        [
+          1,
+          1,
+          2,
+          32
+        ],
+        [
+          19,
+          1,
+          2,
+          32
+        ]
+      ]
+    }
+  ],
+  "wallHeight": 8
+}

@@ -1,0 +1,527 @@
+{
+  "format": "skyrim-codex.room",
+  "version": 1,
+  "id": "korvanjund-causeway",
+  "name": "Korvanjund: The Main Causeway",
+  "terrain": [
+    "2*9,1,2*10",
+    "2*3,1*14,2*3",
+    "2*3,1*14,2*3",
+    "2*3,1*14,2*3",
+    "2*3,1*14,2*3",
+    "2*3,1*14,2*3",
+    "2*3,1*14,2*3",
+    "2*3,1*14,2*3",
+    "2*3,1*14,2*3",
+    "2*3,1*14,2*3",
+    "2*3,1*14,2*3",
+    "2*3,1*14,2*3",
+    "2*3,1*14,2*3",
+    "2*3,1*14,2*3",
+    "2*3,1*14,2*3",
+    "2*2,1*16,2*2",
+    "2*2,1*16,2*2",
+    "2*2,1*16,2*2",
+    "2*2,1*16,2*2",
+    "2*2,1*16,2*2",
+    "2*2,1*16,2*2",
+    "2*2,1*16,2*2",
+    "2*2,1*16,2*2",
+    "2*2,1*16,2*2",
+    "2*2,1*16,2*2",
+    "2*20"
+  ],
+  "seed": 1812618753,
+  "props": [
+    {
+      "id": "p1",
+      "rule": "stairs",
+      "at": [
+        6,
+        9
+      ],
+      "w": 8,
+      "rise": 2.4,
+      "run": 5,
+      "dir": -1
+    },
+    {
+      "id": "p2",
+      "rule": "sprite",
+      "at": [
+        5,
+        17
+      ],
+      "sprite": "log",
+      "rot": 0
+    },
+    {
+      "id": "p3",
+      "rule": "sprite",
+      "at": [
+        12,
+        17.2
+      ],
+      "sprite": "log",
+      "rot": 10
+    },
+    {
+      "id": "p4",
+      "rule": "crate",
+      "at": [
+        8,
+        18
+      ]
+    },
+    {
+      "id": "p5",
+      "rule": "crate",
+      "at": [
+        8.75,
+        18.25
+      ]
+    },
+    {
+      "id": "p6",
+      "rule": "rubble",
+      "at": [
+        3,
+        21
+      ],
+      "size": 3
+    },
+    {
+      "id": "p7",
+      "rule": "rubble",
+      "at": [
+        15,
+        22
+      ],
+      "size": 2
+    },
+    {
+      "id": "p8",
+      "rule": "sprite",
+      "at": [
+        14.5,
+        15.5
+      ],
+      "sprite": "boulder"
+    },
+    {
+      "id": "p9",
+      "rule": "sprite",
+      "at": [
+        3.5,
+        16
+      ],
+      "sprite": "rocks"
+    },
+    {
+      "id": "p10",
+      "rule": "column",
+      "at": [
+        3,
+        4
+      ],
+      "h": 2.2
+    },
+    {
+      "id": "p11",
+      "rule": "column",
+      "at": [
+        16,
+        4
+      ],
+      "h": 2.2
+    },
+    {
+      "id": "p12",
+      "rule": "brazier",
+      "at": [
+        4.2,
+        7
+      ],
+      "lit": true
+    },
+    {
+      "id": "p13",
+      "rule": "brazier",
+      "at": [
+        15.2,
+        7
+      ],
+      "lit": true
+    }
+  ],
+  "tokens": [
+    {
+      "id": "deathlord-1",
+      "spec": {
+        "id": "draugr-deathlord",
+        "name": "Draugr Deathlord",
+        "race": "nord",
+        "build": "burly",
+        "skinTone": "pale",
+        "hair": "grey",
+        "hairStyle": "braid",
+        "beard": "long",
+        "garment": {
+          "torso": "plate",
+          "torsoCloth": "metal",
+          "legs": "greaves",
+          "legsCloth": "metal"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        8.5,
+        1.4
+      ],
+      "facing": 0
+    },
+    {
+      "id": "deathlord-2",
+      "spec": {
+        "id": "draugr-deathlord",
+        "name": "Draugr Deathlord",
+        "race": "nord",
+        "build": "burly",
+        "skinTone": "pale",
+        "hair": "grey",
+        "hairStyle": "braid",
+        "beard": "long",
+        "garment": {
+          "torso": "plate",
+          "torsoCloth": "metal",
+          "legs": "greaves",
+          "legsCloth": "metal"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        10.5,
+        1.4
+      ],
+      "facing": 0
+    },
+    {
+      "id": "battlemage-1",
+      "spec": {
+        "id": "cult-battlemage",
+        "name": "Dragon Cult Battlemage",
+        "race": "breton",
+        "build": "slim",
+        "skinTone": "fair",
+        "hair": "black",
+        "hairStyle": "short",
+        "beard": "none",
+        "garment": {
+          "torso": "tunic",
+          "torsoCloth": "grey",
+          "legs": "skirt",
+          "legsCloth": "grey"
+        },
+        "weapon": "none"
+      },
+      "at": [
+        4,
+        2
+      ],
+      "facing": 0
+    },
+    {
+      "id": "battlemage-2",
+      "spec": {
+        "id": "cult-battlemage",
+        "name": "Dragon Cult Battlemage",
+        "race": "breton",
+        "build": "slim",
+        "skinTone": "fair",
+        "hair": "black",
+        "hairStyle": "short",
+        "beard": "none",
+        "garment": {
+          "torso": "tunic",
+          "torsoCloth": "grey",
+          "legs": "skirt",
+          "legsCloth": "grey"
+        },
+        "weapon": "none"
+      },
+      "at": [
+        14.5,
+        1.6
+      ],
+      "facing": 0
+    },
+    {
+      "id": "battlemage-3",
+      "spec": {
+        "id": "cult-battlemage",
+        "name": "Dragon Cult Battlemage",
+        "race": "breton",
+        "build": "slim",
+        "skinTone": "fair",
+        "hair": "black",
+        "hairStyle": "short",
+        "beard": "none",
+        "garment": {
+          "torso": "tunic",
+          "torsoCloth": "grey",
+          "legs": "skirt",
+          "legsCloth": "grey"
+        },
+        "weapon": "none"
+      },
+      "at": [
+        15.5,
+        2.6
+      ],
+      "facing": 0
+    },
+    {
+      "id": "galmar",
+      "spec": {
+        "id": "galmar",
+        "name": "Galmar Stone-Fist",
+        "race": "nord",
+        "build": "burly",
+        "skinTone": "fair",
+        "hair": "brown",
+        "hairStyle": "long",
+        "beard": "full",
+        "garment": {
+          "torso": "vest",
+          "torsoCloth": "skin",
+          "legs": "trousers",
+          "legsCloth": "leather"
+        },
+        "weapon": "hammer"
+      },
+      "at": [
+        9.4,
+        15.6
+      ],
+      "facing": 1
+    },
+    {
+      "id": "stormcloak-1",
+      "spec": {
+        "id": "stormcloak",
+        "name": "Stormcloak Veteran",
+        "race": "nord",
+        "build": "average",
+        "skinTone": "fair",
+        "hair": "brown",
+        "hairStyle": "short",
+        "beard": "full",
+        "garment": {
+          "torso": "tunic",
+          "torsoCloth": "navy",
+          "legs": "trousers",
+          "legsCloth": "leather"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        7.6,
+        16.2
+      ],
+      "facing": 1
+    },
+    {
+      "id": "stormcloak-2",
+      "spec": {
+        "id": "stormcloak",
+        "name": "Stormcloak Veteran",
+        "race": "nord",
+        "build": "average",
+        "skinTone": "fair",
+        "hair": "brown",
+        "hairStyle": "short",
+        "beard": "full",
+        "garment": {
+          "torso": "tunic",
+          "torsoCloth": "navy",
+          "legs": "trousers",
+          "legsCloth": "leather"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        11.2,
+        16.2
+      ],
+      "facing": 1
+    },
+    {
+      "id": "stormcloak-3",
+      "spec": {
+        "id": "stormcloak",
+        "name": "Stormcloak Veteran",
+        "race": "nord",
+        "build": "average",
+        "skinTone": "fair",
+        "hair": "brown",
+        "hairStyle": "short",
+        "beard": "full",
+        "garment": {
+          "torso": "tunic",
+          "torsoCloth": "navy",
+          "legs": "trousers",
+          "legsCloth": "leather"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        6.4,
+        19.4
+      ],
+      "facing": 1
+    },
+    {
+      "id": "stormcloak-4",
+      "spec": {
+        "id": "stormcloak",
+        "name": "Stormcloak Veteran",
+        "race": "nord",
+        "build": "average",
+        "skinTone": "fair",
+        "hair": "brown",
+        "hairStyle": "short",
+        "beard": "full",
+        "garment": {
+          "torso": "tunic",
+          "torsoCloth": "navy",
+          "legs": "trousers",
+          "legsCloth": "leather"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        12.6,
+        19.6
+      ],
+      "facing": 1
+    },
+    {
+      "id": "pc-1",
+      "spec": {
+        "id": "knight",
+        "name": "Sigrid",
+        "race": "nord",
+        "build": "burly",
+        "skinTone": "fair",
+        "hair": "black",
+        "hairStyle": "braid",
+        "beard": "none",
+        "garment": {
+          "torso": "plate",
+          "torsoCloth": "metal",
+          "legs": "greaves",
+          "legsCloth": "metal"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        9.4,
+        21.4
+      ],
+      "facing": 1,
+      "party": true
+    }
+  ],
+  "path": [],
+  "rig": {
+    "ambient": 0.32,
+    "sun": {
+      "azimuth": 200,
+      "elevation": 34,
+      "intensity": 0.82
+    },
+    "points": []
+  },
+  "ground": [
+    "0*20",
+    "0*20",
+    "0*20",
+    "0*20",
+    "0*20",
+    "0*20",
+    "0*20",
+    "0*20",
+    "0*20",
+    "0*20",
+    "0*20",
+    "0*20",
+    "0*20",
+    "0*20",
+    "0*3,2*14,0*3",
+    "0*2,2*16,0*2",
+    "0*2,2*16,0*2",
+    "0*2,2*16,0*2",
+    "0*2,2*16,0*2",
+    "0*2,2*16,0*2",
+    "0*2,2*16,0*2",
+    "0*2,2*16,0*2",
+    "0*2,2*16,0*2",
+    "0*2,2*16,0*2",
+    "0*2,2*16,0*2",
+    "0*20"
+  ],
+  "doors": [
+    {
+      "id": "gate",
+      "at": [
+        9,
+        0
+      ],
+      "label": "Korvanjund — the iron doors",
+      "state": "closed",
+      "to": {
+        "room": "korvanjund-shaft",
+        "door": "entrance"
+      }
+    }
+  ],
+  "tiers": [
+    {
+      "y": 2.4,
+      "deck": "stone",
+      "rects": [
+        [
+          3,
+          1,
+          14,
+          8
+        ],
+        [
+          9,
+          0,
+          1,
+          1
+        ]
+      ]
+    },
+    {
+      "y": 5.6,
+      "deck": "stone",
+      "rects": [
+        [
+          3,
+          1,
+          3,
+          3
+        ],
+        [
+          14,
+          1,
+          3,
+          3
+        ]
+      ]
+    }
+  ],
+  "wallHeight": 7
+}

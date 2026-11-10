@@ -272,6 +272,29 @@ export function findWalkPath(scene: Scene, from: WalkCell, to: { x: number; z: n
   return chain;
 }
 
+/**
+ * A route through several clicked points. Each leg is planned from where the
+ * last one finished, so a waypoint up a stair is a climb and not a teleport;
+ * the duplicate first cell of every leg after the first is dropped. The caller
+ * owns the points, which means the preview, the commit and the test all use the
+ * same concatenation.
+ */
+export function findWalkRoute(
+  scene: Scene,
+  from: WalkCell,
+  points: { x: number; z: number }[],
+): WalkCell[] | null {
+  let at = from;
+  let path: WalkCell[] | null = null;
+  for (const point of points) {
+    const leg = findWalkPath(scene, at, point);
+    if (!leg) return null;
+    path = path ? [...path, ...leg.slice(1)] : leg;
+    at = leg[leg.length - 1];
+  }
+  return path;
+}
+
 /* -------------------------------------------------------------------- walk */
 
 export type WalkPlan = {

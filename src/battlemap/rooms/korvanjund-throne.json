@@ -1,0 +1,370 @@
+{
+  "format": "skyrim-codex.room",
+  "version": 1,
+  "id": "korvanjund-throne",
+  "name": "Korvanjund: The Throne Room",
+  "terrain": [
+    "2*20",
+    "2,1*18,2",
+    "2,1*18,2",
+    "2,1*18,2",
+    "2,1*18,2",
+    "2,1*18,2",
+    "2,1*18,2",
+    "2,1*18,2",
+    "2,1*18,2",
+    "2,1*18,2",
+    "2,1*18,2",
+    "2,1*18,2",
+    "2,1*18,2",
+    "2,1*18,2",
+    "2,1*18,2",
+    "2,1*18,2",
+    "2*10,1,2*9"
+  ],
+  "seed": 129033664,
+  "props": [
+    {
+      "id": "p1",
+      "rule": "drill",
+      "at": [
+        9,
+        1
+      ],
+      "along": "z",
+      "dir": -1
+    },
+    {
+      "id": "p2",
+      "rule": "sprite",
+      "at": [
+        6.6,
+        1.1
+      ],
+      "sprite": "obelisk"
+    },
+    {
+      "id": "p3",
+      "rule": "sprite",
+      "at": [
+        12.4,
+        1.1
+      ],
+      "sprite": "obelisk"
+    },
+    {
+      "id": "p4",
+      "rule": "sprite",
+      "at": [
+        5,
+        1.3
+      ],
+      "sprite": "runestone"
+    },
+    {
+      "id": "p5",
+      "rule": "sprite",
+      "at": [
+        14.3,
+        1.3
+      ],
+      "sprite": "runestone"
+    },
+    {
+      "id": "p6",
+      "rule": "column",
+      "at": [
+        9.5,
+        8.5
+      ],
+      "h": 4.5
+    },
+    {
+      "id": "p7",
+      "rule": "column",
+      "at": [
+        4,
+        4
+      ],
+      "h": 4.5
+    },
+    {
+      "id": "p8",
+      "rule": "column",
+      "at": [
+        15,
+        4
+      ],
+      "h": 4.5
+    },
+    {
+      "id": "p9",
+      "rule": "column",
+      "at": [
+        4,
+        12
+      ],
+      "h": 4.5
+    },
+    {
+      "id": "p10",
+      "rule": "column",
+      "at": [
+        15,
+        12
+      ],
+      "h": 4.5
+    },
+    {
+      "id": "p11",
+      "rule": "brazier",
+      "at": [
+        2.2,
+        2
+      ],
+      "lit": true
+    },
+    {
+      "id": "p12",
+      "rule": "brazier",
+      "at": [
+        17.2,
+        2
+      ],
+      "lit": true
+    },
+    {
+      "id": "p13",
+      "rule": "brazier",
+      "at": [
+        2.2,
+        14.4
+      ],
+      "lit": true
+    },
+    {
+      "id": "p14",
+      "rule": "brazier",
+      "at": [
+        17.2,
+        14.4
+      ],
+      "lit": true
+    },
+    {
+      "id": "p15",
+      "rule": "rubble",
+      "at": [
+        8,
+        4.6
+      ],
+      "size": 2
+    },
+    {
+      "id": "p16",
+      "rule": "rubble",
+      "at": [
+        11.4,
+        4.4
+      ],
+      "size": 1
+    }
+  ],
+  "tokens": [
+    {
+      "id": "ulag",
+      "spec": {
+        "id": "ulag",
+        "name": "Ulag the Breaker",
+        "race": "orc",
+        "build": "burly",
+        "skinTone": "tan",
+        "hair": "black",
+        "hairStyle": "bald",
+        "beard": "none",
+        "garment": {
+          "torso": "plate",
+          "torsoCloth": "metal",
+          "legs": "greaves",
+          "legsCloth": "metal"
+        },
+        "weapon": "hammer"
+      },
+      "at": [
+        11.6,
+        3
+      ],
+      "facing": 2
+    },
+    {
+      "id": "deathlord-1",
+      "spec": {
+        "id": "draugr-deathlord",
+        "name": "Draugr Deathlord",
+        "race": "nord",
+        "build": "burly",
+        "skinTone": "pale",
+        "hair": "grey",
+        "hairStyle": "braid",
+        "beard": "long",
+        "garment": {
+          "torso": "plate",
+          "torsoCloth": "metal",
+          "legs": "greaves",
+          "legsCloth": "metal"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        7.6,
+        6.4
+      ],
+      "facing": 0
+    },
+    {
+      "id": "deathlord-2",
+      "spec": {
+        "id": "draugr-deathlord",
+        "name": "Draugr Deathlord",
+        "race": "nord",
+        "build": "burly",
+        "skinTone": "pale",
+        "hair": "grey",
+        "hairStyle": "braid",
+        "beard": "long",
+        "garment": {
+          "torso": "plate",
+          "torsoCloth": "metal",
+          "legs": "greaves",
+          "legsCloth": "metal"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        12.4,
+        6.4
+      ],
+      "facing": 0
+    },
+    {
+      "id": "galmar",
+      "spec": {
+        "id": "galmar",
+        "name": "Galmar Stone-Fist",
+        "race": "nord",
+        "build": "burly",
+        "skinTone": "fair",
+        "hair": "brown",
+        "hairStyle": "long",
+        "beard": "full",
+        "garment": {
+          "torso": "vest",
+          "torsoCloth": "skin",
+          "legs": "trousers",
+          "legsCloth": "leather"
+        },
+        "weapon": "hammer"
+      },
+      "at": [
+        9.4,
+        13.6
+      ],
+      "facing": 1
+    },
+    {
+      "id": "hroki",
+      "spec": {
+        "id": "hroki",
+        "name": "Hroki",
+        "race": "nord",
+        "build": "average",
+        "skinTone": "fair",
+        "hair": "brown",
+        "hairStyle": "short",
+        "beard": "stubble",
+        "garment": {
+          "torso": "tunic",
+          "torsoCloth": "navy",
+          "legs": "trousers",
+          "legsCloth": "leather"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        11.4,
+        14.2
+      ],
+      "facing": 1
+    },
+    {
+      "id": "pc-1",
+      "spec": {
+        "id": "knight",
+        "name": "Sigrid",
+        "race": "nord",
+        "build": "burly",
+        "skinTone": "fair",
+        "hair": "black",
+        "hairStyle": "braid",
+        "beard": "none",
+        "garment": {
+          "torso": "plate",
+          "torsoCloth": "metal",
+          "legs": "greaves",
+          "legsCloth": "metal"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        10.2,
+        14.8
+      ],
+      "facing": 1,
+      "party": true
+    }
+  ],
+  "path": [],
+  "rig": {
+    "ambient": 0.2,
+    "sun": {
+      "azimuth": 210,
+      "elevation": 50,
+      "intensity": 0.25
+    },
+    "points": []
+  },
+  "ground": [
+    "0*20",
+    "0*20",
+    "0*20",
+    "0*20",
+    "0*20",
+    "0*20",
+    "0*20",
+    "0*20",
+    "0*20",
+    "0*20",
+    "0*20",
+    "0*20",
+    "0*20",
+    "0*20",
+    "0*20",
+    "0*20",
+    "0*20"
+  ],
+  "doors": [
+    {
+      "id": "entrance",
+      "at": [
+        10,
+        16
+      ],
+      "label": "The Great Crypt",
+      "to": {
+        "room": "korvanjund-crypt",
+        "door": "throne-door"
+      }
+    }
+  ],
+  "wallHeight": 4.6
+}

@@ -9,6 +9,7 @@ import type { PropRule } from '@/battlemap/props';
 import type { GroundKind, RoomDoor } from '@/battlemap/room';
 import {
   findWalkPath,
+  findWalkRoute,
   landing,
   motionAt,
   planWalk,
@@ -173,6 +174,11 @@ export function BattleMapView() {
   const [route, setRoute] = useState<WalkCell[] | null>(null);
   const [walking, setWalking] = useState(false);
   const [walkSq, setWalkSq] = useState(0);
+  // A planned move: the cells the table clicked, and the route through them.
+  // The quick click still walks to one cell; planning is for the moves that
+  // need a corner turned on purpose.
+  const [drawing, setDrawing] = useState(false);
+  const [waypoints, setWaypoints] = useState<[number, number][]>([]);
   const walk = useRef<WalkPlan | null>(null);
   const walkCommit = useRef<(plan: WalkPlan) => void>(() => {});
   const walkTimer = useRef<number | null>(null);
@@ -238,8 +244,23 @@ export function BattleMapView() {
     selected,
     route,
     tool,
+    drawing,
+    marks: [] as [number, number][],
   });
-  live.current = { rig, view, showPath, cam, pan, tab, fog: fogOn ? fogData : null, selected, route, tool };
+  live.current = {
+    rig,
+    view,
+    showPath,
+    cam,
+    pan,
+    tab,
+    fog: fogOn ? fogData : null,
+    selected,
+    route,
+    tool,
+    drawing,
+    marks: waypoints,
+  };
 
   /* ---------------------------------------------------------------- paint */
   // Stable identity: the animation loop restarts whenever this changes, and a
@@ -285,6 +306,7 @@ export function BattleMapView() {
       motion,
       path: L.showPath ? dots : [],
       pathDecks: L.showPath ? decks : null,
+      pathMarks: L.showPath && L.drawing ? L.marks : null,
     });
     if (L.view !== 'lit') b.debug(L.view);
 
@@ -325,6 +347,8 @@ export function BattleMapView() {
       setWalking(false);
       setWalkSq(0);
       setRoute(null);
+      setWaypoints([]);
+      setDrawing(false);
       hoverCell.current = '';
       setRoomId(id);
     },
@@ -354,6 +378,32 @@ export function BattleMapView() {
     [selected],
   );
 
+  /** A route through every click, planned leg by leg on the same scene the
+   *  quick move uses. Each leg starts where the last one finished, including
+   *  its deck, so a waypoint up a stair is a real climb and not a teleport. */
+  const planThrough = useCallback(
+    (points: [number, number][]): WalkCell[] | null => {
+      const b = boardRef.current;
+      if (!b || !selected || !points.length) return null;
+      const tok = b.scene.tokens.find((t) => t.id === selected);
+      if (!tok) return null;
+      for (const [cx, cz] of points) {
+        // A waypoint is somewhere to stand, so another body cannot occupy it.
+        // The leg itself may still pass through an occupied square.
+        const occupied = b.scene.tokens.some(
+          (t) => t.id !== selected && Math.floor(t.x) === cx && Math.floor(t.z) === cz,
+        );
+        if (occupied) return null;
+      }
+      return findWalkRoute(
+        b.scene,
+        { x: tok.x, y: tok.y, z: tok.z },
+        points.map(([cx, cz]) => ({ x: cx + 0.5, z: cz + 0.5 })),
+      );
+    },
+    [selected],
+  );
+
   const startWalk = useCallback((id: string, path: WalkCell[]) => {
     if (path.length < 2) return;
     const tok = boardRef.current?.scene.tokens.find((t) => t.id === id);
@@ -373,8 +423,22 @@ export function BattleMapView() {
     setWalking(true);
     setWalkSq(path.length - 1);
     setRoute(null);
+    setWaypoints([]);
+    setDrawing(false);
     hoverCell.current = '';
   }, [clearWalkTimer]);
+
+  /** Take the plan that is drawn, not a hover that happens to be under the
+   *  pointer when the button is pressed. */
+  const commitRoute = () => {
+    if (!selected || !waypoints.length) return;
+    const path = planThrough(waypoints);
+    if (!path || path.length < 2) {
+      setNotice({ tone: 'err', text: 'No walkable route through that plan.' });
+      return;
+    }
+    startWalk(selected, path);
+  };
 
   // Where the body lands, written when the clock reaches the end. The room is
   // the session's copy, so this is a play-file write, never a document edit.
@@ -528,6 +592,8 @@ export function BattleMapView() {
     setWalking(false);
     setWalkSq(0);
     setRoute(null);
+    setWaypoints([]);
+    setDrawing(false);
     hoverCell.current = '';
     // The party leads: the body a turn starts with is selected on arrival, so
     // the first click on the floor is a move and not a mystery.
@@ -549,17 +615,25 @@ export function BattleMapView() {
   useEffect(() => clearWalkTimer, [clearWalkTimer]);
 
   // Escape is the way out of a selection: with a body selected, a stray click
-  // would walk it, so the board needs a plain "never mind".
+  // would walk it, so the board needs a plain "never mind". A plan is escaped
+  // first — dropping the route is the smaller thing to lose.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
+      if (drawing || waypoints.length) {
+        setDrawing(false);
+        setWaypoints([]);
+        setRoute(null);
+        hoverCell.current = '';
+        return;
+      }
       setSelected(null);
       setRoute(null);
       hoverCell.current = '';
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, []);
+  }, [drawing, waypoints.length]);
 
   useEffect(() => {
     const b = new Board3D(room);
@@ -837,7 +911,7 @@ export function BattleMapView() {
     const canvas = canvasRef.current;
     const b = boardRef.current;
     if (!canvas || !b) return;
-    if (tool !== 'look' || !selected || walk.current) {
+    if (tool !== 'look' || !selected || walk.current || drawing) {
       if (hoverCell.current) {
         hoverCell.current = '';
         setRoute(null);
@@ -919,6 +993,7 @@ export function BattleMapView() {
       const hit = b.tokenAt(bx, by);
       if (hit) {
         setSelected(hit);
+        setWaypoints([]);
         setRoute(null);
         hoverCell.current = '';
         return;
@@ -927,6 +1002,24 @@ export function BattleMapView() {
       // target the gallery.
       const p = b.pickAt(bx, by);
       if (!p) return;
+      // Planning is clicks, not the shortest route to the last one: each click
+      // appends a leg, and the whole plan is checked before it is kept.
+      if (drawing) {
+        if (!selected || walk.current) return;
+        const [wx, wz] = p.cell;
+        const last = waypoints[waypoints.length - 1];
+        if (last && last[0] === wx && last[1] === wz) return;
+        const next: [number, number][] = [...waypoints, [wx, wz]];
+        const plan = planThrough(next);
+        if (!plan || plan.length < 2) {
+          setNotice({ tone: 'err', text: 'No walkable route to that cell. Another body, a wall or a drop is in the way.' });
+          return;
+        }
+        setWaypoints(next);
+        setRoute(plan);
+        hoverCell.current = '';
+        return;
+      }
       // A door is a target in play mode and geometry in build mode. Clicking the
       // cell is the load; there is no walking animation across a threshold.
       const door = (room.doors ?? []).find(
@@ -1277,6 +1370,7 @@ export function BattleMapView() {
                     type="button"
                     onClick={() => {
                       setSelected(t.id);
+                      setWaypoints([]);
                       setRoute(null);
                     }}
                     title="Select this token"
@@ -1335,10 +1429,50 @@ export function BattleMapView() {
                       <Undo2 className="h-3 w-3" />
                     </button>
                   </div>
+                  <div className="flex gap-1">
+                    <Button
+                      size="sm"
+                      variant={drawing ? 'secondary' : 'outline'}
+                      className="h-7 flex-1 text-[11px]"
+                      disabled={walking}
+                      onClick={() => {
+                        setDrawing((d) => !d);
+                        setWaypoints([]);
+                        setRoute(null);
+                        hoverCell.current = '';
+                      }}
+                    >
+                      {drawing ? 'Planning' : 'Plan route'}
+                    </Button>
+                    {drawing && waypoints.length > 0 && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-[11px]"
+                        onClick={() => {
+                          const next = waypoints.slice(0, -1);
+                          setWaypoints(next);
+                          setRoute(next.length ? planThrough(next) : null);
+                        }}
+                      >
+                        Undo
+                      </Button>
+                    )}
+                    {drawing && (
+                      <Button
+                        size="sm"
+                        className="h-7 flex-1 text-[11px]"
+                        disabled={!waypoints.length}
+                        onClick={commitRoute}
+                      >
+                        Walk
+                      </Button>
+                    )}
+                  </div>
                   <p className="text-[11px] leading-relaxed text-neutral-500">
-                    Click a floor cell to walk there. The route is drawn before it is taken: it goes around walls and
-                    props, climbs stairs, and will not step off a drop over five feet. A move is one action however
-                    far the path goes.
+                    {drawing
+                      ? 'Click floor cells to add waypoints. Each leg is checked from the last one, and the whole route is walked as one move. Walk takes it; Undo removes the last click; Esc drops the plan.'
+                      : 'Click a floor cell to walk there. The route is drawn before it is taken: it goes around walls and props, climbs stairs, and will not step off a drop.'}
                   </p>
                 </>
               ) : (

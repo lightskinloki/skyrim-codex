@@ -7,6 +7,7 @@ import type { Facing } from '../room';
 import { Scene, Tri, Vec3, ambientAt, buildScene, receivingPlanes, solidAt, surfaceAt } from './scene';
 import { Sprite } from './texture';
 import { flameTris } from './flame';
+import { animTris } from './animProps';
 
 /**
  * A real 3D board: orthographic camera, z-buffered triangles, and the only
@@ -233,6 +234,9 @@ export type RenderOpts = {
   /** The deck each dot stands on. A planned route knows its own heights, which
    *  is the only way a dot can follow a staircase cell by cell. */
   pathDecks?: number[] | null;
+  /** The cells the table clicked for a planned route. A waypoint is a decision,
+   *  not just another square on the path, so it gets its own mark. */
+  pathMarks?: [number, number][] | null;
   /** Bodies that are moving, by token id. */
   motion?: Record<string, TokenMotion> | null;
   /** Set false while the camera is moving; the outline sweep is a fifth of the frame. */
@@ -457,6 +461,107 @@ export function renderFrame(
     }
   };
 
+  /**
+   * The same raster for a texture that names its material per texel — a sprite
+   * prop, whose one quad may be bark, leaves and iron. Material 0 is air: the
+   * pixel is skipped before the depth test, so a cut-out writes no depth where
+   * it is empty and the ink pass outlines its silhouette, not its quad. Kept
+   * separate so the common path's inner loop is untouched.
+   */
+  const rasterMulti = (
+    tex: { w: number; idx: Uint8Array; mats: Uint8Array },
+    ax: number,
+    ay: number,
+    az: number,
+    bx: number,
+    by: number,
+    bz: number,
+    qx: number,
+    qy: number,
+    qz: number,
+    u0: number,
+    v0: number,
+    u1: number,
+    v1: number,
+    u2: number,
+    v2: number,
+    l0: number,
+    l1: number,
+    l2: number,
+  ) => {
+    const area = (bx - ax) * (qy - ay) - (qx - ax) * (by - ay);
+    if (area === 0) return;
+    const inv = 1 / area;
+    const minX = Math.max(0, Math.floor(Math.min(ax, bx, qx)));
+    const maxX = Math.min(w - 1, Math.ceil(Math.max(ax, bx, qx)));
+    const minY = Math.max(0, Math.floor(Math.min(ay, by, qy)));
+    const maxY = Math.min(h - 1, Math.ceil(Math.max(ay, by, qy)));
+    const tw = tex.w;
+    const ti = tex.idx;
+    const tm = tex.mats;
+    const dc0 = (by - qy) * inv;
+    const dc1 = (qy - ay) * inv;
+    const dc2 = -dc0 - dc1;
+    const dz0 = az - qz;
+    const dz1 = bz - qz;
+    const dd = dz0 * dc0 + dz1 * dc1;
+    const du0 = u0 - u2;
+    const du1 = u1 - u2;
+    const du = du0 * dc0 + du1 * dc1;
+    const dv0 = v0 - v2;
+    const dv1 = v1 - v2;
+    const dv = dv0 * dc0 + dv1 * dc1;
+    const dl0 = l0 - l2;
+    const dl1 = l1 - l2;
+    const dl = dl0 * dc0 + dl1 * dc1;
+    for (let py = minY; py <= maxY; py++) {
+      const pyc = py + 0.5;
+      const row = (py & 3) << 2;
+      const pxc = minX + 0.5;
+      let c0 = ((bx - pxc) * (qy - pyc) - (qx - pxc) * (by - pyc)) * inv;
+      let c1 = ((qx - pxc) * (ay - pyc) - (ax - pxc) * (qy - pyc)) * inv;
+      let c2 = 1 - c0 - c1;
+      let d = qz + c0 * dz0 + c1 * dz1;
+      let u = u2 + c0 * du0 + c1 * du1;
+      let v = v2 + c0 * dv0 + c1 * dv1;
+      let l = l2 + c0 * dl0 + c1 * dl1;
+      for (let px = minX; px <= maxX; px++) {
+        if (c0 >= -0.000001 && c1 >= -0.000001 && c2 >= -0.000001) {
+          const i = py * w + px;
+          if (d < depth[i]) {
+            // Sprite textures are 16 x 16 and never wrap; clamp the edge texel.
+            let tx = u | 0;
+            let ty = v | 0;
+            if (tx < 0) tx = 0;
+            else if (tx > 15) tx = 15;
+            if (ty < 0) ty = 0;
+            else if (ty > 15) ty = 15;
+            const k = ty * tw + tx;
+            const m = tm[k];
+            if (m !== 0) {
+              depth[i] = d;
+              const fl = Math.floor(l);
+              let ii = ti[k] + fl + (l - fl > BAYER4[row | (px & 3)] ? 1 : 0);
+              const top = RAMP_LEN[m] - 1;
+              if (ii < 0) ii = 0;
+              else if (ii > top) ii = top;
+              matBuf[i] = m;
+              stepBuf[i] = ii;
+              col[i] = COLOUR_OF[(m << 4) + ii];
+            }
+          }
+        }
+        c0 += dc0;
+        c1 += dc1;
+        c2 += dc2;
+        d += dd;
+        u += du;
+        v += dv;
+        l += dl;
+      }
+    }
+  };
+
   const tris = scene.tris;
 
   // Projected sun shadows. Every solid is projected along the sun onto the
@@ -603,6 +708,12 @@ export function renderFrame(
     const qy = projectY(b, p2[0], p2[1], p2[2]) * pix + offY;
     const qz = depthOf(b, p2[0], p2[1], p2[2]);
 
+    const tm = T.tex.mats;
+    if (tm) {
+      rasterMulti({ w: T.tex.w, idx: T.tex.idx, mats: tm }, ax, ay, az, bx, by, bz, qx, qy, qz, T.u0, T.v0, T.u1, T.v1, T.u2, T.v2, l0, l1, l2);
+      return;
+    }
+
     raster(
       T.tex,
       T.mat,
@@ -630,6 +741,13 @@ export function renderFrame(
   };
 
   for (let t = 0; t < tris.length; t++) paintTri(tris[t]);
+  // Moving parts are posed for this instant and drawn with the solids, before
+  // the firelight and the ink, so a turning gear is lit and outlined like the
+  // wall behind it.
+  if (scene.anims?.length) {
+    const posed = animTris(scene.anims, time);
+    for (let t = 0; t < posed.length; t++) paintTri(posed[t]);
+  }
 
   renderStats.tris = performance.now() - tMark;
   tMark = performance.now();
@@ -665,7 +783,18 @@ export function renderFrame(
 
   renderStats.outline = performance.now() - tMark;
   tMark = performance.now();
-  if (opts.showPath) drawPath(frame, scene, b, pix, offX, offY, opts.path ?? scene.room.path, opts.pathDecks);
+  if (opts.showPath)
+    drawPath(
+      frame,
+      scene,
+      b,
+      pix,
+      offX,
+      offY,
+      opts.path ?? scene.room.path,
+      opts.pathDecks,
+      opts.pathMarks,
+    );
 
   // Fire after the ink sweep on purpose. The sweep reads depth only, so it
   // would ink the seam between two overlapping tongues — on a tongue two pixels
@@ -823,10 +952,13 @@ function drawPath(
   offY: number,
   path: [number, number][],
   decks?: number[] | null,
+  marks?: [number, number][] | null,
 ) {
   if (path.length === 0) return;
   const dot = COLOUR_OF[(9 << 4) + 5];
+  const mark = COLOUR_OF[(9 << 4) + 7];
   const hot = COLOUR_OF[(9 << 4) + 9];
+  const marked = marks?.length ? new Set(marks.map(([x, z]) => `${x},${z}`)) : null;
   const { w, h, col, depth } = frame;
 
   // A path is walked, so each dot stands on whatever the previous dot could
@@ -846,7 +978,8 @@ function drawPath(
 
   screen.forEach((p, n) => {
     const last = n === screen.length - 1;
-    const colour = last ? hot : dot;
+    const isMark = marked?.has(`${path[n][0]},${path[n][1]}`) ?? false;
+    const colour = last ? hot : isMark ? mark : dot;
     for (let j = -3; j <= 3; j++) {
       for (let i = -3; i <= 3; i++) {
         if (((i >> 1) + (j >> 1)) % 2 === 0) continue;

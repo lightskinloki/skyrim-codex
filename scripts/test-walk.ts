@@ -8,6 +8,7 @@ import { parseRoomDoc } from '@/battlemap/document';
 import { buildScene } from '@/battlemap/gl/scene';
 import {
   findWalkPath,
+  findWalkRoute,
   facingBetween,
   landing,
   motionAt,
@@ -160,6 +161,47 @@ for (const { name, json } of rooms) {
     assert.ok(to);
     findWalkPath(scene, from, { x: to[0] + 0.5, z: to[1] + 0.5 });
     assert.deepStrictEqual(party.at, room.tokens.find((t) => t.id === party.id)!.at);
+  });
+
+  check(`${name}: a planned route turns on its waypoint`, () => {
+    const first = openCell(room, party.at);
+    assert.ok(first, 'no open floor found');
+    const second = openCell(room, first!, 2);
+    assert.ok(second, 'no second open floor found');
+    const path = findWalkRoute(scene, from, [
+      { x: first![0] + 0.5, z: first![1] + 0.5 },
+      { x: second![0] + 0.5, z: second![1] + 0.5 },
+    ]);
+    assert.ok(path, 'no route through the waypoint');
+    auditPath(room, scene, path!, from);
+    assert.ok(
+      path!.some((c) => cellOf(c.x) === first![0] && cellOf(c.z) === first![1]),
+      'the route did not pass through the waypoint',
+    );
+    const last = path![path!.length - 1];
+    assert.deepStrictEqual([cellOf(last.x), cellOf(last.z)], second);
+  });
+
+  check(`${name}: a planned route refuses a wall leg`, () => {
+    let wall: [number, number] | null = null;
+    for (let z = 0; z < room.grid.rows && !wall; z++) {
+      for (let x = 0; x < room.grid.cols; x++) {
+        if (room.grid.cells[z * room.grid.cols + x] === 2) {
+          wall = [x, z];
+          break;
+        }
+      }
+    }
+    assert.ok(wall, 'no wall cell found');
+    const open = openCell(room, party.at);
+    assert.ok(open, 'no open floor found');
+    assert.strictEqual(
+      findWalkRoute(scene, from, [
+        { x: open![0] + 0.5, z: open![1] + 0.5 },
+        { x: wall![0] + 0.5, z: wall![1] + 0.5 },
+      ]),
+      null,
+    );
   });
 }
 

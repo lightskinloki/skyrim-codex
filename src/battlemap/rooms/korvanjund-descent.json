@@ -1,0 +1,393 @@
+{
+  "format": "skyrim-codex.room",
+  "version": 1,
+  "id": "korvanjund-descent",
+  "name": "Korvanjund: The Lift",
+  "terrain": [
+    "2*18",
+    "2*18",
+    "2*18",
+    "2*3,1,2*10,1,2*3",
+    "2*6,0*6,2*6",
+    "2*5,0*2,1*4,0*2,2*5",
+    "2*4,0*2,1*6,0*2,2*4",
+    "2*4,0,1*8,0,2*4",
+    "2*4,0,1*8,0,2*4",
+    "2*4,0,1*8,0,2*4",
+    "2*4,0,1*8,0,2*4",
+    "2*4,0*2,1*6,0*2,2*4",
+    "2*5,0*2,1*4,0*2,2*5",
+    "2*6,0*6,2*6",
+    "2*3,1,2*10,1,2*3",
+    "2*18",
+    "2*18",
+    "2*18"
+  ],
+  "seed": 33018085,
+  "props": [
+    {
+      "id": "p1",
+      "rule": "rubble",
+      "at": [
+        6.5,
+        7.5
+      ],
+      "size": 1
+    },
+    {
+      "id": "p2",
+      "rule": "rubble",
+      "at": [
+        10.6,
+        10.4
+      ],
+      "size": 1
+    }
+  ],
+  "tokens": [
+    {
+      "id": "scourge-1",
+      "spec": {
+        "id": "draugr-scourge-sword",
+        "name": "Draugr Scourge",
+        "race": "nord",
+        "build": "slim",
+        "skinTone": "pale",
+        "hair": "grey",
+        "hairStyle": "long",
+        "beard": "long",
+        "garment": {
+          "torso": "vest",
+          "torsoCloth": "leather",
+          "legs": "trousers",
+          "legsCloth": "grey"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        7,
+        7
+      ],
+      "facing": 0
+    },
+    {
+      "id": "scourge-2",
+      "spec": {
+        "id": "draugr-scourge-sword",
+        "name": "Draugr Scourge",
+        "race": "nord",
+        "build": "slim",
+        "skinTone": "pale",
+        "hair": "grey",
+        "hairStyle": "long",
+        "beard": "long",
+        "garment": {
+          "torso": "vest",
+          "torsoCloth": "leather",
+          "legs": "trousers",
+          "legsCloth": "grey"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        10.6,
+        7.2
+      ],
+      "facing": 2
+    },
+    {
+      "id": "scourge-3",
+      "spec": {
+        "id": "draugr-scourge-sword",
+        "name": "Draugr Scourge",
+        "race": "nord",
+        "build": "slim",
+        "skinTone": "pale",
+        "hair": "grey",
+        "hairStyle": "long",
+        "beard": "long",
+        "garment": {
+          "torso": "vest",
+          "torsoCloth": "leather",
+          "legs": "trousers",
+          "legsCloth": "grey"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        6.6,
+        10.4
+      ],
+      "facing": 3
+    },
+    {
+      "id": "scourge-4",
+      "spec": {
+        "id": "draugr-scourge-sword",
+        "name": "Draugr Scourge",
+        "race": "nord",
+        "build": "slim",
+        "skinTone": "pale",
+        "hair": "grey",
+        "hairStyle": "long",
+        "beard": "long",
+        "garment": {
+          "torso": "vest",
+          "torsoCloth": "leather",
+          "legs": "trousers",
+          "legsCloth": "grey"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        11,
+        10.6
+      ],
+      "facing": 1
+    },
+    {
+      "id": "alcove-1",
+      "spec": {
+        "id": "draugr-scourge-sword",
+        "name": "Draugr Scourge",
+        "race": "nord",
+        "build": "slim",
+        "skinTone": "pale",
+        "hair": "grey",
+        "hairStyle": "long",
+        "beard": "long",
+        "garment": {
+          "torso": "vest",
+          "torsoCloth": "leather",
+          "legs": "trousers",
+          "legsCloth": "grey"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        3,
+        3
+      ],
+      "facing": 3
+    },
+    {
+      "id": "alcove-2",
+      "spec": {
+        "id": "draugr-scourge-sword",
+        "name": "Draugr Scourge",
+        "race": "nord",
+        "build": "slim",
+        "skinTone": "pale",
+        "hair": "grey",
+        "hairStyle": "long",
+        "beard": "long",
+        "garment": {
+          "torso": "vest",
+          "torsoCloth": "leather",
+          "legs": "trousers",
+          "legsCloth": "grey"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        14,
+        3
+      ],
+      "facing": 2
+    },
+    {
+      "id": "alcove-3",
+      "spec": {
+        "id": "draugr-scourge-sword",
+        "name": "Draugr Scourge",
+        "race": "nord",
+        "build": "slim",
+        "skinTone": "pale",
+        "hair": "grey",
+        "hairStyle": "long",
+        "beard": "long",
+        "garment": {
+          "torso": "vest",
+          "torsoCloth": "leather",
+          "legs": "trousers",
+          "legsCloth": "grey"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        3,
+        14
+      ],
+      "facing": 3
+    },
+    {
+      "id": "alcove-4",
+      "spec": {
+        "id": "draugr-scourge-sword",
+        "name": "Draugr Scourge",
+        "race": "nord",
+        "build": "slim",
+        "skinTone": "pale",
+        "hair": "grey",
+        "hairStyle": "long",
+        "beard": "long",
+        "garment": {
+          "torso": "vest",
+          "torsoCloth": "leather",
+          "legs": "trousers",
+          "legsCloth": "grey"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        14,
+        14
+      ],
+      "facing": 2
+    },
+    {
+      "id": "galmar",
+      "spec": {
+        "id": "galmar",
+        "name": "Galmar Stone-Fist",
+        "race": "nord",
+        "build": "burly",
+        "skinTone": "fair",
+        "hair": "brown",
+        "hairStyle": "long",
+        "beard": "full",
+        "garment": {
+          "torso": "vest",
+          "torsoCloth": "skin",
+          "legs": "trousers",
+          "legsCloth": "leather"
+        },
+        "weapon": "hammer"
+      },
+      "at": [
+        8.6,
+        8.8
+      ],
+      "facing": 1
+    },
+    {
+      "id": "hroki",
+      "spec": {
+        "id": "hroki",
+        "name": "Hroki",
+        "race": "nord",
+        "build": "average",
+        "skinTone": "fair",
+        "hair": "brown",
+        "hairStyle": "short",
+        "beard": "stubble",
+        "garment": {
+          "torso": "tunic",
+          "torsoCloth": "navy",
+          "legs": "trousers",
+          "legsCloth": "leather"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        9.6,
+        9.6
+      ],
+      "facing": 1
+    },
+    {
+      "id": "pc-1",
+      "spec": {
+        "id": "knight",
+        "name": "Sigrid",
+        "race": "nord",
+        "build": "burly",
+        "skinTone": "fair",
+        "hair": "black",
+        "hairStyle": "braid",
+        "beard": "none",
+        "garment": {
+          "torso": "plate",
+          "torsoCloth": "metal",
+          "legs": "greaves",
+          "legsCloth": "metal"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        8.4,
+        10
+      ],
+      "facing": 1,
+      "party": true
+    }
+  ],
+  "path": [],
+  "rig": {
+    "ambient": 0.14,
+    "sun": {
+      "azimuth": 210,
+      "elevation": 50,
+      "intensity": 0.2
+    },
+    "points": [
+      {
+        "x": 288,
+        "y": 288,
+        "radius": 160,
+        "intensity": 0.7,
+        "id": "shaft-light",
+        "flicker": 0
+      }
+    ]
+  },
+  "ground": [
+    "0*18",
+    "0*18",
+    "0*18",
+    "0*18",
+    "0*18",
+    "0*18",
+    "0*18",
+    "0*18",
+    "0*18",
+    "0*18",
+    "0*18",
+    "0*18",
+    "0*18",
+    "0*18",
+    "0*18",
+    "0*18",
+    "0*18",
+    "0*18"
+  ],
+  "doors": [
+    {
+      "id": "from-shaft",
+      "at": [
+        9,
+        5
+      ],
+      "label": "Up the shaft",
+      "state": "open",
+      "to": {
+        "room": "korvanjund-shaft",
+        "door": "lift"
+      }
+    },
+    {
+      "id": "to-landing",
+      "at": [
+        9,
+        12
+      ],
+      "label": "The landing, four hundred feet down",
+      "state": "open",
+      "to": {
+        "room": "korvanjund-landing",
+        "door": "lift"
+      }
+    }
+  ],
+  "wallHeight": 4.6
+}

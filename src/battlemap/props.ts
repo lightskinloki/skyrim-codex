@@ -57,7 +57,8 @@ type PropBase = { at: [number, number]; y?: number; id?: string };
 
 export type PropRule = PropBase &
   (
-    | { rule: 'table'; w?: number }
+    /** `stone` makes it a slab: an embalming table, an altar. */
+    | { rule: 'table'; w?: number; stone?: boolean }
     | { rule: 'bench'; w?: number }
     | { rule: 'chest'; w?: number; bands?: number }
     | { rule: 'crate' }
@@ -76,6 +77,23 @@ export type PropRule = PropBase &
     | { rule: 'house'; w?: number; h?: number; roof?: 'thatch' | 'wood'; door?: 'n' | 's' | 'e' | 'w' }
     /** A tree, as a trunk and a polygonal canopy. `autumn` picks the ramp. */
     | { rule: 'tree'; size?: number; autumn?: boolean }
+    /** A prop cut from a 16 px sprite (src/battlemap/atlas/props.json) and built as
+     *  low-poly geometry by `gl/spriteProps.ts`. `rot` turns it in degrees;
+     *  `scale` multiplies the sprite's authored height. */
+    | { rule: 'sprite'; sprite: string; rot?: number; scale?: number }
+    /** A toothed wheel that turns. `r` is its radius, `along` its axle, `h` the
+     *  hub height (default: standing on its rim), `speed` radians per second. */
+    | { rule: 'gear'; r?: number; along?: 'x' | 'z'; h?: number; speed?: number }
+    /** A boring machine, 3 × 2 cells, its bit turning toward `dir` along `along`. */
+    | { rule: 'drill'; along?: 'x' | 'z'; dir?: -1 | 1 }
+    /** An upright sarcophagus with a seam of necrotic light; `face` is where the lid looks. */
+    | { rule: 'sarcophagus'; face?: 'n' | 's' | 'e' | 'w' }
+    /** A control pedestal with a lever. */
+    | { rule: 'lever' }
+    /** A run of iron links, `w` long along `along`, hung at height `h`. */
+    | { rule: 'chain'; w?: number; along?: 'x' | 'z'; h?: number }
+    /** A greatsword driven in point-first toward `dir` along `along`, hilt `h` up. */
+    | { rule: 'blade'; along?: 'x' | 'z'; dir?: -1 | 1; h?: number }
   );
 
 /* ------------------------------------------------------------------ steps */
@@ -543,6 +561,15 @@ const artOf = (p: PropRule, seed: number): Art => {
         spec: 4,
       };
     }
+    case 'sprite':
+    case 'gear':
+    case 'drill':
+    case 'sarcophagus':
+    case 'lever':
+    case 'chain':
+    case 'blade':
+      // The flat board predates these; they exist only in the 3D scene.
+      return { cellsX: 1, cellsY: 1, height: 1, mat: M_STONE_PROP, top: makeMask(CELL, CELL), side: flatSide, flat: true };
   }
 };
 

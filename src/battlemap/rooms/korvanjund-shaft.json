@@ -1,0 +1,383 @@
+{
+  "format": "skyrim-codex.room",
+  "version": 1,
+  "id": "korvanjund-shaft",
+  "name": "Korvanjund: The Silent Shaft",
+  "terrain": [
+    "2*24",
+    "2*4,1*16,2*4",
+    "2*4,1*16,2*4",
+    "2*4,1*16,2*4",
+    "2*5,1*3,0*8,1*3,2*5",
+    "2*5,1*2,0*10,1*2,2*5",
+    "2*6,0*12,2*6",
+    "2*6,0*12,2*6",
+    "2*5,0*14,2*5",
+    "2*5,0*14,2*5",
+    "2*5,0*14,2*5",
+    "2*6,0*12,2*6",
+    "2*6,0*12,2*6",
+    "2*5,1*2,0*10,1*2,2*5",
+    "2*5,1*3,0*8,1*3,2*5",
+    "2*6,1*3,0*6,1*3,2*6",
+    "2*2,1*20,2*2",
+    "2*3,1*18,2*3",
+    "2*8,1,2*15",
+    "2*24",
+    "2*24"
+  ],
+  "seed": 95090433,
+  "props": [
+    {
+      "id": "p1",
+      "rule": "lever",
+      "at": [
+        11.1,
+        17.1
+      ]
+    },
+    {
+      "id": "p2",
+      "rule": "chain",
+      "at": [
+        3,
+        17
+      ],
+      "w": 8,
+      "along": "x",
+      "h": 0.85
+    },
+    {
+      "id": "p3",
+      "rule": "chain",
+      "at": [
+        11.9,
+        17
+      ],
+      "w": 8,
+      "along": "x",
+      "h": 0.85
+    },
+    {
+      "id": "p4",
+      "rule": "chain",
+      "at": [
+        19.9,
+        17
+      ],
+      "w": 1.1,
+      "along": "x",
+      "h": 0.85
+    },
+    {
+      "id": "p5",
+      "rule": "column",
+      "at": [
+        5,
+        1
+      ],
+      "h": 3
+    },
+    {
+      "id": "p6",
+      "rule": "column",
+      "at": [
+        9,
+        1
+      ],
+      "h": 3
+    },
+    {
+      "id": "p7",
+      "rule": "column",
+      "at": [
+        14,
+        1
+      ],
+      "h": 3
+    },
+    {
+      "id": "p8",
+      "rule": "column",
+      "at": [
+        18,
+        1
+      ],
+      "h": 3
+    },
+    {
+      "id": "p9",
+      "rule": "brazier",
+      "at": [
+        7,
+        2.2
+      ],
+      "lit": true
+    },
+    {
+      "id": "p10",
+      "rule": "brazier",
+      "at": [
+        16.4,
+        2.2
+      ],
+      "lit": true
+    },
+    {
+      "id": "p11",
+      "rule": "rubble",
+      "at": [
+        4.2,
+        17
+      ],
+      "size": 1
+    }
+  ],
+  "tokens": [
+    {
+      "id": "scourge-1",
+      "spec": {
+        "id": "draugr-scourge",
+        "name": "Draugr Scourge",
+        "race": "nord",
+        "build": "slim",
+        "skinTone": "pale",
+        "hair": "grey",
+        "hairStyle": "long",
+        "beard": "long",
+        "garment": {
+          "torso": "vest",
+          "torsoCloth": "leather",
+          "legs": "trousers",
+          "legsCloth": "grey"
+        },
+        "weapon": "bow"
+      },
+      "at": [
+        6,
+        2.4
+      ],
+      "facing": 0
+    },
+    {
+      "id": "scourge-2",
+      "spec": {
+        "id": "draugr-scourge",
+        "name": "Draugr Scourge",
+        "race": "nord",
+        "build": "slim",
+        "skinTone": "pale",
+        "hair": "grey",
+        "hairStyle": "long",
+        "beard": "long",
+        "garment": {
+          "torso": "vest",
+          "torsoCloth": "leather",
+          "legs": "trousers",
+          "legsCloth": "grey"
+        },
+        "weapon": "bow"
+      },
+      "at": [
+        10,
+        2.4
+      ],
+      "facing": 0
+    },
+    {
+      "id": "scourge-3",
+      "spec": {
+        "id": "draugr-scourge",
+        "name": "Draugr Scourge",
+        "race": "nord",
+        "build": "slim",
+        "skinTone": "pale",
+        "hair": "grey",
+        "hairStyle": "long",
+        "beard": "long",
+        "garment": {
+          "torso": "vest",
+          "torsoCloth": "leather",
+          "legs": "trousers",
+          "legsCloth": "grey"
+        },
+        "weapon": "bow"
+      },
+      "at": [
+        13,
+        2.4
+      ],
+      "facing": 0
+    },
+    {
+      "id": "scourge-4",
+      "spec": {
+        "id": "draugr-scourge",
+        "name": "Draugr Scourge",
+        "race": "nord",
+        "build": "slim",
+        "skinTone": "pale",
+        "hair": "grey",
+        "hairStyle": "long",
+        "beard": "long",
+        "garment": {
+          "torso": "vest",
+          "torsoCloth": "leather",
+          "legs": "trousers",
+          "legsCloth": "grey"
+        },
+        "weapon": "bow"
+      },
+      "at": [
+        17,
+        2.4
+      ],
+      "facing": 0
+    },
+    {
+      "id": "galmar",
+      "spec": {
+        "id": "galmar",
+        "name": "Galmar Stone-Fist",
+        "race": "nord",
+        "build": "burly",
+        "skinTone": "fair",
+        "hair": "brown",
+        "hairStyle": "long",
+        "beard": "full",
+        "garment": {
+          "torso": "vest",
+          "torsoCloth": "skin",
+          "legs": "trousers",
+          "legsCloth": "leather"
+        },
+        "weapon": "hammer"
+      },
+      "at": [
+        13.4,
+        16.2
+      ],
+      "facing": 1
+    },
+    {
+      "id": "pc-1",
+      "spec": {
+        "id": "knight",
+        "name": "Sigrid",
+        "race": "nord",
+        "build": "burly",
+        "skinTone": "fair",
+        "hair": "black",
+        "hairStyle": "braid",
+        "beard": "none",
+        "garment": {
+          "torso": "plate",
+          "torsoCloth": "metal",
+          "legs": "greaves",
+          "legsCloth": "metal"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        8.4,
+        17.2
+      ],
+      "facing": 1,
+      "party": true
+    }
+  ],
+  "path": [],
+  "rig": {
+    "ambient": 0.16,
+    "sun": {
+      "azimuth": 210,
+      "elevation": 50,
+      "intensity": 0.28
+    },
+    "points": [
+      {
+        "x": 368,
+        "y": 64,
+        "radius": 288,
+        "intensity": 0.6,
+        "id": "far-ledge",
+        "flicker": 0
+      }
+    ]
+  },
+  "ground": [
+    "0*24",
+    "0*24",
+    "0*24",
+    "0*24",
+    "0*24",
+    "0*24",
+    "0*24",
+    "0*24",
+    "0*24",
+    "0*24",
+    "0*24",
+    "0*24",
+    "0*24",
+    "0*24",
+    "0*24",
+    "0*24",
+    "0*24",
+    "0*24",
+    "0*24",
+    "0*24",
+    "0*24"
+  ],
+  "doors": [
+    {
+      "id": "entrance",
+      "at": [
+        8,
+        18
+      ],
+      "label": "The Main Causeway",
+      "to": {
+        "room": "korvanjund-causeway",
+        "door": "gate"
+      }
+    },
+    {
+      "id": "armory-door",
+      "at": [
+        2,
+        16
+      ],
+      "label": "The Armory (left chain)",
+      "to": {
+        "room": "korvanjund-armory",
+        "door": "hub-door"
+      }
+    },
+    {
+      "id": "embalming-door",
+      "at": [
+        21,
+        16
+      ],
+      "label": "The Embalming Hall (right chain)",
+      "to": {
+        "room": "korvanjund-embalming",
+        "door": "hub-door"
+      }
+    },
+    {
+      "id": "lift",
+      "at": [
+        12,
+        16
+      ],
+      "label": "The lift — down the shaft",
+      "state": "open",
+      "to": {
+        "room": "korvanjund-descent",
+        "door": "from-shaft"
+      }
+    }
+  ],
+  "wallHeight": 3.4
+}

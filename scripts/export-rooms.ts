@@ -3,6 +3,7 @@ import { join } from 'path';
 import { makeDemoRoom } from '@/battlemap/room';
 import { makeCaveRoom } from '@/battlemap/cave';
 import { makeIvarstead, makeInn, makeTrader } from '@/battlemap/village';
+import { KORVANJUND } from '@/battlemap/korvanjund';
 import { docToJson, toDoc } from '@/battlemap/document';
 
 /**
@@ -20,6 +21,7 @@ const rooms = [
   { file: 'ivarstead.json', doc: toDoc(makeIvarstead(), { id: 'ivarstead', name: 'Ivarstead' }) },
   { file: 'vilemyr-inn.json', doc: toDoc(makeInn(), { id: 'vilemyr-inn', name: 'Vilemyr Inn' }) },
   { file: 'trader-hall.json', doc: toDoc(makeTrader(), { id: 'trader-hall', name: 'Ivarstead Traders' }) },
+  ...KORVANJUND.map((k) => ({ file: k.file, doc: toDoc(k.build(), { id: k.id, name: k.name }) })),
 ];
 
 for (const { file, doc } of rooms) {
@@ -27,7 +29,7 @@ for (const { file, doc } of rooms) {
   writeFileSync(path, docToJson(doc));
   const kb = (Buffer.byteLength(docToJson(doc)) / 1024).toFixed(1);
   console.log(
-    `${file.padEnd(14)} ${kb} kb · ${doc.terrain.length} rows · ${doc.props.length} props · ` +
+    `${file.padEnd(26)} ${kb} kb · ${doc.terrain.length} rows · ${doc.props.length} props · ` +
       `${doc.tokens.length} tokens · ${doc.tiers?.length ?? 0} storeys · ${doc.doors?.length ?? 0} doors`,
   );
 }

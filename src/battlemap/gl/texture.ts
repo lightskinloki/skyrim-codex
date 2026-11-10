@@ -22,6 +22,9 @@ export type Tex = {
   /** Power-of-two wrap masks, or -1 for an odd size (the rug). */
   mx: number;
   my: number;
+  /** Per-texel material, 0 = transparent. Only sprite props carry it; every other
+   *  texture is one material, named by its triangle. */
+  mats?: Uint8Array;
 };
 
 /** Nearest texel, wrapping in both axes. Negative uv is legal. */

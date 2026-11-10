@@ -39,6 +39,8 @@ import {
   waterTexture,
   woodTexture,
 } from './texture';
+import { buildSpriteProp, spriteMotion, spriteSize } from './spriteProps';
+import { WIND, buildBlade, buildChain, buildDrill, buildGear, buildLever, buildSarcophagus, type SceneAnim } from './animProps';
 
 /**
  * The board as a 3D scene: solids with real volumes, a floor, and the
@@ -137,6 +139,8 @@ export type Scene = {
   fires: SceneFire[];
   lights: SceneLight[];
   colliders: Collider[];
+  /** Moving parts in their rest pose; the renderer poses them per frame. */
+  anims: SceneAnim[];
   /** Contact wash on the cell-corner lattice, one grid per receiving plane:
    *  a surface is darkened only by what rises above it. */
   ambient: { y: number; grid: Float32Array }[];
@@ -434,10 +438,17 @@ function buildProp(
   colliders: Collider[],
   fires: SceneFire[],
   lights: SceneLight[],
+  anims: SceneAnim[],
+  yaw = 0,
 ) {
   const x0 = p.at[0];
   const z0 = p.at[1];
   const id = Math.round(x0 * 8) * 131 + Math.round(z0 * 8);
+  // Every moving thing gets its own phase, so a room's gears and trees are not
+  // a chorus line.
+  const phase = hf(seed ^ 0x3a17, id, 5) * Math.PI * 2;
+  const sink = { tris, anims, colliders, lights };
+  const animTex = { metal: tex.metal, stone: tex.stone, wood: tex.wood };
 
   switch (p.rule) {
     case 'table': {
@@ -445,8 +456,12 @@ function buildProp(
       const d = 0.75;
       const x1 = x0 + w;
       const z1 = z0 + d;
-      addBox(tris, x0, z0, x1, z1, 0.42, 0.5, M_WOOD_PROP, tex.wood);
-      const leg = 0.07;
+      const slab = p.stone === true;
+      const tMat = slab ? M_STONE_PROP : M_WOOD_PROP;
+      const tTex = slab ? tex.stone : tex.wood;
+      addBox(tris, x0, z0, x1, z1, 0.42, 0.5, tMat, tTex);
+      // A slab stands on two stone piers, not four turned legs.
+      const leg = slab ? 0.16 : 0.07;
       const inset = 0.05;
       for (const [lx, lz] of [
         [x0 + inset, z0 + inset],
@@ -454,7 +469,7 @@ function buildProp(
         [x0 + inset, z1 - inset - leg],
         [x1 - inset - leg, z1 - inset - leg],
       ]) {
-        addBox(tris, lx, lz, lx + leg, lz + leg, 0, 0.42, M_WOOD_PROP, tex.wood);
+        addBox(tris, lx, lz, lx + leg, lz + leg, 0, 0.42, tMat, tTex);
       }
       addCollider(colliders, x0, z0, x1, z1, 0.47);
       break;
@@ -688,9 +703,22 @@ function buildProp(
         [r * 0.62, base + 0.56, base + 0.86, -0.03, -0.05],
         [r * 0.36, base + 0.78, base + 1.04, 0.02, 0.02],
       ];
+      // The canopy sways from the top of the trunk; the trunk stays put.
+      const canopy: Tri[] = [];
       for (const [rad, y0, y1, ox, oz] of tiers) {
-        addCylinder(tris, cx + ox, cz + oz, rad, rad * 0.86, y0, y1, mat, leafTex, 10);
+        addCylinder(canopy, cx + ox, cz + oz, rad, rad * 0.86, y0, y1, mat, leafTex, 10);
       }
+      for (const T of canopy) T.cast = false;
+      anims.push({
+        kind: 'sway',
+        tris: canopy,
+        origin: [cx, base, cz],
+        axis: WIND,
+        rate: 0.32 + hf(seed ^ 0x77, id, 2) * 0.12,
+        amp: 0.05 + size * 0.02,
+        phase,
+        height: 1.04,
+      });
       addCollider(colliders, cx - 0.15, cz - 0.15, cx + 0.15, cz + 0.15, trunkH);
       break;
     }
@@ -713,6 +741,67 @@ function buildProp(
       );
       break;
     }
+    case 'sprite': {
+      const motion = spriteMotion(p.sprite);
+      if (!motion) {
+        buildSpriteProp(p, yaw, tris, colliders);
+        break;
+      }
+      const body: Tri[] = [];
+      buildSpriteProp(p, yaw, body, colliders);
+      if (!body.length) break;
+      let y0 = Infinity;
+      let y1 = -Infinity;
+      let sx = 0;
+      let sz = 0;
+      for (const T of body) {
+        for (const v of [T.p0, T.p1, T.p2]) {
+          if (v[1] < y0) y0 = v[1];
+          if (v[1] > y1) y1 = v[1];
+          sx += v[0];
+          sz += v[2];
+        }
+      }
+      const n = body.length * 3;
+      const height = Math.max(0.2, y1 - y0);
+      // A banner swings across its own face, which is what billowing is; a
+      // plant leans with the wind.
+      const front = body[0].n;
+      const across: Vec3 = (() => {
+        const l = Math.hypot(front[0], front[2]) || 1;
+        return [front[0] / l, 0, front[2] / l];
+      })();
+      for (const T of body) T.cast = false;
+      anims.push({
+        kind: motion,
+        tris: body,
+        origin: [sx / n, motion === 'hang' ? y1 : y0, sz / n],
+        axis: motion === 'hang' ? across : WIND,
+        rate: motion === 'hang' ? 0.55 : 0.35,
+        amp: motion === 'hang' ? 0.09 : 0.03 + spriteSize(p.sprite) * (p.scale ?? 1) * 0.025,
+        phase,
+        height,
+      });
+      break;
+    }
+    case 'gear':
+      buildGear(p, animTex, sink, phase);
+      break;
+    case 'drill':
+      buildDrill(p, animTex, sink, phase);
+      break;
+    case 'sarcophagus':
+      buildSarcophagus(p, animTex, sink, phase);
+      break;
+    case 'lever':
+      buildLever(p, animTex, sink);
+      break;
+    case 'chain':
+      buildChain(p, animTex, sink);
+      break;
+    case 'blade':
+      buildBlade(p, animTex, sink);
+      break;
   }
 }
 
@@ -1281,6 +1370,7 @@ export function buildScene(room: Room, yaw: number): Scene {
   const colliders: Collider[] = [];
   const fires: SceneFire[] = [];
   const lights: SceneLight[] = [];
+  const anims: SceneAnim[] = [];
 
   // Textures are functions of the seed only, but the scene is rebuilt whenever
   // the yaw crosses a wall's curb, which is every frame of an orbit. Caching
@@ -1392,7 +1482,8 @@ export function buildScene(room: Room, yaw: number): Scene {
     const c0 = colliders.length;
     const f0 = fires.length;
     const l0 = lights.length;
-    buildProp(p, seed, tex, tris, colliders, fires, lights);
+    const a0 = anims.length;
+    buildProp(p, seed, tex, tris, colliders, fires, lights, anims, yaw);
     // Triangles share their corner arrays, so a vertex must be lifted once, not
     // once per triangle that uses it — that is how a chest becomes a fan.
     const lifted = new Set<Vec3>();
@@ -1404,7 +1495,15 @@ export function buildScene(room: Room, yaw: number): Scene {
       // A prop's shadow belongs on the deck it stands on, not on the pit below.
       if (T.cast) T.castTo = base;
     }
+    for (let i = a0; i < anims.length; i++) {
+      for (const T of anims[i].tris) {
+        lifted.add(T.p0);
+        lifted.add(T.p1);
+        lifted.add(T.p2);
+      }
+    }
     if (base !== 0) {
+      for (let i = a0; i < anims.length; i++) anims[i].origin[1] += base;
       for (const v of lifted) v[1] += base;
       for (let i = c0; i < colliders.length; i++) {
         colliders[i].base += base;
@@ -1425,6 +1524,13 @@ export function buildScene(room: Room, yaw: number): Scene {
     if (dx < 0 || dz < 0 || dx >= cols || dz >= rows) continue;
     const alongZ = doorPassageAlongZ(room, colliders, dx, dz);
     const postH = doorH;
+    // A doorway at the top of a stair or the end of a bridge stands on that
+    // deck, not on the floor under it: the frame is built from y = 0 and lifted
+    // as one piece, exactly as a prop is.
+    const deck = tierTop[dz * cols + dx];
+    const dt0 = tris.length;
+    const dc0 = colliders.length;
+    const dl0 = lights.length;
     const jamb = 0.11;
     const lintel = 0.14;
     // A header through a wall has to be as deep as the wall or the gap either
@@ -1453,6 +1559,21 @@ export function buildScene(room: Room, yaw: number): Scene {
     }
     if (door.to) {
       lights.push({ x: dx + 0.5, y: postH - 0.3, z: dz + 0.5, radius: 1.6, intensity: 0.55, flicker: 0.05 });
+    }
+    if (deck > 0) {
+      const lifted = new Set<Vec3>();
+      for (let i = dt0; i < tris.length; i++) {
+        lifted.add(tris[i].p0);
+        lifted.add(tris[i].p1);
+        lifted.add(tris[i].p2);
+        if (tris[i].cast) tris[i].castTo = deck;
+      }
+      for (const v of lifted) v[1] += deck;
+      for (let i = dc0; i < colliders.length; i++) {
+        colliders[i].base += deck;
+        colliders[i].top += deck;
+      }
+      for (let i = dl0; i < lights.length; i++) lights[i].y += deck;
     }
   }
 
@@ -1486,6 +1607,7 @@ export function buildScene(room: Room, yaw: number): Scene {
     fires,
     lights,
     colliders,
+    anims,
     ambient,
     grid: room.grid.cells,
     tierTop,

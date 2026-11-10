@@ -4,6 +4,15 @@ import cavernJson from '@/battlemap/rooms/cavern.json';
 import ivarsteadJson from '@/battlemap/rooms/ivarstead.json';
 import innJson from '@/battlemap/rooms/vilemyr-inn.json';
 import traderJson from '@/battlemap/rooms/trader-hall.json';
+import kvCausewayJson from '@/battlemap/rooms/korvanjund-causeway.json';
+import kvShaftJson from '@/battlemap/rooms/korvanjund-shaft.json';
+import kvArmoryJson from '@/battlemap/rooms/korvanjund-armory.json';
+import kvEmbalmingJson from '@/battlemap/rooms/korvanjund-embalming.json';
+import kvDescentJson from '@/battlemap/rooms/korvanjund-descent.json';
+import kvLandingJson from '@/battlemap/rooms/korvanjund-landing.json';
+import kvCryptJson from '@/battlemap/rooms/korvanjund-crypt.json';
+import kvThroneJson from '@/battlemap/rooms/korvanjund-throne.json';
+import { KORVANJUND } from '@/battlemap/korvanjund';
 import { makeDemoRoom } from '@/battlemap/room';
 import { makeCaveRoom } from '@/battlemap/cave';
 import { makeIvarstead, makeInn, makeTrader } from '@/battlemap/village';
@@ -46,6 +55,14 @@ const shipped: { file: string; json: unknown; build: () => ReturnType<typeof mak
   { file: 'ivarstead.json', json: ivarsteadJson, build: makeIvarstead },
   { file: 'vilemyr-inn.json', json: innJson, build: makeInn },
   { file: 'trader-hall.json', json: traderJson, build: makeTrader },
+  { file: 'korvanjund-causeway.json', json: kvCausewayJson, build: KORVANJUND.find((k) => k.id === 'korvanjund-causeway')!.build },
+  { file: 'korvanjund-shaft.json', json: kvShaftJson, build: KORVANJUND.find((k) => k.id === 'korvanjund-shaft')!.build },
+  { file: 'korvanjund-armory.json', json: kvArmoryJson, build: KORVANJUND.find((k) => k.id === 'korvanjund-armory')!.build },
+  { file: 'korvanjund-embalming.json', json: kvEmbalmingJson, build: KORVANJUND.find((k) => k.id === 'korvanjund-embalming')!.build },
+  { file: 'korvanjund-descent.json', json: kvDescentJson, build: KORVANJUND.find((k) => k.id === 'korvanjund-descent')!.build },
+  { file: 'korvanjund-landing.json', json: kvLandingJson, build: KORVANJUND.find((k) => k.id === 'korvanjund-landing')!.build },
+  { file: 'korvanjund-crypt.json', json: kvCryptJson, build: KORVANJUND.find((k) => k.id === 'korvanjund-crypt')!.build },
+  { file: 'korvanjund-throne.json', json: kvThroneJson, build: KORVANJUND.find((k) => k.id === 'korvanjund-throne')!.build },
 ];
 
 console.log('room documents');
@@ -278,6 +295,34 @@ check('every door link resolves to a door in a shipped room', () => {
     }
   }
   assert.ok(links >= 4, 'the village and its two interiors should be linked both ways');
+});
+
+check('every door link in Korvanjund is answered by a door that leads back', () => {
+  const byId = new Map<string, RoomDoc>();
+  for (const { json } of shipped) {
+    const p = parseRoomDoc(json);
+    if (p.status === 'ok') byId.set(p.doc.id, p.doc);
+  }
+  for (const k of KORVANJUND) {
+    const doc = byId.get(k.id);
+    assert.ok(doc, `${k.id} is not shipped`);
+    for (const d of doc.doors ?? []) {
+      assert.ok(d.to, `${k.id}/${d.id} leads nowhere`);
+      const back = byId.get(d.to.room)?.doors?.find((o) => o.id === d.to!.door);
+      assert.ok(back?.to?.room === k.id && back.to.door === d.id, `${k.id}/${d.id} is a one-way door`);
+    }
+  }
+});
+
+check('the new rules are carried by the shipped rooms', () => {
+  const rules = new Set<string>();
+  for (const { json } of shipped) {
+    const p = parseRoomDoc(json);
+    if (p.status === 'ok') p.doc.props.forEach((prop) => rules.add(prop.rule));
+  }
+  for (const required of ['gear', 'drill', 'sarcophagus', 'lever', 'chain', 'blade', 'sprite']) {
+    assert.ok(rules.has(required), `no shipped prop uses "${required}"`);
+  }
 });
 
 console.log(`\n${checks - failures}/${checks} checks passed`);

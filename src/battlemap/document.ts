@@ -4,6 +4,7 @@ import type { LightRig, PointLight } from './light';
 import type { DoorState, Facing, GroundKind, Room, RoomDoor, Tier, TokenPlacement } from './room';
 import { GROUND_KINDS } from './room';
 import { CELL } from './paint';
+import { SPRITE_IDS } from './gl/spriteProps';
 import {
   BEARDS,
   BUILDS,
@@ -158,7 +159,7 @@ const encodeGround = (g: Uint8Array, cols: number, rows: number): string[] => {
  * so a diff means someone changed the room.
  */
 const PROP_FIELDS: Record<PropRule['rule'], readonly string[]> = {
-  table: ['w'],
+  table: ['w', 'stone'],
   bench: ['w'],
   chest: ['w', 'bands'],
   crate: [],
@@ -171,6 +172,13 @@ const PROP_FIELDS: Record<PropRule['rule'], readonly string[]> = {
   stairs: ['w', 'rise', 'run', 'along', 'dir'],
   house: ['w', 'h', 'roof', 'door'],
   tree: ['size', 'autumn'],
+  sprite: ['sprite', 'rot', 'scale'],
+  gear: ['r', 'along', 'h', 'speed'],
+  drill: ['along', 'dir'],
+  sarcophagus: ['face'],
+  lever: [],
+  chain: ['w', 'along', 'h'],
+  blade: ['along', 'dir', 'h'],
 };
 
 const isRule = (v: unknown): v is PropRule['rule'] =>
@@ -178,11 +186,15 @@ const isRule = (v: unknown): v is PropRule['rule'] =>
 
 const LIMITS: Record<string, [number, number]> = {
   w: [0.25, 8],
-  h: [0.25, 8],
+  h: [0.05, 8],
   size: [1, 5],
   bands: [1, 3],
   rise: [0.2, 8],
   run: [1, 12],
+  rot: [0, 360],
+  scale: [0.25, 4],
+  r: [0.2, 3],
+  speed: [-6, 6],
 };
 
 type AnyProp = Record<string, unknown>;
@@ -221,7 +233,7 @@ const parseProp = (raw: unknown, index: number, problems: RoomProblem[]): PropDo
   for (const key of PROP_FIELDS[raw.rule]) {
     const v = raw[key];
     if (v === undefined) continue;
-    if (key === 'lit' || key === 'navy' || key === 'autumn') {
+    if (key === 'lit' || key === 'navy' || key === 'autumn' || key === 'stone') {
       if (typeof v === 'boolean') prop[key] = v;
       continue;
     }
@@ -237,8 +249,13 @@ const parseProp = (raw: unknown, index: number, problems: RoomProblem[]): PropDo
       if (v === 'thatch' || v === 'wood') prop[key] = v;
       continue;
     }
-    if (key === 'door') {
+    if (key === 'door' || key === 'face') {
       if (v === 'n' || v === 's' || v === 'e' || v === 'w') prop[key] = v;
+      continue;
+    }
+    if (key === 'sprite') {
+      // A name the atlas does not hold would build nothing; it is a broken prop.
+      if (typeof v === 'string' && SPRITE_IDS.includes(v)) prop[key] = v;
       continue;
     }
     if (!finite(v)) continue;
@@ -250,6 +267,10 @@ const parseProp = (raw: unknown, index: number, problems: RoomProblem[]): PropDo
   // staircase is, and there is no sensible default for a flight of steps.
   if (raw.rule === 'stairs' && prop.rise === undefined) {
     problems.push({ path: where, message: 'is a staircase with no `rise`; dropped' });
+    return null;
+  }
+  if (raw.rule === 'sprite' && prop.sprite === undefined) {
+    problems.push({ path: where, message: `names no known sprite ("${String(raw.sprite)}"); dropped` });
     return null;
   }
 

@@ -75,15 +75,17 @@ chose it. The geometry does not care who caused the movement. Only the economy
 and the opportunity attack do.
 
 > **AS BUILT (9 Nov 2026).** The prototype board selects a token and clicks a
-> cell; the planner finds a route on the cell lattice and draws it before the
-> walk is taken. The route is a list of cell centres with a deck per cell, taken
-> from the scene's colliders, so a stair is climbed by the same rule that makes a
-> shelf standable. The body is a billboard with a four-pose cycle, four facings,
-> a one-pixel passing bob and 200 ms per cell; the landing is written to the play
-> file on the wall clock rather than on an animation frame, so a backgrounded tab
-> still finishes its move. This is the presentation half of M9–M10, not the
-> resolver: arbitrary 3D blocks, zones, engagement and drawn-path editing are
-> still 3b–3d.
+> cell for a quick move; a Plan route mode appends clicked waypoints and walks
+> the whole plan as one move. The planner fills in the walkable cells between
+> the points — every leg starts where the last one finished, with its deck — and
+> the route is drawn before it is taken. It is a list of cell centres with a deck
+> per cell, taken from the scene's colliders, so a stair is climbed by the same
+> rule that makes a shelf standable. The body is a billboard with a four-pose
+> cycle, four facings, a one-pixel passing bob and 200 ms per cell; the landing
+> is written to the play file on the wall clock rather than on an animation
+> frame, so a backgrounded tab still finishes its move. This is the presentation
+> half of M9–M10, not the resolver: arbitrary 3D blocks, zones, engagement and
+> the path's mechanical readout are still 3b–3d.
 
 ---
 
@@ -494,9 +496,12 @@ board, and a board cannot be judged before the sun sweep passes.
 
 ## 13. Non-goals
 
-- **Pathfinding.** The player draws the route. There is no A*, no cost function,
-  no reachable-square shading — with an unlimited budget, shading where you
-  *could* go would be shading the whole map.
+- **Pathfinding.** The player draws the route. There is no cost function, no
+  reachable-square shading — with an unlimited budget, shading where you *could*
+  go would be shading the whole map. *(As built, the planner fills in the
+  walkable cells between the player's waypoints; the waypoints are the drawn
+  route, and a quick move is the two-point version of it. It never invents a
+  waypoint the table did not click.)*
 - **A movement budget**, in any form.
 - **Line of sight, lighting, vision cones, cover maths.** The geometry exists
   and can support them later; this build does not compute them.
@@ -1066,7 +1071,7 @@ save and the shipped room returns. Saving a built-in no longer forks it under a
 new id, because a fork would break every door that points at it.
 
 **V9. Every environment is one click away.** A strip above the canvas lists
-every room in the library — the five shipped documents and any save in this
+every room in the library — the shipped documents and any save in this
 browser — with the current one lit. Clicking another persists the room you are
 leaving (rig, token positions, seen mask) and loads the next, exactly as a door
 does. The last room visited is remembered under `skyrim-codex.room.last`, so a
@@ -1079,3 +1084,67 @@ dropdown was removed rather than left as a second control that could disagree.
 token dragging. Fog is a floor-plane mask: a prop standing over a seen cell is
 not separately occluded. The editor does not yet author `tiers`, `rig` points or
 token links in-world — those still come from JSON or the roster.
+
+## 20. A prop library, and a dungeon built from one
+
+§16 said props are solids. This gives the solids a vocabulary wide enough to
+furnish a ruin without a mesh per object, and proves it on eight linked rooms.
+
+**P1. A sprite is a recipe, not an image.** `src/battlemap/atlas/props.json`
+holds 18 sprites at 16 × 16, cut from the Pixel Art Atlas by
+`scripts/atlas-props.py` (CC0 art; AI-generated with Krea, whose community
+licence governs commercial use). Each entry is a palette and sixteen rows of
+characters — 3 kb for the whole library. Nothing is vendored, nothing is
+bitmap-loaded and nothing is drawn as a quad: `gl/spriteProps.ts` turns the
+recipe into geometry the first time a room asks for it.
+
+**P2. Four builds, chosen by what the object is.** `cross` is one plane turned
+to face the camera (plants, crystals, trees); `lathe` spins the outline into a
+turned solid (urns, stumps, boulders); `extrude` gives the silhouette thickness
+with a side wall on every edge pixel (anvils, obelisks, carts, logs); `decal` is
+a flat quad for things drawn from above (a grate). A room places one with
+`{ rule: 'sprite', sprite, rot?, scale? }`, and the document validator rejects a
+name the atlas does not hold rather than building nothing.
+
+**P3. Colour is mapped into the ramps, not copied.** Every sprite pixel becomes
+the nearest (material, step) in the board's 16-step ramps, weighted for how the
+eye reads it, then authored two steps under what it should read as so the light
+has room to move it. A sprite is therefore lit, shadowed and palette-dithered by
+exactly the rules a flagstone is; the board cannot tell them apart.
+
+**P4. Transparency is air, and air writes no depth.** The sprite texture carries
+a material per texel with 0 for empty. The raster skips those texels before the
+depth test, so a cut-out casts a silhouette-shaped hole rather than a square, and
+the ink pass outlines the drawing rather than its quad. Sprites do not cast
+projected shadows — the pass reads alpha as solid, and a tree's shadow would be
+a rectangle.
+
+**P5. Plants move; stone does not.** A `cross` sprite sways from its foot about
+the wind axis, and a thin `extrude` (≤ 0.08 cells) hangs and swings across its own
+face. Motion is a posed copy of the triangles, rebuilt per frame and drawn with
+the solids, so a moving thing is still lit and inked like the wall behind it.
+
+**P6. The ruin has its own props.** Six rules exist only in the 3D scene:
+`gear` (a toothed wheel on an axle, `speed` radians a second, jammed at 0),
+`drill` (a 3 × 2 boring machine, bit turning and piston hammering), `sarcophagus`
+(an upright lid with a seam of necrotic light that pulses), `lever`, `chain` (iron
+links overhead — it blocks a flier, not a walker) and `blade` (a greatsword
+driven in point-first). They build real geometry with colliders and lights, and
+`artOf` returns a placeholder footprint for the flat renderer, which predates
+them.
+
+**P7. Korvanjund is eight rooms and seven doors.** `korvanjund.ts` authors the
+interior from the Main Causeway to the Throne Room as a door-linked graph:
+causeway → shaft → armory / embalming → lift → landing → crypt → throne. No map
+exists in either repo, so every layout is derived from the module's own terrain
+notes (the shaft's 10-ft ledge over a 60-ft void, the lift's 20-ft radius, the
+crypt's three levels 10 and 20 ft apart) at 5 ft to a cell; where the module names
+a thing it is placed, where it is silent nothing is invented beyond furniture.
+Tokens are placeholders — a monster is still drawn from a character spec, and its
+`name` says what it stands for.
+
+**P8. Export is still the only way a room ships.** The eight rooms are ordinary
+builders run by `rooms:export`; `test:rooms` re-runs every builder and fails if a
+shipped JSON has drifted from it. The dungeon is a checkpoint, not a finished
+adventure: encounters, treasure and the chain-and-lever puzzle's resolver live in
+the module, not here.
