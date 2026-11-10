@@ -111,6 +111,12 @@ export interface Kit {
   equipment: Equipment[];
   items: InventoryItem[];
   gold: number;
+  /**
+   * Assembled from the book's own gear table rather than printed as a starting
+   * kit. The card says so: the printed three are canon, and these are an
+   * invitation to build a hybrid, not another rule.
+   */
+  house?: boolean;
 }
 
 export interface CustomAbility {

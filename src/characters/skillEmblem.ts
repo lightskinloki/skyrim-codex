@@ -1,338 +1,457 @@
-import { packHex } from '@/battlemap/palette';
+import { RAMP_PACKED, packHex } from '@/battlemap/palette';
 
 /**
- * Skill emblems: 32 × 32, drawn from rules rather than shipped as files.
+ * Skill glyphs: 32 × 32, transparent, for the *game* surface.
  *
- * Same discipline as the rest of the app — a skill is not a PNG, it is a glyph
- * plus the palette it is allowed to use. That means a new skill added to
- * `data/skills.ts` costs a dozen lines here, and a re-colour of the whole game
- * re-colours every emblem with it.
+ * These used to sit on a carved stone plaque and do duty in the character
+ * creator. Both jobs were wrong for them. A plaque is a card the app has
+ * already drawn, and a creator step is asking the player to choose a fantasy —
+ * it gets a painted scene, not a pictogram. What a glyph is actually for is the
+ * character sheet and the combat UI: a small, instantly legible mark beside a
+ * name, on whatever surface it lands on.
  *
- * One shape per skill, drawn to read at 48 px in the creator: the sword is a
- * sword, the flame is a flame. This is a character-creation aid, not a HUD icon
- * — the player is deciding what their character *is*, so the pictures have to
- * say "archery" before the label does (docs/PIXEL-ART-SPEC.md §2 on emblems).
+ * So: no background, no frame, one silhouette with a 1 px ink edge. Three to
+ * five tones, all from the board's ramps, so a glyph sits in the same light as
+ * everything else. Readable at 20 px, which is the size the sheet uses.
  */
+
+export const EMBLEM_SIZE = { w: 32, h: 32 };
+export const EMBLEM_INK = packHex('#08070c');
 
 const W = 32;
 const H = 32;
 
-const STEEL = ['#463c60', '#584c76', '#6d5f8e', '#8774a4', '#a68fb2', '#c8afb8', '#e8d3c2'].map(packHex);
-const GOLD = ['#4b2811', '#6f3f1a', '#985a27', '#c17c39', '#d39147', '#e5a95c', '#f3d79a'].map(packHex);
-const LEATHER = ['#1a1008', '#301d11', '#51331d', '#7d512e', '#96633a', '#b0784a', '#dcaa7c'].map(packHex);
-const EMBER = ['#4d0f03', '#a02205', '#e8470c', '#ff8420', '#ffc760', '#fff2bd'].map(packHex);
-const SKY = ['#162649', '#1c315c', '#2e4e8c', '#4f7cbd', '#9dc0e2'].map(packHex);
-const IVORY = ['#c8afb8', '#e8d3c2', '#fff2bd'].map(packHex);
-const INK = packHex('#0a0810');
-const VOID = 0;
+const METAL = RAMP_PACKED.metal;
+const FIRE = RAMP_PACKED.fire;
+const WOOD = RAMP_PACKED.wood;
+const NAVY = RAMP_PACKED.navy;
+const WOOL = RAMP_PACKED.wool;
+const STONE = RAMP_PACKED.stone;
+const OLIVE = RAMP_PACKED.olive;
 
-type Ctx = {
-  col: Uint32Array;
-  /** Art pixels, nearest-neighbour upscaled by the <canvas> at view time. */
-  put: (x: number, y: number, c: number) => void;
-  rect: (x: number, y: number, w: number, h: number, c: number) => void;
-  line: (x0: number, y0: number, x1: number, y1: number, c: number) => void;
-  ring: (cx: number, cy: number, r: number, c: number) => void;
-  disc: (cx: number, cy: number, r: number, c: number) => void;
-};
+type Glyph = { col: Uint32Array; solid: Uint8Array };
 
-function makeCtx(): Ctx {
-  const col = new Uint32Array(W * H);
-  const put = (x: number, y: number, c: number) => {
-    if (x < 0 || y < 0 || x >= W || y >= H) return;
-    if (!c) return;
-    col[y * W + x] = c;
-  };
-  const rect = (x: number, y: number, w: number, h: number, c: number) => {
-    for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) put(x + i, y + j, c);
-  };
-  const line = (x0: number, y0: number, x1: number, y1: number, c: number) => {
-    let x = Math.round(x0);
-    let y = Math.round(y0);
-    const ex = Math.round(x1);
-    const ey = Math.round(y1);
-    const dx = Math.abs(ex - x);
-    const dy = Math.abs(ey - y);
-    const sx = x < ex ? 1 : -1;
-    const sy = y < ey ? 1 : -1;
-    let err = dx - dy;
-    for (let guard = 0; guard < 256; guard++) {
-      put(x, y, c);
-      if (x === ex && y === ey) break;
-      const e2 = err * 2;
-      if (e2 > -dy) {
-        err -= dy;
-        x += sx;
-      }
-      if (e2 < dx) {
-        err += dx;
-        y += sy;
-      }
-    }
-  };
-  const disc = (cx: number, cy: number, r: number, c: number) => {
-    for (let y = -r; y <= r; y++) {
-      for (let x = -r; x <= r; x++) if (x * x + y * y <= r * r) put(cx + x, cy + y, c);
-    }
-  };
-  const ring = (cx: number, cy: number, r: number, c: number) => {
-    for (let y = -r; y <= r; y++) {
-      for (let x = -r; x <= r; x++) {
-        const d = x * x + y * y;
-        if (d <= r * r && d > (r - 1) * (r - 1)) put(cx + x, cy + y, c);
-      }
-    }
-  };
-  return { col, put, rect, line, ring, disc };
+const glyph = (): Glyph => ({ col: new Uint32Array(W * H), solid: new Uint8Array(W * H) });
+
+function put(g: Glyph, x: number, y: number, c: number) {
+  const xi = Math.round(x);
+  const yi = Math.round(y);
+  if (xi < 0 || yi < 0 || xi >= W || yi >= H) return;
+  const i = yi * W + xi;
+  g.col[i] = c;
+  g.solid[i] = 1;
 }
 
-/** The stone plaque every emblem sits on — the shape is the skill's identity. */
-function plaque(g: Ctx) {
-  // Corners are cut one pixel so the tile reads as carved stone, not a web card.
-  for (let y = 0; y < H; y++) {
-    for (let x = 0; x < W; x++) {
-      const corner = (x < 2 || x > W - 3) && (y < 2 || y > H - 3);
-      if (corner) continue;
-      const edge = x === 0 || y === 0 || x === W - 1 || y === H - 1;
-      if (edge) {
-        g.put(x, y, STEEL[0]);
-        continue;
-      }
-      const frame = x === 1 || y === 1 || x === W - 2 || y === H - 2;
-      g.put(x, y, frame ? (y === 2 ? STEEL[4] : STEEL[1]) : INK);
+function rect(g: Glyph, x: number, y: number, w: number, h: number, c: number) {
+  for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) put(g, x + i, y + j, c);
+}
+
+function line(g: Glyph, x0: number, y0: number, x1: number, y1: number, c: number, width = 1) {
+  let x = Math.round(x0);
+  let y = Math.round(y0);
+  const ex = Math.round(x1);
+  const ey = Math.round(y1);
+  const dx = Math.abs(ex - x);
+  const dy = Math.abs(ey - y);
+  const sx = x < ex ? 1 : -1;
+  const sy = y < ey ? 1 : -1;
+  let err = dx - dy;
+  for (let guard = 0; guard < 512; guard++) {
+    if (width <= 1) put(g, x, y, c);
+    else disc(g, x, y, width / 2, c);
+    if (x === ex && y === ey) break;
+    const e2 = err * 2;
+    if (e2 > -dy) {
+      err -= dy;
+      x += sx;
+    }
+    if (e2 < dx) {
+      err += dx;
+      y += sy;
     }
   }
-  // Rivets, so a row of emblems has a rhythm.
-  for (const [x, y] of [[3, 3], [W - 4, 3], [3, H - 4], [W - 4, H - 4]] as const) {
-    g.put(x, y, STEEL[3]);
+}
+
+function disc(g: Glyph, cx: number, cy: number, r: number, c: number) {
+  for (let y = Math.floor(cy - r); y <= Math.ceil(cy + r); y++) {
+    for (let x = Math.floor(cx - r); x <= Math.ceil(cx + r); x++) {
+      const dx = x + 0.5 - cx;
+      const dy = y + 0.5 - cy;
+      if (dx * dx + dy * dy <= r * r) put(g, x, y, c);
+    }
   }
-  // A faint inner vignette: light from the top-left like every other surface.
-  g.line(3, 2, W - 4, 2, STEEL[0]);
-  g.line(2, 3, 2, H - 4, STEEL[0]);
+}
+
+function ring(g: Glyph, cx: number, cy: number, r: number, c: number) {
+  for (let y = Math.floor(cy - r); y <= Math.ceil(cy + r); y++) {
+    for (let x = Math.floor(cx - r); x <= Math.ceil(cx + r); x++) {
+      const dx = x + 0.5 - cx;
+      const dy = y + 0.5 - cy;
+      const d = dx * dx + dy * dy;
+      if (d <= r * r && d > (r - 1) * (r - 1)) put(g, x, y, c);
+    }
+  }
+}
+
+function poly(g: Glyph, pts: readonly [number, number][], c: number) {
+  let minY = Infinity;
+  let maxY = -Infinity;
+  for (const [, y] of pts) {
+    if (y < minY) minY = y;
+    if (y > maxY) maxY = y;
+  }
+  for (let y = Math.floor(minY); y <= Math.ceil(maxY); y++) {
+    const xs: number[] = [];
+    for (let i = 0; i < pts.length; i++) {
+      const [x0, y0] = pts[i];
+      const [x1, y1] = pts[(i + 1) % pts.length];
+      if ((y0 <= y && y1 > y) || (y1 <= y && y0 > y)) xs.push(x0 + ((y - y0) / (y1 - y0)) * (x1 - x0));
+    }
+    xs.sort((a, b) => a - b);
+    for (let k = 0; k + 1 < xs.length; k += 2) {
+      for (let x = Math.ceil(xs[k]); x <= Math.floor(xs[k + 1]); x++) put(g, x, y, c);
+    }
+  }
+}
+
+/** A stroked circular arc, for bows, wards and summoning circles. */
+function arc(
+  g: Glyph,
+  cx: number,
+  cy: number,
+  r: number,
+  a0: number,
+  a1: number,
+  c: number,
+  width = 1,
+) {
+  const steps = Math.max(8, Math.ceil(Math.abs(a1 - a0) * r));
+  for (let i = 0; i <= steps; i++) {
+    const a = a0 + ((a1 - a0) * i) / steps;
+    if (width <= 1) put(g, cx + Math.cos(a) * r, cy + Math.sin(a) * r, c);
+    else disc(g, cx + Math.cos(a) * r, cy + Math.sin(a) * r, width / 2, c);
+  }
+}
+
+/** Add the 1 px black edge outside the union silhouette. */
+function finish(g: Glyph) {
+  const edge = new Uint8Array(W * H);
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const i = y * W + x;
+      if (g.solid[i]) continue;
+      if (
+        (x > 0 && g.solid[i - 1]) ||
+        (x < W - 1 && g.solid[i + 1]) ||
+        (y > 0 && g.solid[i - W]) ||
+        (y < H - 1 && g.solid[i + W])
+      ) {
+        edge[i] = 1;
+      }
+    }
+  }
+  for (let i = 0; i < W * H; i++) if (edge[i]) g.col[i] = EMBLEM_INK;
 }
 
 /* ---------------------------------------------------------------- glyphs */
 
-function oneHanded(g: Ctx) {
-  // Blade: a bright edge with a darker fuller, crossguard, hilt.
-  g.line(10, 24, 22, 8, STEEL[5]);
-  g.line(11, 24, 23, 8, STEEL[3]);
-  g.line(12, 25, 24, 9, STEEL[1]);
-  g.line(9, 19, 15, 24, GOLD[3]);
-  g.line(10, 18, 16, 23, GOLD[2]);
-  g.line(9, 25, 13, 28, LEATHER[3]);
-  g.put(8, 29, GOLD[4]);
-}
-
-function twoHanded(g: Ctx) {
-  // Longer, heavier, held two-handed: a broad blade down the middle.
-  g.rect(14, 6, 4, 15, STEEL[5]);
-  g.rect(15, 6, 2, 15, STEEL[3]);
-  g.rect(12, 7, 8, 1, STEEL[2]);
-  g.rect(11, 19, 10, 2, GOLD[3]);
-  g.rect(11, 18, 10, 1, GOLD[2]);
-  g.rect(14, 21, 4, 5, LEATHER[3]);
-  g.rect(14, 25, 4, 1, GOLD[2]);
-  g.put(15, 4, STEEL[6]);
-  g.put(16, 4, STEEL[4]);
-}
-
-function archery(g: Ctx) {
-  // A drawn bow: the arc is the bow, the straight line the arrow, the notch nock.
-  for (let y = 7; y <= 25; y++) {
-    const t = (y - 16) / 9;
-    const x = 20 - Math.round(Math.cos(t * 1.15) * 6);
-    g.put(x, y, LEATHER[5]);
-    g.put(x + 1, y, LEATHER[3]);
+/** A sword at any angle: one geometry, used by both blade skills. */
+function swordAt(
+  g: Glyph,
+  hiltX: number,
+  hiltY: number,
+  tipX: number,
+  tipY: number,
+  halfWidth: number,
+  guardHalf: number,
+  gripLen: number,
+) {
+  const dx = tipX - hiltX;
+  const dy = tipY - hiltY;
+  const len = Math.hypot(dx, dy) || 1;
+  const ux = dx / len;
+  const uy = dy / len;
+  const px = -uy;
+  const py = ux;
+  poly(g, [
+    [hiltX + px * halfWidth, hiltY + py * halfWidth],
+    [tipX + px * halfWidth * 0.55, tipY + py * halfWidth * 0.55],
+    [tipX, tipY],
+    [tipX - px * halfWidth * 0.55, tipY - py * halfWidth * 0.55],
+    [hiltX - px * halfWidth, hiltY - py * halfWidth],
+  ], METAL[8]);
+  line(g, hiltX + px * (halfWidth - 1), hiltY + py * (halfWidth - 1), tipX + px * 0.4, tipY + py * 0.4, METAL[11]);
+  line(g, hiltX, hiltY, tipX - ux, tipY - uy, METAL[5]);
+  line(g, hiltX - px * guardHalf, hiltY - py * guardHalf, hiltX + px * guardHalf, hiltY + py * guardHalf, FIRE[7], 2);
+  line(g, hiltX + px * (guardHalf - 2), hiltY + py * (guardHalf - 2), hiltX - px * (guardHalf - 2), hiltY - py * (guardHalf - 2), FIRE[9]);
+  line(g, hiltX, hiltY, hiltX - ux * gripLen, hiltY - uy * gripLen, WOOD[4], 3);
+  for (let i = 1; i < gripLen; i += 2) {
+    put(g, hiltX - ux * i + px, hiltY - uy * i + py, WOOD[2]);
+    put(g, hiltX - ux * i - px, hiltY - uy * i - py, WOOD[2]);
   }
-  g.line(20, 7, 20, 25, IVORY[0]);
-  g.line(7, 25, 25, 7, STEEL[4]);
-  g.line(8, 26, 26, 8, STEEL[2]);
-  g.rect(6, 26, 3, 3, GOLD[3]);
-  g.put(25, 7, STEEL[6]);
-  g.put(24, 6, STEEL[6]);
+  disc(g, hiltX - ux * (gripLen + 1), hiltY - uy * (gripLen + 1), 2.2, FIRE[8]);
+  put(g, hiltX - ux * (gripLen + 1) - 1, hiltY - uy * (gripLen + 1) - 1, FIRE[11]);
 }
 
-function heavyArmor(g: Ctx) {
-  // A tower shield with a thick plated face.
-  for (let y = 5; y <= 27; y++) {
-    const inset = y < 11 ? 6 - Math.floor((y - 5) / 2) : 6 + Math.floor((y - 11) / 3);
-    for (let x = 16 - inset; x <= 16 + inset; x++) {
-      if (y === 5 || x === 16 - inset || x === 16 + inset) g.put(x, y, STEEL[1]);
-      else g.put(x, y, STEEL[3]);
-    }
-  }
-  g.rect(15, 8, 2, 16, STEEL[5]);
-  g.rect(10, 14, 12, 2, GOLD[3]);
-  g.disc(16, 15, 2, GOLD[4]);
+function oneHanded(g: Glyph) {
+  // Angled, light, one hand: the arming sword a traveller actually carries.
+  swordAt(g, 11, 21, 24, 5, 2.2, 5.5, 5);
 }
 
-function lightArmor(g: Ctx) {
-  // Leather cuirass: straps and buckles, no plates.
-  for (let y = 8; y <= 25; y++) {
-    const inset = y < 12 ? 6 : 5;
-    g.rect(16 - inset, y, inset * 2, 1, y % 4 === 0 ? LEATHER[2] : LEATHER[4]);
-  }
-  g.line(11, 9, 21, 9, LEATHER[6]);
-  g.line(12, 13, 20, 13, LEATHER[1]);
-  g.line(12, 20, 20, 20, LEATHER[1]);
-  g.rect(15, 11, 2, 3, GOLD[3]);
-  g.rect(15, 18, 2, 3, GOLD[3]);
-  g.line(16, 8, 16, 25, LEATHER[2]);
+function twoHanded(g: Glyph) {
+  // Straight up the middle, broad, with a guard you can see from across a room.
+  swordAt(g, 16, 21, 16, 3, 3.9, 10, 5);
 }
 
-function destruction(g: Ctx) {
-  // Flame: wide base, licking tongue, hot core.
-  for (let y = 0; y < 19; y++) {
-    const yy = 26 - y;
-    const width = Math.max(1, Math.round((y / 19) * 5 + Math.abs(Math.sin(y * 0.55)) * 2));
-    g.rect(16 - width, yy, width * 2, 1, EMBER[1]);
-  }
-  for (let y = 0; y < 14; y++) {
-    const yy = 26 - y;
-    const width = Math.max(1, Math.round((y / 14) * 3 + Math.abs(Math.sin(y * 0.7)) * 1.5));
-    g.rect(16 - width, yy, width * 2, 1, EMBER[2]);
-  }
-  for (let y = 0; y < 8; y++) g.rect(15, 24 - y, 2, 1, EMBER[4]);
-  g.rect(15, 8, 2, 5, EMBER[3]);
-  g.put(16, 5, EMBER[5]);
-  g.put(15, 6, EMBER[4]);
+function archery(g: Glyph) {
+  // Bow, string, arrow. The arrow does the pointing; the arc does the telling.
+  arc(g, 18, 16, 13, Math.PI * 0.62, Math.PI * 1.38, WOOD[5], 2);
+  line(g, 11, 5, 11, 27, METAL[10]);
+  rect(g, 6, 15, 3, 3, WOOD[3]);
+  rect(g, 6, 15, 3, 1, WOOD[6]);
+  line(g, 4, 22, 27, 9, WOOD[7]);
+  line(g, 27, 9, 23, 9, METAL[11]);
+  line(g, 27, 9, 27, 13, METAL[11]);
+  put(g, 26, 10, METAL[8]);
+  for (const [x, y] of [[5, 21], [7, 20], [6, 22], [8, 21]] as const) put(g, x, y, WOOL[7]);
+  put(g, 4, 22, WOOL[5]);
 }
 
-function restoration(g: Ctx) {
-  // A sun: the magicka cross inside a ring.
-  g.ring(16, 17, 8, GOLD[2]);
-  g.ring(16, 17, 7, GOLD[4]);
-  g.rect(15, 11, 2, 13, IVORY[1]);
-  g.rect(10, 16, 12, 2, IVORY[1]);
+function heavyArmor(g: Glyph) {
+  poly(g, [[7, 4], [25, 4], [24, 21], [16, 29], [8, 21]], METAL[7]);
+  poly(g, [[9, 6], [23, 6], [22, 20], [16, 26], [10, 20]], METAL[9]);
+  line(g, 16, 6, 16, 24, METAL[10]);
+  line(g, 10, 8, 10, 18, METAL[11]);
+  disc(g, 16, 13, 3.2, METAL[6]);
+  disc(g, 16, 13, 1.6, METAL[11]);
+  for (const [x, y] of [[9, 8], [23, 8], [10, 20], [22, 20]] as const) put(g, x, y, METAL[11]);
+  line(g, 8, 22, 16, 29, METAL[5]);
+}
+
+function lightArmor(g: Glyph) {
+  poly(g, [[9, 5], [23, 5], [24, 11], [22, 13], [21, 24], [11, 24], [10, 13], [8, 11]], WOOD[4]);
+  line(g, 9, 6, 23, 6, WOOD[7]);
+  line(g, 10, 10, 22, 10, WOOD[2]);
+  line(g, 11, 14, 21, 14, WOOD[2]);
+  line(g, 16, 6, 16, 24, WOOD[2]);
+  rect(g, 14, 8, 4, 3, FIRE[7]);
+  rect(g, 14, 17, 4, 3, FIRE[7]);
+  put(g, 15, 9, FIRE[11]);
+  put(g, 15, 18, FIRE[11]);
+  line(g, 12, 22, 20, 22, WOOD[6]);
+  line(g, 22, 5, 25, 9, WOOD[6]);
+  line(g, 10, 5, 7, 9, WOOD[6]);
+}
+
+function destruction(g: Glyph) {
+  // A flame with a real silhouette: wide foot, a waist, a whipped tip.
+  for (let y = 3; y <= 28; y++) {
+    const t = (y - 3) / 25;
+    const half = Math.max(0.6, Math.sin(t * Math.PI) * 10.2 + Math.sin(t * 9) * 1.4);
+    line(g, 16 - half, y, 16 + half, y, FIRE[7]);
+  }
+  for (let y = 10; y <= 28; y++) {
+    const t = (y - 10) / 18;
+    const half = Math.max(0.5, Math.sin(t * Math.PI) * 4.6);
+    line(g, 16 - half, y, 16 + half, y, FIRE[9]);
+  }
+  rect(g, 15, 20, 2, 8, FIRE[11]);
+  rect(g, 15, 25, 2, 3, FIRE[12]);
+  put(g, 16, 5, FIRE[10]);
+  put(g, 22, 9, FIRE[8]);
+  put(g, 10, 12, FIRE[8]);
+  put(g, 23, 14, FIRE[6]);
+}
+
+function restoration(g: Glyph) {
+  ring(g, 16, 15, 9, FIRE[7]);
+  ring(g, 16, 15, 8, FIRE[9]);
+  rect(g, 15, 8, 2, 14, STONE[12]);
+  rect(g, 9, 14, 14, 2, STONE[12]);
+  disc(g, 16, 15, 2.2, FIRE[11]);
+  put(g, 16, 15, STONE[12]);
   for (let i = 0; i < 8; i++) {
     const a = (i / 8) * Math.PI * 2;
-    g.put(16 + Math.round(Math.cos(a) * 10), 17 + Math.round(Math.sin(a) * 10), GOLD[3]);
-    g.put(16 + Math.round(Math.cos(a) * 11), 17 + Math.round(Math.sin(a) * 11), GOLD[1]);
+    const x = 16 + Math.cos(a) * 12;
+    const y = 15 + Math.sin(a) * 12;
+    line(g, x - Math.cos(a), y - Math.sin(a), x + Math.cos(a), y + Math.sin(a), FIRE[8]);
   }
 }
 
-function alteration(g: Ctx) {
-  // A spiral of force: concentric rings breaking open at the top.
-  g.ring(16, 17, 9, SKY[1]);
-  g.ring(16, 17, 6, SKY[3]);
-  g.ring(16, 17, 3, SKY[4]);
-  g.rect(15, 8, 2, 4, INK);
-  g.line(16, 17, 21, 12, SKY[4]);
-  g.put(22, 11, IVORY[0]);
-  g.put(16, 17, IVORY[1]);
+function alteration(g: Glyph) {
+  // Three arcs, each broken at the top right: force with a seam in it.
+  arc(g, 16, 16, 12, Math.PI * 0.2, Math.PI * 1.75, NAVY[9], 2);
+  arc(g, 16, 16, 8, Math.PI * 0.45, Math.PI * 2.05, NAVY[11], 2);
+  arc(g, 16, 16, 4, Math.PI * 0.9, Math.PI * 2.4, NAVY[12], 2);
+  put(g, 16, 16, STONE[12]);
+  for (const [x, y] of [[23, 6], [26, 15], [9, 8], [7, 18]] as const) {
+    put(g, x, y, NAVY[12]);
+    put(g, x + 1, y, NAVY[9]);
+    put(g, x, y + 1, NAVY[9]);
+  }
 }
 
-function illusion(g: Ctx) {
-  // An eye, lid and iris, with a few lashes.
-  for (let x = 7; x <= 25; x++) {
-    const t = (x - 16) / 9;
-    const y = Math.round(17 - (1 - t * t) * 6);
-    g.put(x, y, IVORY[0]);
-    g.put(x, y + 1, IVORY[1]);
-  }
-  for (let x = 7; x <= 25; x++) {
-    const t = (x - 16) / 9;
-    const y = Math.round(17 + (1 - t * t) * 6);
-    g.put(x, y, IVORY[0]);
-  }
-  g.disc(16, 17, 3, SKY[3]);
-  g.disc(16, 17, 1, SKY[0]);
-  g.put(15, 16, IVORY[2]);
-  for (const x of [9, 13, 19, 23]) g.put(x, 6 + (x % 3), STEEL[2]);
+function illusion(g: Glyph) {
+  // An eye, drawn as one almond: two arcs that meet at the corners.
+  poly(g, [
+    [4, 16],
+    [8, 10],
+    [16, 7],
+    [24, 10],
+    [28, 16],
+    [24, 22],
+    [16, 25],
+    [8, 22],
+  ], STONE[11]);
+  ring(g, 16, 16, 5, NAVY[8]);
+  disc(g, 16, 16, 4, NAVY[10]);
+  disc(g, 16, 16, 2, NAVY[3]);
+  put(g, 15, 15, STONE[12]);
+  put(g, 14, 14, STONE[12]);
+  // Lashes above, so it is not a floating football.
+  line(g, 9, 9, 7, 6, METAL[5]);
+  line(g, 13, 7, 12, 4, METAL[5]);
+  line(g, 19, 7, 20, 4, METAL[5]);
+  line(g, 23, 9, 25, 6, METAL[5]);
 }
 
-function conjuration(g: Ctx) {
-  // A summoning circle with a rising hand, drawn in cold light.
-  g.ring(16, 20, 9, SKY[2]);
-  g.ring(16, 20, 8, SKY[4]);
+function conjuration(g: Glyph) {
+  // A summoning circle on the floor, with a hooded shade standing in it.
+  for (let a = 0; a < Math.PI * 2; a += 0.02) {
+    const x = 16 + Math.cos(a) * 13;
+    const y = 25 + Math.sin(a) * 4;
+    put(g, x, y, NAVY[8]);
+    put(g, x, y - 1, NAVY[11]);
+  }
   for (let i = 0; i < 5; i++) {
-    const a = (i / 5) * Math.PI * 2 - Math.PI / 2;
-    g.put(16 + Math.round(Math.cos(a) * 8), 20 + Math.round(Math.sin(a) * 8), IVORY[1]);
+    const x = 5 + i * 5.5;
+    put(g, Math.round(x), 28 - Math.round(Math.abs(x - 16) * 0.25), NAVY[12]);
   }
-  g.rect(13, 13, 6, 6, IVORY[0]);
-  g.rect(14, 14, 4, 5, IVORY[1]);
-  for (const x of [14, 16, 18]) g.rect(x, 8, 1, 5, IVORY[0]);
-  g.put(13, 12, IVORY[2]);
-  g.put(19, 12, IVORY[2]);
+  // The shade: hood, shoulders, a hem that has not finished arriving.
+  poly(g, [
+    [16, 3],
+    [21, 9],
+    [22, 14],
+    [20, 21],
+    [18, 22],
+    [16, 20],
+    [14, 22],
+    [12, 21],
+    [10, 14],
+    [11, 9],
+  ], NAVY[5]);
+  poly(g, [
+    [16, 8],
+    [19, 11],
+    [18, 16],
+    [14, 16],
+    [13, 11],
+  ], NAVY[3]);
+  line(g, 11, 10, 16, 3, NAVY[8]);
+  line(g, 21, 10, 16, 3, NAVY[8]);
+  line(g, 10, 15, 12, 21, NAVY[8]);
+  line(g, 22, 15, 20, 21, NAVY[8]);
+  // The eyes are the one warm thing about it.
+  put(g, 14, 12, STONE[12]);
+  put(g, 18, 12, STONE[12]);
+  put(g, 14, 13, NAVY[12]);
+  put(g, 18, 13, NAVY[12]);
 }
 
-function sneak(g: Ctx) {
-  // A footprint: heel, ball, toes. Silent, directional.
-  g.rect(13, 16, 6, 7, LEATHER[3]);
-  g.disc(16, 16, 5, LEATHER[4]);
-  g.rect(14, 12, 4, 5, LEATHER[4]);
-  for (const x of [12, 15, 18, 21]) g.put(x, 8 + Math.abs(16 - x) / 2, LEATHER[5]);
-  g.put(16, 24, LEATHER[2]);
-  g.put(15, 25, LEATHER[1]);
+function sneak(g: Glyph) {
+  // A boot print in pale dust, pointing up: five toes, a wide ball, a narrow
+  // arch, a round heel. A rectangle with a circle under it reads as a mushroom.
+  disc(g, 16, 17, 4.8, WOOD[7]);
+  rect(g, 14, 18, 4, 7, WOOD[7]);
+  disc(g, 16, 26, 3.2, WOOD[7]);
+  disc(g, 8, 13, 1.7, WOOD[7]);
+  disc(g, 11, 10, 1.7, WOOD[7]);
+  disc(g, 15, 8, 1.8, WOOD[7]);
+  disc(g, 19, 10, 1.7, WOOD[7]);
+  disc(g, 23, 13, 1.6, WOOD[7]);
+  line(g, 12, 16, 20, 16, WOOD[10]);
+  line(g, 11, 17, 21, 17, WOOD[4]);
+  line(g, 15, 20, 15, 24, WOOD[4]);
+  line(g, 17, 20, 17, 24, WOOD[4]);
+  put(g, 15, 22, WOOD[2]);
+  put(g, 17, 23, WOOD[2]);
 }
 
-function lockpicking(g: Ctx) {
-  // A key and a pick crossed: the two halves of the skill.
-  g.ring(12, 12, 4, GOLD[3]);
-  g.ring(12, 12, 3, GOLD[2]);
-  g.line(15, 15, 25, 25, GOLD[4]);
-  g.rect(22, 22, 2, 2, GOLD[5]);
-  g.rect(20, 20, 2, 2, GOLD[5]);
-  g.line(9, 27, 21, 9, STEEL[4]);
-  g.line(8, 26, 20, 8, STEEL[2]);
-  g.put(8, 27, STEEL[1]);
-  g.put(22, 7, IVORY[0]);
+function lockpicking(g: Glyph) {
+  // Key and pick crossed: the two halves of the skill.
+  ring(g, 11, 10, 5, FIRE[8]);
+  ring(g, 11, 10, 3, FIRE[6]);
+  line(g, 14, 13, 25, 24, FIRE[8], 2);
+  rect(g, 23, 22, 3, 2, FIRE[10]);
+  rect(g, 21, 20, 2, 3, FIRE[10]);
+  line(g, 9, 27, 23, 6, METAL[10]);
+  line(g, 8, 26, 22, 5, METAL[7]);
+  line(g, 23, 6, 26, 4, METAL[11]);
+  put(g, 25, 3, METAL[11]);
+  put(g, 7, 28, METAL[5]);
 }
 
-function speech(g: Ctx) {
-  // A coin and a scroll seal: gold talks.
-  g.ring(16, 16, 9, GOLD[2]);
-  g.ring(16, 16, 8, GOLD[4]);
-  g.rect(12, 12, 8, 9, GOLD[1]);
-  g.rect(13, 13, 6, 7, GOLD[3]);
-  g.line(14, 15, 18, 15, GOLD[5]);
-  g.line(14, 17, 18, 17, GOLD[5]);
-  g.line(14, 19, 17, 19, GOLD[5]);
-  g.put(24, 10, IVORY[1]);
+function speech(g: Glyph) {
+  // A coin with a crown struck on it: the only language barter understands.
+  disc(g, 16, 17, 10, FIRE[6]);
+  disc(g, 16, 17, 9, FIRE[8]);
+  disc(g, 16, 17, 7, FIRE[10]);
+  ring(g, 16, 17, 9, FIRE[11]);
+  poly(g, [
+    [11, 20],
+    [11, 13],
+    [14, 16],
+    [16, 12],
+    [18, 16],
+    [21, 13],
+    [21, 20],
+  ], FIRE[5]);
+  rect(g, 12, 21, 8, 1, FIRE[5]);
+  put(g, 16, 14, FIRE[12]);
+  put(g, 16, 18, FIRE[12]);
 }
 
-const GLYPHS: Record<string, (g: Ctx) => void> = {
+function rune(g: Glyph) {
+  ring(g, 16, 16, 9, STONE[6]);
+  ring(g, 16, 16, 8, STONE[4]);
+  line(g, 16, 7, 16, 25, STONE[9], 2);
+  line(g, 9, 14, 23, 14, STONE[7]);
+  line(g, 9, 20, 23, 20, STONE[7]);
+  put(g, 16, 4, STONE[11]);
+  put(g, 16, 27, STONE[11]);
+}
+
+const GLYPHS: Record<string, (g: Glyph) => void> = {
   'one-handed': oneHanded,
   'two-handed': twoHanded,
-  archery: archery,
+  archery,
   'heavy-armor': heavyArmor,
   'light-armor': lightArmor,
-  destruction: destruction,
-  restoration: restoration,
-  alteration: alteration,
-  illusion: illusion,
-  conjuration: conjuration,
-  sneak: sneak,
-  lockpicking: lockpicking,
-  speech: speech,
+  destruction,
+  restoration,
+  alteration,
+  illusion,
+  conjuration,
+  sneak,
+  lockpicking,
+  speech,
 };
 
-/** Fallback: a rune that says "this skill exists but has no emblem yet". */
-function rune(g: Ctx) {
-  g.ring(16, 16, 8, STEEL[2]);
-  g.rect(15, 8, 2, 16, STEEL[4]);
-  g.line(9, 14, 23, 14, STEEL[3]);
-  g.line(9, 20, 23, 20, STEEL[3]);
-}
-
 export function skillEmblemPixels(id: string): Uint32Array {
-  const g = makeCtx();
-  plaque(g);
+  const g = glyph();
   (GLYPHS[id] ?? rune)(g);
+  finish(g);
   return g.col;
 }
 
-/** Raw pixels, for the tests and for anything that wants to compose them. */
 export const SKILL_EMBLEM_IDS = Object.keys(GLYPHS);
-export const EMBLEM_SIZE = { w: W, h: H };
 
 const urlCache = new Map<string, string>();
 
 /**
- * A data URL for an <img>. Cached per id: thirteen 32×32 emblems are drawn once
- * per session, because the creator re-renders on every rank click and
- * re-encoding a PNG on each of those would be wasteful for no pixels gained.
+ * A data URL for an <img>. Cached per id: the sheet draws each glyph once per
+ * session. The transparent background is preserved, so the glyph takes the
+ * colour of whatever card it sits on.
  */
 export function skillEmblemUrl(id: string): string {
   const hit = urlCache.get(id);

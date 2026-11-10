@@ -2,10 +2,11 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
+import { ChevronDown } from "lucide-react";
 import { Skill, CharacterSkill } from "@/types/character";
-import { skillEmblemUrl } from "@/characters/skillEmblem";
+import { skillArtPath } from "@/characters/creatorArt";
+import { CreatorPlate } from "./CreatorPlate";
 
 interface SkillSelectionProps {
   skills: Skill[];
@@ -13,6 +14,13 @@ interface SkillSelectionProps {
   maxApprenticeSkills: number;
   onSkillsChange: (skills: CharacterSkill[]) => void;
 }
+
+const TYPE_NOTE: Record<string, string> = {
+  Combat: "How you end a fight.",
+  Armor: "How you survive the ones you did not start.",
+  Magic: "What you can do that steel cannot.",
+  Utility: "What gets you in, out, and paid.",
+};
 
 export function SkillSelection({ skills, selectedSkills, maxApprenticeSkills, onSkillsChange }: SkillSelectionProps) {
   const [expandedSkills, setExpandedSkills] = useState<Set<string>>(new Set());
@@ -27,24 +35,24 @@ export function SkillSelection({ skills, selectedSkills, maxApprenticeSkills, on
 
   const canSelectRank = (skillId: string, rank: "Apprentice" | "Adept"): boolean => {
     const currentRank = getRankForSkill(skillId);
-    
+
     if (rank === "Adept") {
       if (currentRank === "Adept") return true;
       return adeptCount < 1;
     }
-    
+
     if (rank === "Apprentice") {
       if (currentRank === "Apprentice") return true;
       if (currentRank === "Adept") return true; // Can downgrade
       return apprenticeCount < maxApprenticeSkills;
     }
-    
+
     return false;
   };
 
   const handleRankSelect = (skillId: string, rank: "Novice" | "Apprentice" | "Adept") => {
     const newSkills = selectedSkills.filter(s => s.skillId !== skillId);
-    
+
     if (rank !== "Novice") {
       newSkills.push({
         skillId,
@@ -52,7 +60,7 @@ export function SkillSelection({ skills, selectedSkills, maxApprenticeSkills, on
         unlockedPerks: []
       });
     }
-    
+
     onSkillsChange(newSkills);
   };
 
@@ -82,16 +90,17 @@ export function SkillSelection({ skills, selectedSkills, maxApprenticeSkills, on
   const typeOrder = ["Combat", "Armor", "Magic", "Utility"];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       <div className="text-center">
         <h3 className="text-xl font-cinzel text-foreground mb-2">
           Choose Your Skills
         </h3>
-        <p className="text-muted-foreground mb-4">
-          Select your expertise areas. You must choose exactly 1 Adept skill and {maxApprenticeSkills} Apprentice skills.
+        <p className="mx-auto max-w-2xl text-sm text-muted-foreground">
+          Every character starts at Novice in everything. You are choosing where yours stands out:
+          one Adept skill and {maxApprenticeSkills} Apprentice skills.
         </p>
-        
-        <div className="flex justify-center gap-4">
+
+        <div className="mt-4 flex justify-center gap-4">
           <Badge variant={adeptCount === 1 ? "default" : "destructive"}>
             Adept Skills: {adeptCount}/1
           </Badge>
@@ -101,120 +110,112 @@ export function SkillSelection({ skills, selectedSkills, maxApprenticeSkills, on
         </div>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-7">
         {typeOrder.map(type => (
-          <div key={type}>
-            <h4 className="text-lg font-cinzel text-primary mb-3 border-b border-border pb-1">
-              {type} Skills
-            </h4>
-            
-            <div className="grid gap-3">
+          <section key={type}>
+            <div className="mb-3 flex items-baseline justify-between border-b border-border pb-1">
+              <div className="flex items-baseline gap-3">
+                <h4 className="text-lg font-cinzel text-primary">{type}</h4>
+                <span className="text-[11px] uppercase tracking-wide text-muted-foreground">{TYPE_NOTE[type]}</span>
+              </div>
+              <span className="text-[11px] text-muted-foreground">{skillsByType[type]?.length ?? 0}</span>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
               {skillsByType[type]?.map(skill => {
                 const currentRank = getRankForSkill(skill.id);
                 const isExpanded = expandedSkills.has(skill.id);
-                
+                const chosen = currentRank !== "Novice";
+                const apprenticePerks = skill.perks.filter(p => p.rank === "Apprentice");
+                const adeptPerks = skill.perks.filter(p => p.rank === "Adept");
+
                 return (
-                  <Card key={skill.id} className="overflow-hidden">
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <img
-                            src={skillEmblemUrl(skill.id)}
-                            alt=""
-                            aria-hidden
-                            width={40}
-                            height={40}
-                            className="shrink-0 rounded-sm border border-border/60"
-                            style={{ imageRendering: "pixelated" }}
-                          />
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <h5 className="font-semibold">{skill.name}</h5>
-                              <Badge variant="outline" className="text-xs">
-                                {skill.type}
-                              </Badge>
-                            </div>
-                            {skill.summary && (
-                              <p className="text-xs text-muted-foreground mt-0.5 max-w-md">
-                                {skill.summary}
-                              </p>
-                            )}
-                            <p className="text-[11px] text-muted-foreground/80 mt-1 max-w-md">
-                              <span className="uppercase tracking-wide">Governing {skill.governingStat}</span>
-                              {currentRank !== "Adept" && (
-                                <>
-                                  {" · "}
-                                  {currentRank === "Novice" ? "Apprentice" : "Adept"} adds:{" "}
-                                  {skill.perks
-                                    .filter((p) =>
-                                      currentRank === "Novice" ? p.rank === "Apprentice" : p.rank === "Apprentice" || p.rank === "Adept",
-                                    )
-                                    .map((p) => p.name)
-                                    .join(", ")}
-                                </>
-                              )}
-                            </p>
+                  <Card
+                    key={skill.id}
+                    className={`overflow-hidden transition-colors ${chosen ? "border-primary/50 bg-primary/[0.03]" : ""}`}
+                  >
+                    <CreatorPlate
+                      src={skillArtPath(skill.id)}
+                      alt={`${skill.name} artwork`}
+                      className="aspect-[16/9]"
+                    />
+
+                    <CardContent className="space-y-3 p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <h5 className="font-cinzel text-lg font-semibold">{skill.name}</h5>
+                            <Badge variant="outline" className="text-[10px]">{skill.type}</Badge>
                           </div>
-                        </div>
-                        
-                        <div className="flex items-center gap-2">
-                          <div className="flex gap-1">
-                            <Button
-                              size="sm"
-                              variant={currentRank === "Novice" ? "default" : "outline"}
-                              onClick={() => handleRankSelect(skill.id, "Novice")}
-                            >
-                              Novice
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant={currentRank === "Apprentice" ? "default" : "outline"}
-                              onClick={() => handleRankSelect(skill.id, "Apprentice")}
-                              disabled={!canSelectRank(skill.id, "Apprentice")}
-                            >
-                              Apprentice
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant={currentRank === "Adept" ? "default" : "outline"}
-                              onClick={() => handleRankSelect(skill.id, "Adept")}
-                              disabled={!canSelectRank(skill.id, "Adept")}
-                            >
-                              Adept
-                            </Button>
-                          </div>
-                          
-                          {currentRank !== "Novice" && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => toggleSkillExpansion(skill.id)}
-                            >
-                              {isExpanded ? (
-                                <ChevronDown className="w-4 h-4" />
-                              ) : (
-                                <ChevronRight className="w-4 h-4" />
-                              )}
-                            </Button>
-                          )}
+                          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                            {skill.summary}
+                          </p>
                         </div>
                       </div>
-                      
-                      {currentRank !== "Novice" && (
+
+                      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                        Governing {skill.governingStat}
+                      </p>
+
+                      <div className="rounded-r border-l-2 border-primary/30 bg-muted/30 px-3 py-2 text-xs leading-relaxed">
+                        <span className="font-medium text-foreground">Apprentice</span>
+                        <span className="text-muted-foreground"> — {apprenticePerks.map(p => p.name).join(", ")}</span>
+                        <br />
+                        <span className="font-medium text-foreground">Adept</span>
+                        <span className="text-muted-foreground"> — {adeptPerks.map(p => p.name).join(", ")}</span>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <Button
+                          size="sm"
+                          variant={currentRank === "Novice" ? "default" : "outline"}
+                          onClick={() => handleRankSelect(skill.id, "Novice")}
+                        >
+                          Novice
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant={currentRank === "Apprentice" ? "default" : "outline"}
+                          onClick={() => handleRankSelect(skill.id, "Apprentice")}
+                          disabled={!canSelectRank(skill.id, "Apprentice")}
+                        >
+                          Apprentice
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant={currentRank === "Adept" ? "default" : "outline"}
+                          onClick={() => handleRankSelect(skill.id, "Adept")}
+                          disabled={!canSelectRank(skill.id, "Adept")}
+                        >
+                          Adept
+                        </Button>
+
+                        {chosen && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="ml-auto gap-1 text-xs"
+                            onClick={() => toggleSkillExpansion(skill.id)}
+                          >
+                            Perks
+                            <ChevronDown className={`w-4 h-4 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                          </Button>
+                        )}
+                      </div>
+
+                      {chosen && (
                         <Collapsible open={isExpanded}>
-                          <CollapsibleContent className="mt-3">
-                            <div className="p-3 bg-muted/30 rounded border-l-4 border-primary">
-                              <h6 className="font-semibold text-primary mb-2">
-                                Unlocked Perks ({currentRank} Rank)
+                          <CollapsibleContent>
+                            <div className="space-y-2 rounded border border-border/60 bg-muted/20 p-3">
+                              <h6 className="text-[11px] font-semibold uppercase tracking-wide text-primary">
+                                Unlocked at {currentRank}
                               </h6>
-                              <div className="space-y-2">
-                                {getPerksForRank(skill, currentRank as "Apprentice" | "Adept").map(perk => (
-                                  <div key={perk.name} className="text-sm">
-                                    <div className="font-medium">{perk.name}</div>
-                                    <div className="text-muted-foreground">{perk.description}</div>
-                                  </div>
-                                ))}
-                              </div>
+                              {getPerksForRank(skill, currentRank as "Apprentice" | "Adept").map(perk => (
+                                <div key={perk.name} className="text-xs">
+                                  <div className="font-medium">{perk.name}</div>
+                                  <div className="text-muted-foreground">{perk.description}</div>
+                                </div>
+                              ))}
                             </div>
                           </CollapsibleContent>
                         </Collapsible>
@@ -224,7 +225,7 @@ export function SkillSelection({ skills, selectedSkills, maxApprenticeSkills, on
                 );
               })}
             </div>
-          </div>
+          </section>
         ))}
       </div>
     </div>

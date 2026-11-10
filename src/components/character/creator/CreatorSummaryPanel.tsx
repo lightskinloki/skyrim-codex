@@ -156,8 +156,15 @@ export function CreatorSummaryPanel({
           <Card>
             <CardContent className="p-3">
               <h4 className="font-semibold text-primary text-center mb-3">Starting Kit</h4>
-              <div className="text-center mb-3">
-                <div className="font-medium">{kit.name}</div>
+              <div className="mb-3 text-center">
+                <div className="font-medium">
+                  {kit.name}
+                  {kit.house && (
+                    <span className="ml-1 align-middle text-[10px] uppercase tracking-wide text-muted-foreground">
+                      House
+                    </span>
+                  )}
+                </div>
               </div>
               <div className="space-y-2 text-sm">
                 <div>

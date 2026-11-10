@@ -103,9 +103,11 @@ decoration; they are the explanation.
   tracker dims it and keeps it usable; anything player-facing omits it.
 - **Combat Mode is the fight's home.** Closing it is allowed but must be a
   decision, not a stray click.
-- **No new image assets.** Skill art is procedural, like the tokens and the
-  board, for the same reason: a rule is smaller than a sprite and stays
-  consistent when the palette changes.
+- **The board stays procedural; the creator is painted.** The board, tokens and
+  in-game glyphs are still rules, so a re-colour is one table and nothing at the
+  table depends on a shipped raster. The creator's showcase plates are authored
+  images, because that screen is selling a fantasy and a 32 px pictogram cannot
+  do it. The split is in `docs/CREATOR-ART-BRIEF.md`.
 
 ## Work order
 
@@ -224,12 +226,39 @@ Casting or attacking opens the prompt; summoning still opens its body picker
 first, because that is a choice, not a roll.
 
 **S8 — skills with faces.** `characters/skillEmblem.ts` draws thirteen 32 × 32
-emblems from rules, in the same palette as the board (sword, greatsword, bow,
+glyphs from rules, in the same palette as the board (sword, greatsword, bow,
 shield, cuirass, flame, sun, rings, eye, summoning circle, footprint, key, coin).
-Each skill gained a one-line `summary`, and the creator card now shows the
-emblem, the summary, the governing stat, and what the next rank adds, before the
-player commits the rank. `npm run test:emblems` checks coverage, opacity, that a
-glyph is actually drawn, and that no two skills share a picture.
+Each skill gained a one-line `summary`. `npm run test:emblems` checks coverage,
+transparency, the ink edge, that a glyph actually fills the square, and that no
+two skills share a picture.
+
+**S9 — the glyphs moved, and the creator got a frame for real art.** The 32 px
+glyphs were doing showcase duty in the creator, which is the wrong job twice
+over: a pictogram cannot sell a character choice, and the game surface had no
+icons at all. They now appear beside each skill on the character sheet
+(`SkillsDisplay`), on transparency, with no plaque; the creator's emoji type
+headers are gone with them. The creator's skill and kit steps now reserve a
+16:9 plate per card, loaded from `public/images/skills/<id>.jpg` and
+`public/images/kits/<id>.jpg`. A missing file collapses the frame rather than
+showing a placeholder — the artwork itself is authored outside the app.
+`docs/CREATOR-ART-BRIEF.md` is the handoff: nineteen prompts, exact filenames,
+the house style, and the crop rules. `npm run test:creator` guards the contract
+(19 unique paths) and the kits against the printed equipment table.
+
+**S10 — six kits, and the printed numbers corrected.** The three printed kits
+are unchanged in wording; their damage now matches the gear table (Steel
+Greatsword 9, Steel Sword 6, Long Bow 4, daggers 4/3) instead of the older
+low values they shipped with. Three house kits use only printed gear so a hybrid
+has somewhere legal to start: Spellsword (sword + robes + both potions),
+Nightblade (dagger + leather + poison + magicka + picks), Ranger (bow + axe +
+hide + arrows + healing). They carry `house` and the card says so; the printed
+three remain canon.
+
+**S11 — the plates are painted, and the sheet wears them.** All thirteen skill
+plates were authored outside the app and dropped in by id: the creator's skill
+step is now full-bleed art, and expanding a skill on the character sheet opens
+its plate above the perk list. `test:creator` also fails if a skill file goes
+missing (118 checks). The six kit plates are the only empty frames left.
 
 ## Still open
 
@@ -245,6 +274,10 @@ glyph is actually drawn, and that no two skills share a picture.
 5. **Two sheets, one writer.** The revision rule resolves the common cases, but
    a simultaneous edit on both screens is last-write-wins. Acceptable at a
    table; worth a note if the GM starts editing mid-turn as a habit.
+6. **The six kit plates.** The thirteen skill plates are painted and installed.
+   The kits still have their slots and their prompts but no images; a missing
+   plate collapses, so the step works, but it only reaches the race/stone
+   standard once the files land in `public/images/kits`.
 
 ## Where the board stands, and what comes next
 
@@ -278,8 +311,8 @@ static map per fight.
   tsconfig.app.json --noEmit`) — clean. Never use `npx tsc` here: it resolves to
   the bun shim in this checkout and tests the wrong package.
 - `npm run test:brace` (15), `test:damage`, `test:encounter` (43), `test:props`,
-  `test:rooms` (112), `test:walk` (39), `test:alchemy`, `test:emblems` (94) — all
-  pass.
+  `test:rooms` (112), `test:walk` (39), `test:alchemy`, `test:emblems` (133),
+  `test:creator` (118) — all pass.
 - `npm run build` — clean.
 - The bundled one-shot still loads: `BUNDLED_MODULES` starts with
   `sleeping-men:module` and the five templates are in `enemyTemplates`.

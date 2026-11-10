@@ -11,6 +11,7 @@
     "test:alchemy": "esbuild scripts/test-alchemy.ts --bundle --platform=node --format=cjs --alias:@=./src --outfile=node_modules/.test-alchemy.cjs && node node_modules/.test-alchemy.cjs",
     "test:brace": "esbuild scripts/test-brace.ts --bundle --platform=node --format=cjs --alias:@=./src --outfile=node_modules/.test-brace.cjs && node node_modules/.test-brace.cjs",
     "test:damage": "esbuild scripts/test-damage.ts --bundle --platform=node --format=cjs --alias:@=./src --outfile=node_modules/.test-damage.cjs && node node_modules/.test-damage.cjs",
+    "test:creator": "esbuild scripts/test-creator.ts --bundle --platform=node --format=cjs --alias:@=./src --outfile=node_modules/.test-creator.cjs && node node_modules/.test-creator.cjs",
     "test:emblems": "esbuild scripts/test-emblems.ts --bundle --platform=node --format=cjs --alias:@=./src --outfile=node_modules/.test-emblems.cjs && node node_modules/.test-emblems.cjs",
     "check:types": "node node_modules/typescript/bin/tsc -p tsconfig.app.json --noEmit",
     "preview": "vite preview",
