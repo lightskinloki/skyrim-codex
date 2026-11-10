@@ -755,6 +755,94 @@ export const enemyTemplates: EnemyTemplate[] = [
       'Flee at two or fewer active',
     ],
   },
+
+  // ── The Sleeping Men (oneshot) ─────────────────────────────────────────
+  // Calibrated to the APPRENTICE tier row (3-6 AP) for a five-player, 5 AP
+  // party. The Three are the museum specimens and the climax enemies at once;
+  // their HP is the line between "restorable" and "destroyed." The Quieting
+  // Rod in the module can shut each one down without touching that HP.
+  {
+    id: 'forsworn_reaver',
+    name: 'Forsworn Reaver', // Apprentice TL1 — the bridge ambush
+    category: 'humanoid',
+    hp: 40,
+    dr: 4,
+    stats: { might: 15, agility: 13, magic: 11, guile: 8 },
+    attacks: [
+      { name: 'Forsworn Sword', damage: 8, stat: 'might' },
+      { name: 'Flames', damage: 4, stat: 'magic', properties: 'Burning 1 for 2 turns' },
+    ],
+    abilities: ['Can cast Flames (1 FP)', 'Uses the high ground; breaks when Varn falls'],
+  },
+  {
+    id: 'varn_briarheart',
+    name: 'Varn the Briar-Sworn', // Apprentice TL2 Elite — bridge leader
+    category: 'humanoid',
+    hp: 113,
+    fp: 20,
+    dr: 6,
+    stats: { might: 16, agility: 14, magic: 11, guile: 8 },
+    attacks: [
+      { name: 'Forsworn Sword', damage: 12, stat: 'might' },
+      { name: 'Firebolt', damage: 6, stat: 'magic', properties: 'Ranged, Burning 2 for 2 turns, costs 3 FP' },
+    ],
+    abilities: [
+      'Can cast Oakflesh (3 FP, +2 DR)',
+      'Briarheart: a called shot to the chest (Very Hard) or a fire critical destroys the heart; if it does, he drops',
+      'Will parley once, but will not let the rod pass',
+    ],
+    isBoss: true,
+  },
+  {
+    id: 'sleeping_spider',
+    name: 'The Small One (Dwarven Spider)', // Apprentice TL1 — museum specimen
+    category: 'construct',
+    hp: 40,
+    dr: 4,
+    stats: { might: 15, agility: 13, magic: 11, guile: 8 },
+    attacks: [{ name: 'Shock Bolt', damage: 8, stat: 'magic', properties: 'Drains 2 FP' }],
+    abilities: [
+      'Immune to poison and mind-affecting effects; resistant to frost',
+      'Self-destructs at 0 HP: 6 shock damage to everyone within 5 feet (Standard Agility avoids)',
+      'Hunts the Quieting Rod. Aicantar calls it Tick',
+    ],
+  },
+  {
+    id: 'sleeping_sphere',
+    name: 'The Round One (Dwarven Sphere)', // Apprentice TL2 — museum specimen
+    category: 'construct',
+    hp: 113,
+    dr: 6,
+    stats: { might: 16, agility: 14, magic: 11, guile: 8 },
+    attacks: [
+      { name: 'Blade', damage: 12, stat: 'might' },
+      { name: 'Integrated Crossbow', damage: 12, stat: 'agility', properties: 'Ignores 1 DR' },
+    ],
+    abilities: [
+      'Immune to poison and mind-affecting effects; resistant to frost',
+      'Guards the Tall One’s sledge; does not pursue beyond 30 feet of it',
+      'Aicantar calls it Orbit',
+    ],
+  },
+  {
+    id: 'sleeping_warden',
+    name: 'The Tall One (Dwarven Centurion)', // Apprentice TL3 Boss — museum centerpiece
+    category: 'construct',
+    hp: 300,
+    dr: 8,
+    stats: { might: 17, agility: 15, magic: 11, guile: 8 },
+    attacks: [
+      { name: 'Hammer Arm', damage: 16, stat: 'might', properties: 'Staggering' },
+      { name: 'Steam Breath', damage: 12, stat: 'magic', properties: 'Cone; Standard Agility avoids' },
+    ],
+    abilities: [
+      'TWO BARS: 150 HP each. Discard the breaking hit’s overflow; the second bar starts at 150 and clears its statuses',
+      'Assembles at the end of round 2 (round 3 if its crate was reinforced or it was folded in the vault). It cannot act or move until assembled',
+      'The Quieting Rod needs two successes: the first staggers it, the second shuts it down. After its first bar is gone, command checks are Very Hard (-6)',
+      'Immune to poison and mind-affecting effects; resistant to frost. Aicantar calls it Grandfather',
+    ],
+    isBoss: true,
+  },
 ];
 
 // Helper to get enemies by category

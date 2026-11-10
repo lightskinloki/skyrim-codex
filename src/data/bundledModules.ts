@@ -3,8 +3,12 @@
 //          Frogs-5-skyrim/oneshots/WHAT_THE_GIANTS_GUARD_CONTINUATION.txt (scenes 08-21)
 // Regenerate: node scripts/build-giants-module.cjs
 import type { CampaignModule } from '@/types/campaign';
+// Hand-added bundled adventure: authored as a CampaignModule rather than
+// generated from a runsheet text file. See data/sleepingMenModule.ts.
+import { SLEEPING_MEN_MODULE } from './sleepingMenModule';
 
 export const BUNDLED_MODULES: CampaignModule[] = [
+  SLEEPING_MEN_MODULE,
   {
     "id": "wtgg:module",
     "name": "What the Giants Guard",
