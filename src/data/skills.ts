@@ -7,6 +7,7 @@ export const skills: Skill[] = [
     name: "One-Handed",
     type: "Combat",
     governingStat: "Might",
+    summary: "Sword, axe, mace, dagger — the close fight, one weapon in the fist.",
     perks: [
       {
         rank: "Novice",
@@ -43,6 +44,7 @@ export const skills: Skill[] = [
     name: "Two-Handed",
     type: "Combat",
     governingStat: "Might",
+    summary: "Greatswords and warhammers: slower, heavier, and it ends fights.",
     perks: [
       {
         rank: "Novice",
@@ -79,6 +81,7 @@ export const skills: Skill[] = [
     name: "Archery",
     type: "Combat",
     governingStat: "Agility",
+    summary: "Bows and crossbows — damage and range from across the room.",
     perks: [
       {
         rank: "Novice",
@@ -119,6 +122,7 @@ export const skills: Skill[] = [
     name: "Heavy Armor",
     type: "Armor",
     governingStat: "Might",
+    summary: "Plate and mail: wear the heaviest kit and shrug off what hits you.",
     perks: [
       {
         rank: "Novice",
@@ -154,6 +158,7 @@ export const skills: Skill[] = [
     name: "Light Armor",
     type: "Armor",
     governingStat: "Agility",
+    summary: "Leather and hide: stay quick and quiet while still taking a hit.",
     perks: [
       {
         rank: "Novice",
@@ -193,6 +198,7 @@ export const skills: Skill[] = [
     name: "Destruction",
     type: "Magic",
     governingStat: "Magic",
+    summary: "Fire, frost and shock — the direct damage schools of magic.",
     perks: [
       {
         rank: "Novice",
@@ -228,6 +234,7 @@ export const skills: Skill[] = [
     name: "Restoration",
     type: "Magic",
     governingStat: "Magic",
+    summary: "Healing, wards and turning the undead with holy light.",
     perks: [
       {
         rank: "Novice",
@@ -263,6 +270,7 @@ export const skills: Skill[] = [
     name: "Alteration",
     type: "Magic",
     governingStat: "Magic",
+    summary: "Mage armour, shields of force, breathing water, walking on air.",
     perks: [
       {
         rank: "Novice",
@@ -297,6 +305,7 @@ export const skills: Skill[] = [
     name: "Illusion",
     type: "Magic",
     governingStat: "Magic",
+    summary: "Fear, calm and invisibility — winning before the first blow.",
     perks: [
       {
         rank: "Novice",
@@ -330,6 +339,7 @@ export const skills: Skill[] = [
     name: "Conjuration",
     type: "Magic",
     governingStat: "Magic",
+    summary: "Summon atronachs and raise the dead to fight beside you.",
     perks: [
       {
         rank: "Novice",
@@ -365,6 +375,7 @@ export const skills: Skill[] = [
     name: "Sneak",
     type: "Utility",
     governingStat: "Agility",
+    summary: "Move unseen, strike from behind, and open locks quietly.",
     perks: [
       {
         rank: "Novice",
@@ -402,6 +413,7 @@ export const skills: Skill[] = [
     name: "Lockpicking",
     type: "Utility",
     governingStat: "Guile",
+    summary: "Open doors and chests without a key or a crowbar.",
     perks: [
       {
         rank: "Novice",
@@ -436,6 +448,7 @@ export const skills: Skill[] = [
     name: "Speech",
     type: "Utility",
     governingStat: "Guile",
+    summary: "Persuade, intimidate, and get paid what you are worth.",
     perks: [
       {
         rank: "Novice",

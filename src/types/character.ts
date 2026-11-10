@@ -48,6 +48,8 @@ export interface Skill {
   name: string;
   type: 'Combat' | 'Magic' | 'Armor' | 'Utility';
   governingStat: 'Might' | 'Agility' | 'Magic' | 'Guile';
+  /** One line, in plain language, for the creator. "What will my character do?" */
+  summary?: string;
   perks: Perk[];
 }
 

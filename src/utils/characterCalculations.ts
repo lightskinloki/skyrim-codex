@@ -112,7 +112,13 @@ export function calculateMaxFP(
 }
 
 export function calculateTotalDR(equipment: any[], standingStone: StandingStone): number {
-  let totalDR = equipment.reduce((total, item) => total + (item.dr || 0), 0);
+  // A shield's `dr` is its bracing bonus, not passive armour: the books list it
+  // under "Bracing Bonus" and only while bracing (players guide 823-824,
+  // Gear → Shields). Counting it here would give every shield two lives.
+  let totalDR = equipment.reduce(
+    (total, item) => total + (item.type === 'shield' ? 0 : item.dr || 0),
+    0,
+  );
   
   // Lord stone bonus
   if (standingStone.id === "lord") {

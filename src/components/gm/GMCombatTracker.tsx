@@ -160,6 +160,14 @@ export function GMCombatTracker({ combatState, onUpdateState }: GMCombatTrackerP
     onUpdateState(prev => combatManager.removeCombatant(prev, combatantId));
   };
 
+  // Concealment is the GM's hold on an ambush: the card stays here, dimmed and
+  // usable, but the enemy never reaches the players' roster (S6).
+  const handleConcealToggle = (combatantId: string) => {
+    const combatant = combatState.combatants.find(c => c.id === combatantId);
+    if (!combatant) return;
+    onUpdateState(prev => combatManager.updateCombatant(prev, combatantId, { concealed: !combatant.concealed }));
+  };
+
   if (combatState.combatants.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-muted-foreground py-12">
@@ -212,6 +220,7 @@ export function GMCombatTracker({ combatState, onUpdateState }: GMCombatTrackerP
                       onActionToggle={(action) => handleActionToggle(enemy.id, action)}
                       onDuplicate={() => handleDuplicate(enemy.id)}
                       onRemove={() => handleRemove(enemy.id)}
+                      onConcealToggle={() => handleConcealToggle(enemy.id)}
                     />
                   ))}
 

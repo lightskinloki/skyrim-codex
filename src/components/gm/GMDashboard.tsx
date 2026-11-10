@@ -19,6 +19,7 @@ import { CombatView } from "./CombatView";
 import { UniversalCompendium } from "./compendium/UniversalCompendium";
 import { AlchemyWorkbench } from "./alchemy/AlchemyWorkbench";
 import { TableBadge } from "./TableBadge";
+import { useTable } from "./TableContext";
 
 interface GMDashboardProps {
   onExit: () => void;
@@ -29,6 +30,109 @@ function GMDashboardInner({ onExit }: GMDashboardProps) {
   const [activeTab, setActiveTab] = useState("hub");
   const [liveModuleId, setLiveModuleId] = useState<string | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
+  const { members, editCharacter, publishRoster } = useTable();
+  const lastRoster = useRef("");
+  const membersRef = useRef(members);
+  membersRef.current = members;
+  const lastCombat = useRef(combatState);
+
+  // A player's sheet and their combatant are one number, not two. The sheet
+  // wins the first direction: anything a player does to themselves on their
+  // own screen lands on the tracker without the GM copying it across.
+  useEffect(() => {
+    setCombatState((prev) => {
+      let next = prev;
+      for (const member of members) {
+        const combatant = prev.combatants.find((c) => c.characterId === member.character.id);
+        if (!combatant) continue;
+        const hp = member.character.resources.hp;
+        const fp = member.character.resources.fp;
+        if (
+          combatant.hp.current === hp.current &&
+          combatant.hp.max === hp.max &&
+          combatant.fp.current === fp.current &&
+          combatant.fp.max === fp.max
+        ) continue;
+        next = combatManager.updateCombatant(next, combatant.id, {
+          hp: { ...hp },
+          fp: { ...fp },
+          isDead: hp.current <= 0,
+        });
+      }
+      return next;
+    });
+  }, [members]);
+
+  // Keep the players' list of what is on the board current. Concealed enemies
+  // are simply not in it; there is no "something is there" placeholder to leak.
+  useEffect(() => {
+    const visible = combatState.combatants
+      .filter((c) => c.type === "enemy" && !c.isDead && !c.concealed)
+      .map((c) => ({ id: c.id, name: c.name }));
+    const key = JSON.stringify(visible);
+    if (key === lastRoster.current) return;
+    lastRoster.current = key;
+    publishRoster(visible);
+  }, [combatState.combatants, publishRoster]);
+
+  // A brace the player reported becomes a status effect on their combatant, so
+  // the tracker's own damage path subtracts it once and then spends it. The
+  // player card shows the same number, for hits applied there instead.
+  useEffect(() => {
+    setCombatState((prev) => {
+      let next = prev;
+      for (const member of members) {
+        const combatant = prev.combatants.find((c) => c.characterId === member.character.id);
+        if (!combatant) continue;
+        const held = combatant.statusEffects.find((e) => e.type === 'bracing');
+        const want = member.brace?.bonus ?? 0;
+        if (want > 0 && held?.bonusValue !== want) {
+          if (held) next = combatManager.removeStatusEffect(next, combatant.id, held.id);
+          next = combatManager.addStatusEffect(next, combatant.id, 'bracing', 1, 'Brace', undefined, want);
+        } else if (want === 0 && held) {
+          next = combatManager.removeStatusEffect(next, combatant.id, held.id);
+        }
+      }
+      return next;
+    });
+  }, [members]);
+
+  // The other direction: a GM's damage or heal on the tracker writes back to
+  // the player's sheet. Only a combatant whose HP actually moved in this
+  // update is written, so unrelated tracker changes never touch a sheet.
+  useEffect(() => {
+    const before = lastCombat.current;
+    lastCombat.current = combatState;
+    for (const combatant of combatState.combatants) {
+      if (!combatant.characterId) continue;
+      const previous = before.combatants.find((c) => c.id === combatant.id);
+      if (!previous) continue;
+      if (
+        previous.hp.current === combatant.hp.current &&
+        previous.fp.current === combatant.fp.current
+      ) continue;
+      const member = membersRef.current.find((m) => m.character.id === combatant.characterId);
+      if (!member) continue;
+      if (
+        member.character.resources.hp.current === combatant.hp.current &&
+        member.character.resources.fp.current === combatant.fp.current
+      ) continue;
+      editCharacter(member.peerId, (character) => ({
+        ...character,
+        resources: {
+          ...character.resources,
+          hp: {
+            ...character.resources.hp,
+            current: Math.max(0, Math.min(character.resources.hp.max, combatant.hp.current)),
+          },
+          fp: {
+            ...character.resources.fp,
+            current: Math.max(0, Math.min(character.resources.fp.max, combatant.fp.current)),
+          },
+        },
+      }));
+    }
+  }, [combatState, editCharacter]);
 
   // Ctrl/Cmd+K → jump to the compendium and focus search
   useEffect(() => {

@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { Skill, CharacterSkill } from "@/types/character";
+import { skillEmblemUrl } from "@/characters/skillEmblem";
 
 interface SkillSelectionProps {
   skills: Skill[];
@@ -117,10 +118,43 @@ export function SkillSelection({ skills, selectedSkills, maxApprenticeSkills, on
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <h5 className="font-semibold">{skill.name}</h5>
-                          <Badge variant="outline" className="text-xs">
-                            {skill.type}
-                          </Badge>
+                          <img
+                            src={skillEmblemUrl(skill.id)}
+                            alt=""
+                            aria-hidden
+                            width={40}
+                            height={40}
+                            className="shrink-0 rounded-sm border border-border/60"
+                            style={{ imageRendering: "pixelated" }}
+                          />
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h5 className="font-semibold">{skill.name}</h5>
+                              <Badge variant="outline" className="text-xs">
+                                {skill.type}
+                              </Badge>
+                            </div>
+                            {skill.summary && (
+                              <p className="text-xs text-muted-foreground mt-0.5 max-w-md">
+                                {skill.summary}
+                              </p>
+                            )}
+                            <p className="text-[11px] text-muted-foreground/80 mt-1 max-w-md">
+                              <span className="uppercase tracking-wide">Governing {skill.governingStat}</span>
+                              {currentRank !== "Adept" && (
+                                <>
+                                  {" · "}
+                                  {currentRank === "Novice" ? "Apprentice" : "Adept"} adds:{" "}
+                                  {skill.perks
+                                    .filter((p) =>
+                                      currentRank === "Novice" ? p.rank === "Apprentice" : p.rank === "Apprentice" || p.rank === "Adept",
+                                    )
+                                    .map((p) => p.name)
+                                    .join(", ")}
+                                </>
+                              )}
+                            </p>
+                          </div>
                         </div>
                         
                         <div className="flex items-center gap-2">

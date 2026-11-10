@@ -20,6 +20,9 @@ import { EffectApplicator } from "./EffectApplicator";
 import { CombatLog } from "./CombatLog";
 import { CombatState } from "@/types/combat";
 import { combatManager } from "@/lib/combatManager";
+import { PlayerCards } from "./PlayerCards";
+import { RollFeed } from "./RollFeed";
+import { useTable } from "./TableContext";
 
 interface CombatViewProps {
   combatState: CombatState;
@@ -28,10 +31,40 @@ interface CombatViewProps {
 
 export function CombatView({ combatState, onUpdateState }: CombatViewProps) {
   const [logOpen, setLogOpen] = useState(true);
+  const { members, announceFight } = useTable();
 
   const currentCombatant = combatState.combatants.find(
     (c) => c.id === combatState.currentTurnCombatantId
   );
+
+  // Start Combat is the GM's one declaration. Everyone at the table who is not
+  // already in the fight steps in from their live sheet, at the HP they have
+  // right now, and every seat is told to open Combat Mode
+  // (docs/SESSION-2026-11-09-PLAYTEST.md, S2).
+  const joinedCharacterIds = new Set(
+    combatState.combatants.map((c) => c.characterId).filter((id): id is string => !!id)
+  );
+  const joining = members.filter((m) => m.connected && !joinedCharacterIds.has(m.character.id));
+  const canStart = combatState.combatants.length > 0 || joining.length > 0;
+
+  const startFight = () => {
+    onUpdateState((prev) => {
+      let next = prev;
+      for (const member of joining) {
+        next = combatManager.addCombatant(
+          next,
+          combatManager.createCombatantFromCharacter(member.character)
+        );
+      }
+      return combatManager.startCombat(next);
+    });
+    announceFight("start", { round: 1, title: "Combat" });
+  };
+
+  const endFight = () => {
+    onUpdateState((prev) => combatManager.endCombat(prev));
+    announceFight("end");
+  };
 
   return (
     <div className="flex flex-col">
@@ -57,12 +90,13 @@ export function CombatView({ combatState, onUpdateState }: CombatViewProps) {
         <div className="flex items-center justify-center gap-4">
           {!combatState.active ? (
             <Button
-              onClick={() => onUpdateState((prev) => combatManager.startCombat(prev))}
-              disabled={combatState.combatants.length === 0}
+              onClick={startFight}
+              disabled={!canStart}
               className="bg-green-600 hover:bg-green-700"
+              title={joining.length > 0 ? `Adds ${joining.length} joined player${joining.length === 1 ? "" : "s"} and starts` : undefined}
             >
               <Play className="h-4 w-4 mr-2" />
-              Start Combat
+              Start Combat{joining.length > 0 ? ` (+${joining.length})` : ""}
             </Button>
           ) : (
             <>
@@ -74,7 +108,7 @@ export function CombatView({ combatState, onUpdateState }: CombatViewProps) {
                 <SkipForward className="h-5 w-5 mr-2" />
                 Next Turn
               </Button>
-              <Button onClick={() => onUpdateState((prev) => combatManager.endCombat(prev))} variant="destructive">
+              <Button onClick={endFight} variant="destructive">
                 <Square className="h-4 w-4 mr-2" />
                 End Combat
               </Button>
@@ -90,6 +124,12 @@ export function CombatView({ combatState, onUpdateState }: CombatViewProps) {
           </Button>
         </div>
       </div>
+
+      {/* Outcomes the players have already rolled */}
+      <RollFeed combatState={combatState} onUpdateState={onUpdateState} />
+
+      {/* Every joined player's sheet, live */}
+      <PlayerCards combatState={combatState} />
 
       {/* Main grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

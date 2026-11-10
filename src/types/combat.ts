@@ -79,6 +79,9 @@ export interface Combatant {
   // Flags
   isBoss: boolean;       // Immune to certain effects
   characterId?: string;  // Link to saved player character
+  /** The GM is holding this one back: it is omitted from every player-facing
+   *  surface (the revealed roster) until it is unhidden. */
+  concealed?: boolean;
   
   // Enemy-specific
   attacks?: CombatantAttack[];

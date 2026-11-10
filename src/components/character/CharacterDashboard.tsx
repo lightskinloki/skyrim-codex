@@ -14,6 +14,7 @@ import { ItemPickerModal } from "./ItemPickerModal";
 import { AbilityTracker } from "./AbilityTracker";
 import { PlayerCombatPortal } from "@/components/combat/player/PlayerCombatPortal";
 import { TableSeatControl } from "./TableSeatControl";
+import { TableSeat, FightMessage, RollCard, VisibleEnemy } from "@/net/table";
 import { spawnSummon, summonRuleFor, risePendingSummons, summonCapacityError, summonLimitsFor, raiseThrall, thrallCapacityError } from "@/utils/summoning";
 import { DeadThrallPicker } from "./DeadThrallPicker";
 import { EnemyTemplate } from "@/data/enemies";
@@ -31,7 +32,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ToastAction } from "@/components/ui/toast";
-import { Heart, Zap, Sword, Shield, Settings, Plus, UserPlus, Play, RotateCcw, Package, Download, Minus, BookText, Edit2, Trash2, X, Check, ScrollText, Sparkles, AlertTriangle, LogOut } from "lucide-react";
+import { Heart, Zap, Sword, Shield, Settings, Plus, UserPlus, Play, RotateCcw, Package, Download, Minus, BookText, Edit2, Trash2, X, Check, ScrollText, Sparkles, AlertTriangle, LogOut, Swords } from "lucide-react";
 import { officialEquipment } from "@/data/equipment";
 import { resolveInventoryItem } from "@/utils/itemLookup";
 import { isHomebrewItem, mergeHomebrewEntry, mergeInventoryItem } from "@/utils/itemPicker";
@@ -363,6 +364,14 @@ interface CharacterDashboardProps {
 
 export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCharacter, onEndSession, joinCode }: CharacterDashboardProps) {
   const [currentCharacter, setCurrentCharacter] = useState<Character>(character);
+  // The live seat to the GM's table, once joined. Combat Mode sends a brace
+  // through it; the sheet itself travels from the control.
+  const [tableSeat, setTableSeat] = useState<TableSeat | null>(null);
+  // True between the GM opening a fight and ending it. Drives the way back
+  // into Combat Mode when a player has stepped out to read something.
+  const [fightActive, setFightActive] = useState(false);
+  // The enemies the GM has revealed. Concealed ones never arrive here.
+  const [tableRoster, setTableRoster] = useState<VisibleEnemy[]>([]);
   const [activeTab, setActiveTab] = useState("sheet");
   const [mapRevealed, setMapRevealed] = useState(
     () => localStorage.getItem(`skyrimTTRPG_mapRevealed_${character.id}`) === 'true'
@@ -655,20 +664,52 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
     }
   };
 
-  const handleCombatModeToggle = (enabled: boolean) => {
-    let updatedCharacter = { ...currentCharacter, combatMode: enabled };
+  // The GM corrected this sheet (damage, healing, a resource spend). Write it
+  // back through the same path a local edit takes, so storage and the seat's
+  // next frame both hold the correction.
+  // Applied verbatim: the GM's sheet is not re-derived here, because a
+  // recalculated copy would differ from the frame we just adopted and bounce
+  // straight back as a local edit.
+  const handleRemoteCharacter = (character: Character) => {
+    setCurrentCharacter(character);
+    onUpdateCharacter(character);
+  };
 
-    // If enabling combat mode, reset per-combat abilities
-    if (enabled) {
-      const perCombatIds = getPerCombatAbilityIds(currentCharacter);
-      updatedCharacter.usedAbilities = (currentCharacter.usedAbilities || [])
-        .filter(id => !perCombatIds.includes(id));
+  // Per-combat abilities are spent once per fight, so they come back when the
+  // fight starts — not every time the overlay is opened. Minimising Combat Mode
+  // mid-fight and coming back must not hand the player a second use.
+  const withPerCombatReset = (character: Character): Character => {
+    const perCombatIds = getPerCombatAbilityIds(character);
+    return {
+      ...character,
+      usedAbilities: (character.usedAbilities || []).filter(id => !perCombatIds.includes(id)),
+    };
+  };
 
-      toast({
-        title: "Combat Mode Activated",
-        description: "Per-combat abilities have been reset.",
-      });
+  // A fight opened: put this player in Combat Mode without asking. A fight
+  // ending never closes it — nobody's screen is pulled from under them.
+  const handleFightMessage = (message: FightMessage) => {
+    setFightActive(message.state === "start");
+    if (message.state === "end") {
+      toast({ title: "The fight is over", description: "Combat Mode is still open if you were mid-turn." });
+      return;
     }
+    const fresh = { ...withPerCombatReset(currentCharacter), combatMode: true };
+    setCurrentCharacter(fresh);
+    onUpdateCharacter(fresh);
+    toast({
+      title: "Combat Mode",
+      description: message.title
+        ? `${message.title} — round ${message.round ?? 1}. Your sheet is on the combat card.`
+        : "The GM opened a fight. Your sheet is on the combat card.",
+    });
+  };
+
+  const handleCombatModeToggle = (enabled: boolean) => {
+    // Outside a live fight, opening the mode is the start of one for this
+    // character; inside it, the mode is just a view and changes nothing.
+    const base = enabled && !fightActive ? withPerCombatReset(currentCharacter) : currentCharacter;
+    const updatedCharacter = { ...base, combatMode: enabled };
 
     // Apprentice stone FP regeneration happens at end of turn, not mode toggle
     setCurrentCharacter(updatedCharacter);
@@ -1097,7 +1138,14 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
               <Download className="w-3.5 h-3.5 mr-1.5" />
               Export
             </Button>
-            <TableSeatControl character={currentCharacter} autoJoinCode={joinCode} />
+            <TableSeatControl
+              character={currentCharacter}
+              autoJoinCode={joinCode}
+              onRemoteCharacter={handleRemoteCharacter}
+              onFight={handleFightMessage}
+              onRoster={setTableRoster}
+              onSeat={setTableSeat}
+            />
             <Badge
               variant="outline"
               className={`text-xs flex-shrink-0 ${hasExportedThisSession
@@ -1934,8 +1982,24 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
             character={currentCharacter}
             onUpdateCharacter={handleUpdateCharacter}
             onClose={() => handleCombatModeToggle(false)}
-            onMinimize={() => { /* Logic to minimize can go here later */ }}
+            onMinimize={() => handleCombatModeToggle(false)}
+            onBrace={(bonus, label) => tableSeat?.sendBrace(bonus, label)}
+            onBraceClear={() => tableSeat?.sendBrace(0, "")}
+            roster={tableRoster}
+            onRoll={(card: RollCard) => tableSeat?.sendRoll(card)}
           />
+        )}
+
+        {/* The way back in, without hunting for the toggle. */}
+        {!currentCharacter.combatMode && fightActive && (
+          <Button
+            size="lg"
+            className="fixed bottom-6 right-6 z-40 shadow-lg shadow-amber-500/20"
+            onClick={() => handleCombatModeToggle(true)}
+          >
+            <Swords className="h-5 w-5 mr-2" />
+            Return to combat
+          </Button>
         )}
         {/* --------------------------- */}
 

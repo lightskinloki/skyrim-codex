@@ -109,7 +109,7 @@ decoration; they are the explanation.
 
 ## Work order
 
-### S1 — one sheet, both screens
+### S1 — one sheet, both screens ✅ landed
 
 Full-sheet messages on the existing table channel, in both directions, with a
 revision number so an in-flight frame cannot resurrect older HP. The GM gets a
@@ -119,7 +119,7 @@ that write to the player's sheet.
 *Done when:* a −5 on either screen moves the other within a frame, and both
 numbers are equal afterwards.
 
-### S2 — Start Combat pulls the table
+### S2 — Start Combat pulls the table ✅ landed
 
 Start Combat adds every joined player who is not already in the fight, from
 their live sheet, at their current HP and FP. No duplicates. A player who joins
@@ -128,7 +128,7 @@ opens Combat Mode (tap to open, never a hijacked screen).
 
 *Done when:* five joined players produce five combatants and five prompts.
 
-### S3 — Combat Mode cannot be fallen out of
+### S3 — Combat Mode cannot be fallen out of ✅ landed
 
 A permanent quick bar: Attack, Cast, Move, Brace, Dodge, End Turn. Closing the
 mode asks first, and a "Return to combat" control stays on the dashboard while
@@ -137,7 +137,7 @@ a fight is live.
 *Done when:* reading a spell list costs one deliberate tap and one deliberate
 tap to come back, and the fight is never lost.
 
-### S4 — Brace computes
+### S4 — Brace computes ✅ landed
 
 Always offered as a Minor. Shows the equipped shield's bracing bonus, the
 riders its enchantment adds (Elven +1 DR vs spells, Orcish 1 damage back,
@@ -148,17 +148,17 @@ pending DR is visible to both screens until the next hit consumes it.
 *Done when:* the card states the number before the player commits, and the GM
 can see it is pending.
 
-### S5 — a target on the card
+### S5 — a target on the card ✅ landed
 
 The player names a target from the enemies the GM has revealed. It travels with
 the roll card. It does not yet move a token; the battlemap will read it.
 
-### S6 — conceal
+### S6 — conceal ✅ landed
 
 A per-enemy concealed flag on the GM tracker. Concealed enemies are dimmed for
 the GM and omitted from every player-facing surface until revealed.
 
-### S7 — an outcome, not arithmetic
+### S7 — an outcome, not arithmetic ✅ landed
 
 Tapping an attack or spell opens the roll: d20 entry (or the app's roller), then
 the five tiers, then the damage that tier produces, computed from the action and
@@ -169,27 +169,121 @@ one tap applies it. Complication holds the damage for the GM's call.
 *Done when:* a crit on Firebolt says "12 (6 ×2)" without anyone reaching for
 the book.
 
-### S8 — skills with faces
+### S8 — skills with faces ✅ landed
 
 Thirteen procedural icons, one per skill, in the creator's skill step and the
 summary. Each card answers three questions in order: what this is, what the
 stat is, what the next rank buys.
 
+## How each step was built (the morning after)
+
+**S1 — one sheet, both screens.** `net/table.ts` now carries `SheetMessage` in
+both directions, and every sheet has a `rev`. The host keeps the newest frame it
+has seen and answers an older `hello` with its own sheet instead of accepting it,
+so a reconnect cannot resurrect stale HP. A player adopting a GM sheet records it
+as `lastRemote` and does not echo it, so the two copies settle instead of
+ping-ponging. `GMDashboard` writes tracker HP/FP back to the sheet, and reads the
+sheet into the combatant on every change — one number, two screens. The GM's
+`PlayerCards` renders each seat live: HP, FP, DR, conditions, brace, and
+damage/heal/FP buttons that go through `editCharacter`.
+
+**S2 — Start Combat pulls the table.** `CombatView` diffs the joined seats
+against the combatants' `characterId`s and adds everyone missing from their live
+sheet before starting, so HP and FP arrive at the values the player currently
+has. The button reads `Start Combat (+n)` and says what it will add. The host
+sends `fight: start`, each seat raises a dismissible "fight started" prompt, not
+a hijacked screen, and a `Return to combat` button stays on the dashboard until
+`fight: end`.
+
+**S3 — Combat Mode cannot be fallen out of.** A permanent bar above the scroll
+holds Attack (the best weapon, with its damage on the button), Cast/Actions,
+Move, Brace, Dodge and End turn, plus Major/Minor/DR status underneath. The X now
+asks first, and minimising (which was already allowed) is the quiet option.
+
+**S4 — Brace computes.** `utils/brace.ts` is the one place the number lives: the
+equipped shield's bracing bonus from `data/equipment.ts` (hide/iron 1, steel/elven
+2, dwarven/orcish 3, ebony 4, daedric/dragon 5) plus the shield's riders, with an
+explicit "no shield — the book gives no brace" path. Taking a brace marks the
+Minor (unless Dwarven Shield's Shield Wall says otherwise), shows `Bracing +n` in
+the header, and reports it to the GM as a status effect so their damage path
+subtracts it once. A hit — from either screen — spends it.
+
+**S5 — a target on the card.** The roll prompt lists the enemies the GM has
+revealed; the chosen target rides on the `RollCard`. Nothing moves on a board
+yet; when the battlemap reads it, it will already be there.
+
+**S6 — conceal.** `Combatant.concealed` is a GM-only flag, dimmed on the tracker
+and filtered out of `roster` before it is published. A seat that joins mid-fight
+is sent the current roster on `hello`, so the list is never stale or half-known.
+
+**S7 — an outcome, not arithmetic.** `utils/roll.ts` owns the d20 → tier → damage
+law (crit is one ×2 step, fail is nothing, a complication holds the damage for
+the GM). `RollPrompt` walks die → tier → target and sends a card; `RollFeed` shows
+it on the GM's screen with the arithmetic already done and one Apply button.
+Casting or attacking opens the prompt; summoning still opens its body picker
+first, because that is a choice, not a roll.
+
+**S8 — skills with faces.** `characters/skillEmblem.ts` draws thirteen 32 × 32
+emblems from rules, in the same palette as the board (sword, greatsword, bow,
+shield, cuirass, flame, sun, rings, eye, summoning circle, footprint, key, coin).
+Each skill gained a one-line `summary`, and the creator card now shows the
+emblem, the summary, the governing stat, and what the next rank adds, before the
+player commits the rank. `npm run test:emblems` checks coverage, opacity, that a
+glyph is actually drawn, and that no two skills share a picture.
+
 ## Still open
 
 1. **Weapon parry.** The book has no brace with a weapon. If the table wants
    one, it is a house rule and needs a number before it is built.
-2. **Concealment depth.** Should a concealed enemy be absent from the GM's turn
-   summary too, or only from player surfaces?
+2. **Concealment depth.** Concealment hides an enemy from player surfaces only;
+   the GM's tracker dims it and keeps it usable. Decided, but the GM turn
+   summary has not been checked for leaks yet.
 3. **Rolls outside a fight.** Exploration rolls have no encounter to attach to.
-   Same card, or a session log card?
-4. **Targets before the map.** Pick from the GM's revealed list, or free text
-   until the board can answer it?
+   Same card, or a session log card? Not decided.
+4. **Targets on the board.** Picking from the revealed roster works. The tie to
+   an actual token (and to the battlemap) is the next session's seam.
+5. **Two sheets, one writer.** The revision rule resolves the common cases, but
+   a simultaneous edit on both screens is last-write-wins. Acceptable at a
+   table; worth a note if the GM starts editing mid-turn as a habit.
+
+## Where the board stands, and what comes next
+
+Nothing in this checkpoint touched the battlemap. It is where the last one left
+it: rooms are documents (`rooms/*.json`), doors are loading screens with a saved
+rig/token/seen layer, fog is 2D line of sight with a GM toggle, and there is a
+draft editor and one-switch environment strip. `BATTLEMAP-SPEC.md` §18–20 are the
+record; the open list at the end of §19 is still open (no multi-storey village,
+no token dragging, fog is a floor-plane mask).
+
+The session's pain points point at the board for two things, in this order:
+
+1. **A fight on the board.** Launch an encounter from the room the party is
+   standing in, with the room's props and tiers as the fight's ground and each
+   combatant on its own token. The join between `combatManager`'s combatants and
+   `RoomDoc` tokens is the actual work; the renderer already draws what a fight
+   needs.
+2. **A camera per player.** Today the board is one GM view. The table wants each
+   seat to pan, zoom and turn its own view, with that seat's fog revealed by its
+   own line of sight. `FogView` is per-view already; the missing piece is a
+   per-seat camera and seen mask travelling over the table channel.
+
+After that, the $64k question from the design conversation stands: a dungeon is
+a graph of rooms the party explores and where the GM launches encounters, and the
+board should hold the whole graph (doors as loading screens) rather than one
+static map per fight.
 
 ## Verification for this checkpoint
 
-- `node node_modules/typescript/bin/tsc -p tsconfig.app.json --noEmit` — clean.
-  (`npx tsc` resolves to the bun shim in this checkout and must not be trusted.)
-- `npm run test:rooms`, `test:walk`, `test:props`, `test:encounter` — all pass.
-- The bundled one-shot loads: `BUNDLED_MODULES` starts with `sleeping-men:module`
-  and the five templates are in `enemyTemplates`.
+- `npm run check:types` (`node node_modules/typescript/bin/tsc -p
+  tsconfig.app.json --noEmit`) — clean. Never use `npx tsc` here: it resolves to
+  the bun shim in this checkout and tests the wrong package.
+- `npm run test:brace` (15), `test:damage`, `test:encounter` (43), `test:props`,
+  `test:rooms` (112), `test:walk` (39), `test:alchemy`, `test:emblems` (94) — all
+  pass.
+- `npm run build` — clean.
+- The bundled one-shot still loads: `BUNDLED_MODULES` starts with
+  `sleeping-men:module` and the five templates are in `enemyTemplates`.
+
+**Not verified in a browser this checkpoint:** the two-screen loop was exercised
+by code and types, not by two devices. The first thing to do at the next session
+is a two-tab join, damage on one tab, and read the other.
