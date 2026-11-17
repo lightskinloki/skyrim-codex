@@ -1,0 +1,266 @@
+{
+  "id": "argonian_female",
+  "race": "Argonian",
+  "gender": "female",
+  "canvas_size": [
+    764,
+    1024
+  ],
+  "layers_back_to_front": [
+    {
+      "z_index": 1,
+      "layer_key": "background",
+      "file": "01_background.png",
+      "non_empty": true,
+      "shared": true,
+      "path": "/character-layers/shared/01_background.png",
+      "bbox_xyxy": [
+        0,
+        0,
+        763,
+        1023
+      ],
+      "description": "Nordic glowing cyan rune circle and embers background plate"
+    },
+    {
+      "z_index": 2,
+      "layer_key": "hair_back",
+      "file": "02_hair_back.png",
+      "non_empty": false,
+      "shared": false,
+      "path": null,
+      "bbox_xyxy": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "description": "Back hair (empty \u2014 Argonian horns and dorsal crests render in 16_headgear_horns)"
+    },
+    {
+      "z_index": 3,
+      "layer_key": "body_head_base",
+      "file": "03_body_head_base.png",
+      "non_empty": true,
+      "shared": false,
+      "path": "/character-layers/argonian_female/03_body_head_base.png",
+      "bbox_xyxy": [
+        11,
+        180,
+        753,
+        1011
+      ],
+      "description": "Clean 1:1 Argonian female hornless spineless armor-free scaly bust base"
+    },
+    {
+      "z_index": 4,
+      "layer_key": "body_markings",
+      "file": "04_body_markings.png",
+      "non_empty": false,
+      "shared": false,
+      "path": null,
+      "bbox_xyxy": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "description": "Body markings (empty \u2014 reptilian scales are part of base)"
+    },
+    {
+      "z_index": 5,
+      "layer_key": "nose",
+      "file": "05_nose.png",
+      "non_empty": true,
+      "shared": false,
+      "path": "/character-layers/argonian_female/05_nose.png",
+      "bbox_xyxy": [
+        458,
+        294,
+        619,
+        463
+      ],
+      "description": "Scaled olive-green Argonian snout and nostrils"
+    },
+    {
+      "z_index": 6,
+      "layer_key": "mouth",
+      "file": "06_mouth.png",
+      "non_empty": true,
+      "shared": false,
+      "path": "/character-layers/argonian_female/06_mouth.png",
+      "bbox_xyxy": [
+        391,
+        440,
+        617,
+        543
+      ],
+      "description": "Serrated toothline and reptilian jaw"
+    },
+    {
+      "z_index": 7,
+      "layer_key": "tusks_whiskers",
+      "file": "07_tusks_whiskers.png",
+      "non_empty": true,
+      "shared": false,
+      "path": "/character-layers/argonian_female/07_tusks_whiskers.png",
+      "bbox_xyxy": [
+        291,
+        435,
+        596,
+        570
+      ],
+      "description": "Sharp scaly cheek, jaw, and chin spikes"
+    },
+    {
+      "z_index": 8,
+      "layer_key": "eyes",
+      "file": "08_eyes.png",
+      "non_empty": true,
+      "shared": false,
+      "path": "/character-layers/argonian_female/08_eyes.png",
+      "bbox_xyxy": [
+        361,
+        297,
+        491,
+        363
+      ],
+      "description": "Glowing amber-gold slit-pupil reptilian eye"
+    },
+    {
+      "z_index": 9,
+      "layer_key": "eyebrows",
+      "file": "09_eyebrows.png",
+      "non_empty": true,
+      "shared": false,
+      "path": "/character-layers/argonian_female/09_eyebrows.png",
+      "bbox_xyxy": [
+        311,
+        239,
+        543,
+        316
+      ],
+      "description": "Heavy spiked scaly supraorbital brow ridges"
+    },
+    {
+      "z_index": 10,
+      "layer_key": "face_markings",
+      "file": "10_face_markings.png",
+      "non_empty": false,
+      "shared": false,
+      "path": null,
+      "bbox_xyxy": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "description": "Face markings (empty)"
+    },
+    {
+      "z_index": 11,
+      "layer_key": "facial_hair",
+      "file": "11_facial_hair.png",
+      "non_empty": false,
+      "shared": false,
+      "path": null,
+      "bbox_xyxy": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "description": "Facial hair (empty)"
+    },
+    {
+      "z_index": 12,
+      "layer_key": "earring_ears",
+      "file": "12_earring_ears.png",
+      "non_empty": false,
+      "shared": false,
+      "path": null,
+      "bbox_xyxy": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "description": "Ears / earrings (empty)"
+    },
+    {
+      "z_index": 13,
+      "layer_key": "armor_torso",
+      "file": "13_armor_torso.png",
+      "non_empty": true,
+      "shared": false,
+      "path": "/character-layers/argonian_female/13_armor_torso.png",
+      "bbox_xyxy": [
+        10,
+        575,
+        729,
+        1012
+      ],
+      "description": "Copper-bronze spiked scale pauldrons, tiered cuirass, crossed straps, and sleeves"
+    },
+    {
+      "z_index": 14,
+      "layer_key": "cloak_mantle",
+      "file": "14_cloak_mantle.png",
+      "non_empty": true,
+      "shared": false,
+      "path": "/character-layers/argonian_female/14_cloak_mantle.png",
+      "bbox_xyxy": [
+        223,
+        586,
+        587,
+        837
+      ],
+      "description": "Chain-scale gorget neck collar with pale bone amulet toggles"
+    },
+    {
+      "z_index": 15,
+      "layer_key": "hair_front",
+      "file": "15_hair_front.png",
+      "non_empty": false,
+      "shared": false,
+      "path": null,
+      "bbox_xyxy": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "description": "Front hair (empty)"
+    },
+    {
+      "z_index": 16,
+      "layer_key": "headgear_horns",
+      "file": "16_headgear_horns.png",
+      "non_empty": true,
+      "shared": false,
+      "path": "/character-layers/argonian_female/16_headgear_horns.png",
+      "bbox_xyxy": [
+        77,
+        61,
+        543,
+        566
+      ],
+      "description": "Swept curved obsidian horns, dorsal cranial spikes, and back neck spines"
+    },
+    {
+      "z_index": 17,
+      "layer_key": "frame",
+      "file": "17_frame.png",
+      "non_empty": true,
+      "shared": true,
+      "path": "/character-layers/shared/17_frame.png",
+      "bbox_xyxy": [
+        0,
+        0,
+        763,
+        1023
+      ],
+      "description": "Portrait border frame"
+    }
+  ]
+}

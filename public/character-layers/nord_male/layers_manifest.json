@@ -1,0 +1,266 @@
+{
+  "id": "nord_male",
+  "race": "nord",
+  "gender": "male",
+  "canvas_size": [
+    764,
+    1024
+  ],
+  "layers_back_to_front": [
+    {
+      "z_index": 1,
+      "layer_key": "background",
+      "file": "01_background.png",
+      "non_empty": true,
+      "shared": true,
+      "path": "/character-layers/shared/01_background.png",
+      "bbox_xyxy": [
+        0,
+        0,
+        763,
+        1023
+      ],
+      "description": "Background plate with glowing Nordic rune circle and embers"
+    },
+    {
+      "z_index": 2,
+      "layer_key": "hair_back",
+      "file": "02_hair_back.png",
+      "non_empty": false,
+      "shared": false,
+      "path": null,
+      "bbox_xyxy": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "description": "Back hair (empty on short Viking undercut)"
+    },
+    {
+      "z_index": 3,
+      "layer_key": "body_head_base",
+      "file": "03_body_head_base.png",
+      "non_empty": true,
+      "shared": false,
+      "path": "/character-layers/nord_male/03_body_head_base.png",
+      "bbox_xyxy": [
+        0,
+        106,
+        763,
+        1005
+      ],
+      "description": "Muscular Male Nord base mannequin bust, broad jaw, shaved temple, and bare chest"
+    },
+    {
+      "z_index": 4,
+      "layer_key": "body_markings",
+      "file": "04_body_markings.png",
+      "non_empty": true,
+      "shared": false,
+      "path": "/character-layers/nord_male/04_body_markings.png",
+      "bbox_xyxy": [
+        285,
+        735,
+        695,
+        918
+      ],
+      "description": "Blue Nordic Eye-of-Kyne shoulder swirl tattoo, arm bands, and chest battle scars"
+    },
+    {
+      "z_index": 5,
+      "layer_key": "nose",
+      "file": "05_nose.png",
+      "non_empty": true,
+      "shared": false,
+      "path": "/character-layers/nord_male/05_nose.png",
+      "bbox_xyxy": [
+        427,
+        326,
+        521,
+        446
+      ],
+      "description": "Broad masculine Nordic nose"
+    },
+    {
+      "z_index": 6,
+      "layer_key": "mouth",
+      "file": "06_mouth.png",
+      "non_empty": true,
+      "shared": false,
+      "path": "/character-layers/nord_male/06_mouth.png",
+      "bbox_xyxy": [
+        410,
+        457,
+        524,
+        507
+      ],
+      "description": "Stern masculine mouth / lips"
+    },
+    {
+      "z_index": 7,
+      "layer_key": "tusks_whiskers",
+      "file": "07_tusks_whiskers.png",
+      "non_empty": false,
+      "shared": false,
+      "path": null,
+      "bbox_xyxy": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "description": "Tusks / whiskers (empty on Nord)"
+    },
+    {
+      "z_index": 8,
+      "layer_key": "eyes",
+      "file": "08_eyes.png",
+      "non_empty": true,
+      "shared": false,
+      "path": "/character-layers/nord_male/08_eyes.png",
+      "bbox_xyxy": [
+        347,
+        308,
+        578,
+        360
+      ],
+      "description": "Piercing masculine ice-blue Nordic eyes"
+    },
+    {
+      "z_index": 9,
+      "layer_key": "eyebrows",
+      "file": "09_eyebrows.png",
+      "non_empty": true,
+      "shared": false,
+      "path": "/character-layers/nord_male/09_eyebrows.png",
+      "bbox_xyxy": [
+        353,
+        287,
+        576,
+        322
+      ],
+      "description": "Thick furrowed sandy-brown eyebrows"
+    },
+    {
+      "z_index": 10,
+      "layer_key": "face_markings",
+      "file": "10_face_markings.png",
+      "non_empty": true,
+      "shared": false,
+      "path": "/character-layers/nord_male/10_face_markings.png",
+      "bbox_xyxy": [
+        274,
+        198,
+        415,
+        422
+      ],
+      "description": "Vertical red eye battle scar, diagonal blue woad war-paint, and temple rune"
+    },
+    {
+      "z_index": 11,
+      "layer_key": "facial_hair",
+      "file": "11_facial_hair.png",
+      "non_empty": true,
+      "shared": false,
+      "path": "/character-layers/nord_male/11_facial_hair.png",
+      "bbox_xyxy": [
+        284,
+        385,
+        566,
+        632
+      ],
+      "description": "Full ash-brown/blond Nordic beard and mustache"
+    },
+    {
+      "z_index": 12,
+      "layer_key": "earring_ears",
+      "file": "12_earring_ears.png",
+      "non_empty": false,
+      "shared": false,
+      "path": null,
+      "bbox_xyxy": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "description": "Earrings / ear attachments (empty on Male Nord)"
+    },
+    {
+      "z_index": 13,
+      "layer_key": "armor_torso",
+      "file": "13_armor_torso.png",
+      "non_empty": true,
+      "shared": false,
+      "path": "/character-layers/nord_male/13_armor_torso.png",
+      "bbox_xyxy": [
+        275,
+        650,
+        615,
+        1011
+      ],
+      "description": "Diagonal studded brown leather chest baldric and iron buckle over bare chest"
+    },
+    {
+      "z_index": 14,
+      "layer_key": "cloak_mantle",
+      "file": "14_cloak_mantle.png",
+      "non_empty": true,
+      "shared": false,
+      "path": "/character-layers/nord_male/14_cloak_mantle.png",
+      "bbox_xyxy": [
+        11,
+        492,
+        753,
+        965
+      ],
+      "description": "Dark-brown bear/wolf fur shoulder mantle"
+    },
+    {
+      "z_index": 15,
+      "layer_key": "hair_front",
+      "file": "15_hair_front.png",
+      "non_empty": true,
+      "shared": false,
+      "path": "/character-layers/nord_male/15_hair_front.png",
+      "bbox_xyxy": [
+        185,
+        48,
+        576,
+        305
+      ],
+      "description": "Swept-back ash-blond/brown Viking undercut hair"
+    },
+    {
+      "z_index": 16,
+      "layer_key": "headgear_horns",
+      "file": "16_headgear_horns.png",
+      "non_empty": false,
+      "shared": false,
+      "path": null,
+      "bbox_xyxy": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "description": "Headgear / helmet / crown / horns (empty on unhelmeted Nord)"
+    },
+    {
+      "z_index": 17,
+      "layer_key": "frame",
+      "file": "17_frame.png",
+      "non_empty": true,
+      "shared": true,
+      "path": "/character-layers/shared/17_frame.png",
+      "bbox_xyxy": [
+        0,
+        0,
+        763,
+        1023
+      ],
+      "description": "Outer dark pixel-art portrait border frame"
+    }
+  ]
+}

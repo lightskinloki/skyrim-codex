@@ -1,0 +1,266 @@
+{
+  "id": "redguard_female",
+  "race": "Redguard",
+  "gender": "female",
+  "canvas_size": [
+    764,
+    1024
+  ],
+  "layers_back_to_front": [
+    {
+      "z_index": 1,
+      "layer_key": "background",
+      "file": "01_background.png",
+      "non_empty": true,
+      "shared": true,
+      "path": "/character-layers/shared/01_background.png",
+      "bbox_xyxy": [
+        0,
+        0,
+        763,
+        1023
+      ],
+      "description": "Nordic glowing cyan rune circle and embers background plate"
+    },
+    {
+      "z_index": 2,
+      "layer_key": "hair_back",
+      "file": "02_hair_back.png",
+      "non_empty": true,
+      "shared": false,
+      "path": "/character-layers/redguard_female/02_hair_back.png",
+      "bbox_xyxy": [
+        98,
+        252,
+        211,
+        646
+      ],
+      "description": "Flowing beaded dark dreadlocks behind left shoulder and neck"
+    },
+    {
+      "z_index": 3,
+      "layer_key": "body_head_base",
+      "file": "03_body_head_base.png",
+      "non_empty": true,
+      "shared": false,
+      "path": "/character-layers/redguard_female/03_body_head_base.png",
+      "bbox_xyxy": [
+        11,
+        113,
+        729,
+        1011
+      ],
+      "description": "Clean 1:1 Redguard female shaved bald bare-shoulder mannequin base"
+    },
+    {
+      "z_index": 4,
+      "layer_key": "body_markings",
+      "file": "04_body_markings.png",
+      "non_empty": false,
+      "shared": false,
+      "path": null,
+      "bbox_xyxy": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "description": "Body markings (empty)"
+    },
+    {
+      "z_index": 5,
+      "layer_key": "nose",
+      "file": "05_nose.png",
+      "non_empty": true,
+      "shared": false,
+      "path": "/character-layers/redguard_female/05_nose.png",
+      "bbox_xyxy": [
+        436,
+        323,
+        524,
+        450
+      ],
+      "description": "Broad sculpted Redguard nose"
+    },
+    {
+      "z_index": 6,
+      "layer_key": "mouth",
+      "file": "06_mouth.png",
+      "non_empty": true,
+      "shared": false,
+      "path": "/character-layers/redguard_female/06_mouth.png",
+      "bbox_xyxy": [
+        413,
+        454,
+        533,
+        511
+      ],
+      "description": "Full defined Redguard lips"
+    },
+    {
+      "z_index": 7,
+      "layer_key": "tusks_whiskers",
+      "file": "07_tusks_whiskers.png",
+      "non_empty": false,
+      "shared": false,
+      "path": null,
+      "bbox_xyxy": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "description": "Tusks / whiskers (empty)"
+    },
+    {
+      "z_index": 8,
+      "layer_key": "eyes",
+      "file": "08_eyes.png",
+      "non_empty": true,
+      "shared": false,
+      "path": "/character-layers/redguard_female/08_eyes.png",
+      "bbox_xyxy": [
+        354,
+        325,
+        575,
+        367
+      ],
+      "description": "Warm amber-brown fierce Redguard eyes"
+    },
+    {
+      "z_index": 9,
+      "layer_key": "eyebrows",
+      "file": "09_eyebrows.png",
+      "non_empty": true,
+      "shared": false,
+      "path": "/character-layers/redguard_female/09_eyebrows.png",
+      "bbox_xyxy": [
+        344,
+        301,
+        579,
+        337
+      ],
+      "description": "Strong arched dark eyebrows"
+    },
+    {
+      "z_index": 10,
+      "layer_key": "face_markings",
+      "file": "10_face_markings.png",
+      "non_empty": false,
+      "shared": false,
+      "path": null,
+      "bbox_xyxy": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "description": "Face markings (empty)"
+    },
+    {
+      "z_index": 11,
+      "layer_key": "facial_hair",
+      "file": "11_facial_hair.png",
+      "non_empty": false,
+      "shared": false,
+      "path": null,
+      "bbox_xyxy": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "description": "Facial hair (empty)"
+    },
+    {
+      "z_index": 12,
+      "layer_key": "earring_ears",
+      "file": "12_earring_ears.png",
+      "non_empty": true,
+      "shared": false,
+      "path": "/character-layers/redguard_female/12_earring_ears.png",
+      "bbox_xyxy": [
+        244,
+        404,
+        567,
+        527
+      ],
+      "description": "Polished gold Hammerfell hoop earrings"
+    },
+    {
+      "z_index": 13,
+      "layer_key": "armor_torso",
+      "file": "13_armor_torso.png",
+      "non_empty": true,
+      "shared": false,
+      "path": "/character-layers/redguard_female/13_armor_torso.png",
+      "bbox_xyxy": [
+        10,
+        637,
+        734,
+        1012
+      ],
+      "description": "Hammered bronze desert pauldron and olive-brown leather armor with crossed straps"
+    },
+    {
+      "z_index": 14,
+      "layer_key": "cloak_mantle",
+      "file": "14_cloak_mantle.png",
+      "non_empty": true,
+      "shared": false,
+      "path": "/character-layers/redguard_female/14_cloak_mantle.png",
+      "bbox_xyxy": [
+        149,
+        570,
+        618,
+        820
+      ],
+      "description": "Wrapped cream desert linen scarf cowl"
+    },
+    {
+      "z_index": 15,
+      "layer_key": "hair_front",
+      "file": "15_hair_front.png",
+      "non_empty": true,
+      "shared": false,
+      "path": "/character-layers/redguard_female/15_hair_front.png",
+      "bbox_xyxy": [
+        164,
+        95,
+        669,
+        759
+      ],
+      "description": "Woven dark dreadlocks with brass and gold beads"
+    },
+    {
+      "z_index": 16,
+      "layer_key": "headgear_horns",
+      "file": "16_headgear_horns.png",
+      "non_empty": true,
+      "shared": false,
+      "path": "/character-layers/redguard_female/16_headgear_horns.png",
+      "bbox_xyxy": [
+        314,
+        215,
+        559,
+        299
+      ],
+      "description": "Slender golden Hammerfell circlet with amber forehead gem"
+    },
+    {
+      "z_index": 17,
+      "layer_key": "frame",
+      "file": "17_frame.png",
+      "non_empty": true,
+      "shared": true,
+      "path": "/character-layers/shared/17_frame.png",
+      "bbox_xyxy": [
+        0,
+        0,
+        763,
+        1023
+      ],
+      "description": "Portrait border frame"
+    }
+  ]
+}

@@ -1,0 +1,173 @@
+{
+  "version": 1,
+  "canvas_size": [
+    764,
+    1024
+  ],
+  "shared": {
+    "background": "/character-layers/shared/01_background.png",
+    "frame": "/character-layers/shared/17_frame.png"
+  },
+  "characters": [
+    {
+      "id": "nord_female",
+      "race_id": "nord",
+      "race_name": "nord",
+      "gender": "female",
+      "manifest_path": "/character-layers/nord_female/layers_manifest.json",
+      "active_layers": 12
+    },
+    {
+      "id": "nord_male",
+      "race_id": "nord",
+      "race_name": "nord",
+      "gender": "male",
+      "manifest_path": "/character-layers/nord_male/layers_manifest.json",
+      "active_layers": 13
+    },
+    {
+      "id": "breton_female",
+      "race_id": "breton",
+      "race_name": "Breton",
+      "gender": "female",
+      "manifest_path": "/character-layers/breton_female/layers_manifest.json",
+      "active_layers": 13
+    },
+    {
+      "id": "breton_male",
+      "race_id": "breton",
+      "race_name": "Breton",
+      "gender": "male",
+      "manifest_path": "/character-layers/breton_male/layers_manifest.json",
+      "active_layers": 12
+    },
+    {
+      "id": "imperial_female",
+      "race_id": "imperial",
+      "race_name": "Imperial",
+      "gender": "female",
+      "manifest_path": "/character-layers/imperial_female/layers_manifest.json",
+      "active_layers": 12
+    },
+    {
+      "id": "imperial_male",
+      "race_id": "imperial",
+      "race_name": "Imperial",
+      "gender": "male",
+      "manifest_path": "/character-layers/imperial_male/layers_manifest.json",
+      "active_layers": 12
+    },
+    {
+      "id": "redguard_female",
+      "race_id": "redguard",
+      "race_name": "Redguard",
+      "gender": "female",
+      "manifest_path": "/character-layers/redguard_female/layers_manifest.json",
+      "active_layers": 13
+    },
+    {
+      "id": "redguard_male",
+      "race_id": "redguard",
+      "race_name": "Redguard",
+      "gender": "male",
+      "manifest_path": "/character-layers/redguard_male/layers_manifest.json",
+      "active_layers": 13
+    },
+    {
+      "id": "highelf_female",
+      "race_id": "highelf",
+      "race_name": "High Elf",
+      "gender": "female",
+      "manifest_path": "/character-layers/highelf_female/layers_manifest.json",
+      "active_layers": 14
+    },
+    {
+      "id": "highelf_male",
+      "race_id": "highelf",
+      "race_name": "High Elf",
+      "gender": "male",
+      "manifest_path": "/character-layers/highelf_male/layers_manifest.json",
+      "active_layers": 13
+    },
+    {
+      "id": "woodelf_female",
+      "race_id": "woodelf",
+      "race_name": "Wood Elf",
+      "gender": "female",
+      "manifest_path": "/character-layers/woodelf_female/layers_manifest.json",
+      "active_layers": 15
+    },
+    {
+      "id": "woodelf_male",
+      "race_id": "woodelf",
+      "race_name": "Wood Elf",
+      "gender": "male",
+      "manifest_path": "/character-layers/woodelf_male/layers_manifest.json",
+      "active_layers": 14
+    },
+    {
+      "id": "darkelf_female",
+      "race_id": "darkelf",
+      "race_name": "Dark Elf",
+      "gender": "female",
+      "manifest_path": "/character-layers/darkelf_female/layers_manifest.json",
+      "active_layers": 12
+    },
+    {
+      "id": "darkelf_male",
+      "race_id": "darkelf",
+      "race_name": "Dark Elf",
+      "gender": "male",
+      "manifest_path": "/character-layers/darkelf_male/layers_manifest.json",
+      "active_layers": 13
+    },
+    {
+      "id": "orc_female",
+      "race_id": "orc",
+      "race_name": "Orc",
+      "gender": "female",
+      "manifest_path": "/character-layers/orc_female/layers_manifest.json",
+      "active_layers": 14
+    },
+    {
+      "id": "orc_male",
+      "race_id": "orc",
+      "race_name": "Orc",
+      "gender": "male",
+      "manifest_path": "/character-layers/orc_male/layers_manifest.json",
+      "active_layers": 13
+    },
+    {
+      "id": "khajiit_female",
+      "race_id": "khajiit",
+      "race_name": "Khajiit",
+      "gender": "female",
+      "manifest_path": "/character-layers/khajiit_female/layers_manifest.json",
+      "active_layers": 13
+    },
+    {
+      "id": "khajiit_male",
+      "race_id": "khajiit",
+      "race_name": "Khajiit",
+      "gender": "male",
+      "manifest_path": "/character-layers/khajiit_male/layers_manifest.json",
+      "active_layers": 13
+    },
+    {
+      "id": "argonian_female",
+      "race_id": "argonian",
+      "race_name": "Argonian",
+      "gender": "female",
+      "manifest_path": "/character-layers/argonian_female/layers_manifest.json",
+      "active_layers": 11
+    },
+    {
+      "id": "argonian_male",
+      "race_id": "argonian",
+      "race_name": "Argonian",
+      "gender": "male",
+      "manifest_path": "/character-layers/argonian_male/layers_manifest.json",
+      "active_layers": 11
+    }
+  ]
+}

@@ -1,0 +1,266 @@
+{
+  "id": "redguard_male",
+  "race": "Redguard",
+  "gender": "male",
+  "canvas_size": [
+    764,
+    1024
+  ],
+  "layers_back_to_front": [
+    {
+      "z_index": 1,
+      "layer_key": "background",
+      "file": "01_background.png",
+      "non_empty": true,
+      "shared": true,
+      "path": "/character-layers/shared/01_background.png",
+      "bbox_xyxy": [
+        0,
+        0,
+        763,
+        1023
+      ],
+      "description": "Nordic glowing cyan rune circle and embers background plate"
+    },
+    {
+      "z_index": 2,
+      "layer_key": "hair_back",
+      "file": "02_hair_back.png",
+      "non_empty": true,
+      "shared": false,
+      "path": "/character-layers/redguard_male/02_hair_back.png",
+      "bbox_xyxy": [
+        158,
+        368,
+        259,
+        617
+      ],
+      "description": "Loose braided dreadlocks framing neck and left shoulder"
+    },
+    {
+      "z_index": 3,
+      "layer_key": "body_head_base",
+      "file": "03_body_head_base.png",
+      "non_empty": true,
+      "shared": false,
+      "path": "/character-layers/redguard_male/03_body_head_base.png",
+      "bbox_xyxy": [
+        11,
+        129,
+        732,
+        1011
+      ],
+      "description": "Clean 1:1 athletic Redguard male shaved bald bare-shoulder mannequin base"
+    },
+    {
+      "z_index": 4,
+      "layer_key": "body_markings",
+      "file": "04_body_markings.png",
+      "non_empty": false,
+      "shared": false,
+      "path": null,
+      "bbox_xyxy": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "description": "Body markings (empty)"
+    },
+    {
+      "z_index": 5,
+      "layer_key": "nose",
+      "file": "05_nose.png",
+      "non_empty": true,
+      "shared": false,
+      "path": "/character-layers/redguard_male/05_nose.png",
+      "bbox_xyxy": [
+        440,
+        320,
+        524,
+        448
+      ],
+      "description": "Broad chiseled Redguard nose"
+    },
+    {
+      "z_index": 6,
+      "layer_key": "mouth",
+      "file": "06_mouth.png",
+      "non_empty": true,
+      "shared": false,
+      "path": "/character-layers/redguard_male/06_mouth.png",
+      "bbox_xyxy": [
+        420,
+        466,
+        529,
+        499
+      ],
+      "description": "Defined warrior lips"
+    },
+    {
+      "z_index": 7,
+      "layer_key": "tusks_whiskers",
+      "file": "07_tusks_whiskers.png",
+      "non_empty": false,
+      "shared": false,
+      "path": null,
+      "bbox_xyxy": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "description": "Tusks / whiskers (empty)"
+    },
+    {
+      "z_index": 8,
+      "layer_key": "eyes",
+      "file": "08_eyes.png",
+      "non_empty": true,
+      "shared": false,
+      "path": "/character-layers/redguard_male/08_eyes.png",
+      "bbox_xyxy": [
+        351,
+        321,
+        569,
+        359
+      ],
+      "description": "Piercing dark Redguard warrior eyes"
+    },
+    {
+      "z_index": 9,
+      "layer_key": "eyebrows",
+      "file": "09_eyebrows.png",
+      "non_empty": true,
+      "shared": false,
+      "path": "/character-layers/redguard_male/09_eyebrows.png",
+      "bbox_xyxy": [
+        341,
+        294,
+        577,
+        331
+      ],
+      "description": "Heavy furrowed dark eyebrows"
+    },
+    {
+      "z_index": 10,
+      "layer_key": "face_markings",
+      "file": "10_face_markings.png",
+      "non_empty": true,
+      "shared": false,
+      "path": "/character-layers/redguard_male/10_face_markings.png",
+      "bbox_xyxy": [
+        345,
+        355,
+        402,
+        443
+      ],
+      "description": "Diagonal cheek battle scar"
+    },
+    {
+      "z_index": 11,
+      "layer_key": "facial_hair",
+      "file": "11_facial_hair.png",
+      "non_empty": true,
+      "shared": false,
+      "path": "/character-layers/redguard_male/11_facial_hair.png",
+      "bbox_xyxy": [
+        381,
+        437,
+        547,
+        587
+      ],
+      "description": "Trimmed Redguard warrior goatee and connected mustache"
+    },
+    {
+      "z_index": 12,
+      "layer_key": "earring_ears",
+      "file": "12_earring_ears.png",
+      "non_empty": false,
+      "shared": false,
+      "path": null,
+      "bbox_xyxy": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "description": "Ears (base)"
+    },
+    {
+      "z_index": 13,
+      "layer_key": "armor_torso",
+      "file": "13_armor_torso.png",
+      "non_empty": true,
+      "shared": false,
+      "path": "/character-layers/redguard_male/13_armor_torso.png",
+      "bbox_xyxy": [
+        10,
+        599,
+        743,
+        1012
+      ],
+      "description": "Patinaed bronze segmented pauldron and studded brown leather chest armor"
+    },
+    {
+      "z_index": 14,
+      "layer_key": "cloak_mantle",
+      "file": "14_cloak_mantle.png",
+      "non_empty": true,
+      "shared": false,
+      "path": "/character-layers/redguard_male/14_cloak_mantle.png",
+      "bbox_xyxy": [
+        173,
+        520,
+        615,
+        790
+      ],
+      "description": "Heavy wrapped cream-sand desert linen scarf cowl"
+    },
+    {
+      "z_index": 15,
+      "layer_key": "hair_front",
+      "file": "15_hair_front.png",
+      "non_empty": true,
+      "shared": false,
+      "path": "/character-layers/redguard_male/15_hair_front.png",
+      "bbox_xyxy": [
+        235,
+        36,
+        593,
+        645
+      ],
+      "description": "Swept dreadlocks topknot bun with loose side locs"
+    },
+    {
+      "z_index": 16,
+      "layer_key": "headgear_horns",
+      "file": "16_headgear_horns.png",
+      "non_empty": false,
+      "shared": false,
+      "path": null,
+      "bbox_xyxy": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "description": "Headgear (empty)"
+    },
+    {
+      "z_index": 17,
+      "layer_key": "frame",
+      "file": "17_frame.png",
+      "non_empty": true,
+      "shared": true,
+      "path": "/character-layers/shared/17_frame.png",
+      "bbox_xyxy": [
+        0,
+        0,
+        763,
+        1023
+      ],
+      "description": "Portrait border frame"
+    }
+  ]
+}
