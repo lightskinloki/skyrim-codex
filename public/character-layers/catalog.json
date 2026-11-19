@@ -134,8 +134,8 @@
       "anchor": {
         "eyeX": 461,
         "eyeY": 337,
-        "mouthX": 469,
-        "mouthY": 476
+        "mouthX": 470,
+        "mouthY": 482
       },
       "baseLayers": {
         "01_background.png": "/character-layers/shared/01_background.png",
@@ -302,8 +302,8 @@
       "anchor": {
         "eyeX": 463,
         "eyeY": 337,
-        "mouthX": 478,
-        "mouthY": 488
+        "mouthX": 470,
+        "mouthY": 482
       },
       "baseLayers": {
         "01_background.png": "/character-layers/shared/01_background.png",
@@ -444,7 +444,7 @@
       "displayName": "Breton (Female)",
       "compatibilityGroup": "humanoid_female",
       "anchor": {
-        "eyeX": 463,
+        "eyeX": 450,
         "eyeY": 359,
         "mouthX": 477,
         "mouthY": 486
