@@ -23,7 +23,8 @@ interface Env {
 }
 
 const CODE = /^[A-Z0-9]{4,8}$/;
-const WORKERS_AI_IMAGE_MODEL = '@cf/black-forest-labs/flux-2-klein-4b';
+const WORKERS_AI_PRIMARY_MODEL = '@cf/black-forest-labs/flux-2-dev';
+const WORKERS_AI_FALLBACK_MODEL = '@cf/black-forest-labs/flux-2-klein-4b';
 
 function decodeBase64DataUrl(dataUrl: string): { bytes: Uint8Array; mime: string } | null {
   const match = dataUrl.match(/^data:(image\/(?:png|jpeg|webp));base64,([A-Za-z0-9+/=]+)$/);
@@ -66,31 +67,35 @@ async function handleAiRender(request: Request, env: Env): Promise<Response> {
 
   const width = Math.max(256, Math.min(1024, Math.round(Number(body.width) || 768)));
   const height = Math.max(256, Math.min(1024, Math.round(Number(body.height) || 1024)));
-  const fluxPrompt = rawPrompt.replace(
-    'the attached rough layered portrait collage',
-    'image 0 (the attached rough layered portrait collage)'
-  );
-
-  const form = new FormData();
-  form.append('prompt', fluxPrompt.slice(0, 2000));
-  form.append('input_image_0', new Blob([decoded.bytes], { type: decoded.mime }), 'reference.png');
-  form.append('width', String(width));
-  form.append('height', String(height));
-
-  const serialized = new Response(form);
-  const contentType = serialized.headers.get('content-type') || 'multipart/form-data';
-
-  try {
-    const aiResult = await env.AI.run(WORKERS_AI_IMAGE_MODEL, {
+  const buildPayload = (withSteps: boolean) => {
+    const form = new FormData();
+    form.append('prompt', rawPrompt.slice(0, 2000));
+    form.append('input_image_0', new Blob([decoded.bytes], { type: decoded.mime }), 'reference.png');
+    form.append('width', String(width));
+    form.append('height', String(height));
+    if (withSteps) form.append('steps', '14');
+    const serialized = new Response(form);
+    return {
       multipart: {
         body: serialized.body!,
-        contentType,
+        contentType: serialized.headers.get('content-type') || 'multipart/form-data',
       },
-    });
+    };
+  };
+
+  try {
+    let usedModel = WORKERS_AI_PRIMARY_MODEL;
+    let aiResult: unknown;
+    try {
+      aiResult = await env.AI.run(WORKERS_AI_PRIMARY_MODEL, buildPayload(true));
+    } catch {
+      usedModel = WORKERS_AI_FALLBACK_MODEL;
+      aiResult = await env.AI.run(WORKERS_AI_FALLBACK_MODEL, buildPayload(false));
+    }
 
     let b64: string | undefined;
-    if (aiResult && typeof aiResult === 'object' && 'image' in aiResult && typeof aiResult.image === 'string') {
-      b64 = aiResult.image;
+    if (aiResult && typeof aiResult === 'object' && 'image' in aiResult && typeof (aiResult as { image?: unknown }).image === 'string') {
+      b64 = (aiResult as { image: string }).image;
     } else if (aiResult instanceof ReadableStream) {
       const buf = await new Response(aiResult).arrayBuffer();
       b64 = uint8ToBase64(new Uint8Array(buf));
@@ -103,7 +108,7 @@ async function handleAiRender(request: Request, env: Env): Promise<Response> {
     const outMime = b64.startsWith('iVBOR') ? 'image/png' : 'image/jpeg';
     return Response.json({
       imageDataUrl: `data:${outMime};base64,${b64}`,
-      model: WORKERS_AI_IMAGE_MODEL,
+      model: usedModel,
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);

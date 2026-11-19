@@ -89,7 +89,7 @@ export function FinalRenderPanel({
   }, []);
 
   const compiledSpec = useMemo(() => {
-    if (!catalog) return { prompt: "", summary: "" };
+    if (!catalog) return { prompt: "", fluxPrompt: "", summary: "" };
     return compileRenderPrompt({ portrait, catalog, sheet: sheetContext });
   }, [portrait, catalog, sheetContext]);
 
@@ -168,7 +168,7 @@ export function FinalRenderPanel({
           })
         : await requestBuiltInAiRender({
             baseImageDataUrl,
-            prompt: compiledSpec.prompt,
+            prompt: compiledSpec.fluxPrompt,
             onStatus: (st, msg) => {
               setRenderStatus(st);
               if (msg) setRenderMessage(msg);
