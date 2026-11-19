@@ -125,3 +125,66 @@ export function focusRenderTab(): void {
 export function retryRenderGrab(): void {
   window.postMessage({ type: "RETRY_AI_GRAB" }, "*");
 }
+
+async function resizeDataUrlForWorkersAi(dataUrl: string, maxW = 376, maxH = 504): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(maxW / img.width, maxH / img.height, 1);
+      const w = Math.max(64, Math.round(img.width * scale));
+      const h = Math.max(64, Math.round(img.height * scale));
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        reject(new Error("Canvas unavailable for reference resize."));
+        return;
+      }
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL("image/png"));
+    };
+    img.onerror = () => reject(new Error("Failed to decode Stage 1 blueprint."));
+    img.src = dataUrl;
+  });
+}
+
+export async function requestBuiltInAiRender(params: {
+  baseImageDataUrl: string;
+  prompt: string;
+  onStatus?: (status: RenderBridgeStatus, message?: string) => void;
+}): Promise<RenderBridgeResult> {
+  const renderJobId = `worker_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  params.onStatus?.("attaching", "Preparing reference blueprint for built-in AI finalizer...");
+  const compactRef = await resizeDataUrlForWorkersAi(params.baseImageDataUrl, 376, 504);
+
+  params.onStatus?.("generating", "Rendering unified portrait via Skyrim Codex AI...");
+  const response = await fetch("/api/render", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      imageDataUrl: compactRef,
+      prompt: params.prompt,
+      width: 768,
+      height: 1024,
+    }),
+  });
+
+  const ct = response.headers.get("content-type") || "";
+  if (!ct.includes("application/json")) {
+    throw new Error(
+      response.status === 404
+        ? "Built-in AI endpoint (/api/render) is live on the deployed Cloudflare Worker, not the standalone Vite dev server."
+        : `Built-in AI returned unexpected response (${response.status}).`
+    );
+  }
+
+  const data = (await response.json()) as { imageDataUrl?: string; error?: string };
+  if (!response.ok || !data.imageDataUrl) {
+    throw new Error(data.error || `Built-in AI render failed (${response.status}).`);
+  }
+
+  params.onStatus?.("saving", "Saving rendered portrait...");
+  return { imageDataUrl: data.imageDataUrl, renderJobId };
+}
