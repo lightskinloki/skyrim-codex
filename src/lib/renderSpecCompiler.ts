@@ -215,7 +215,7 @@ export function compileRenderPrompt(params: {
   portrait: PortraitConfig;
   catalog: PortraitCatalog;
   sheet?: CharacterSheetRenderContext;
-}): { prompt: string; fluxPrompt: string; summary: string } {
+}): { prompt: string; summary: string } {
   const { portrait, catalog, sheet } = params;
   const opts: PortraitRenderOptions = {
     ...DEFAULT_RENDER_OPTIONS,
@@ -333,23 +333,6 @@ export function compileRenderPrompt(params: {
     .filter(Boolean)
     .join("\n");
 
-  const fluxBodyCue =
-    opts.bodyType !== "athletic" || Boolean(opts.customBodyNote?.trim())
-      ? ` Reshape the face, cheeks, jaw, neck, shoulders, and torso cleanly into a ${physiqueText}.`
-      : "";
-
-  const fluxPrompt = [
-    `Repaint the character in image 0 as a seamless, cohesive 32-bit RPG pixel-art bust portrait of a ${physiqueText} ${genderWord} ${raceName} (${ageText}) with ${expressionText}.${fluxBodyCue}`,
-    `Paint smooth, uniform ${targetSkinTone} evenly across the entire face, temples, jawline, neck, chest, and bare shoulders, with hair flowing naturally behind the ears, crisp sculpted lips, and unified armor and fabric transitions.`,
-    visualFeatures.length > 0 ? `Retain all identity and outfit elements from image 0: ${visualFeatures.join(", ")}.` : "",
-    equippedList.length > 0 ? `Depict equipped gear cleanly in hand or worn: ${equippedList.join(", ")}.` : "",
-    magicSchools.length > 0 ? `Add ${magicSchools.slice(0, 2).join(" and ")} magic sparks around the character.` : "",
-    `Keep the exact hair, eyebrow, eye, heterochromia, warpaint, cloak, and garment color palette from image 0. Render in hand-crafted 32-bit dark-fantasy RPG pixel art with crisp 1px dark ink outlines, sculpted cel shading, subtle dithering, and warm upper-left key light.`,
-    `Compose a centered 3:4 bust portrait with generous headroom filling the entire canvas edge-to-edge against ${backdropText}.`,
-  ]
-    .filter(Boolean)
-    .join(" ");
-
   const summary = `${raceName} ${genderWord} • ${BODY_TYPE_DESCRIPTIONS[opts.bodyType]?.label || opts.bodyType} • ${EXPRESSION_DESCRIPTIONS[opts.expression]?.label || opts.expression}`;
-  return { prompt, fluxPrompt, summary };
+  return { prompt, summary };
 }

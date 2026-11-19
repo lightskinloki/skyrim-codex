@@ -22,7 +22,6 @@ import {
   focusRenderTab,
   pingRenderBridge,
   requestAiRender,
-  requestBuiltInAiRender,
   retryRenderGrab,
   sendRenderSavedAck,
   subscribeLateRenderComplete,
@@ -60,7 +59,6 @@ export function FinalRenderPanel({
 }: FinalRenderPanelProps) {
   const [catalog, setCatalog] = useState<PortraitCatalog | null>(null);
   const [bridgeConnected, setBridgeConnected] = useState<boolean | null>(null);
-  const [activeBackend, setActiveBackend] = useState<"extension" | "builtin" | null>(null);
   const [renderStatus, setRenderStatus] = useState<RenderBridgeStatus>("idle");
   const [renderMessage, setRenderMessage] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -89,7 +87,7 @@ export function FinalRenderPanel({
   }, []);
 
   const compiledSpec = useMemo(() => {
-    if (!catalog) return { prompt: "", fluxPrompt: "", summary: "" };
+    if (!catalog) return { prompt: "", summary: "" };
     return compileRenderPrompt({ portrait, catalog, sheet: sheetContext });
   }, [portrait, catalog, sheetContext]);
 
@@ -147,6 +145,13 @@ export function FinalRenderPanel({
     try {
       const hasBridge = await pingRenderBridge();
       setBridgeConnected(hasBridge);
+      if (!hasBridge) {
+        setRenderStatus("error");
+        setRenderMessage(
+          "Companion extension not detected. Load C:\\Users\\fbrown\\skyrim-codex\\render-bridge-extension in chrome://extensions and refresh this page."
+        );
+        return;
+      }
 
       setRenderStatus("starting");
       setRenderMessage("Exporting Stage 1 blueprint (without UI border)...");
@@ -154,37 +159,18 @@ export function FinalRenderPanel({
         includeFrame: false,
       });
 
-      const backend = hasBridge ? "extension" : "builtin";
-      setActiveBackend(backend);
+      const result = await requestAiRender({
+        baseImageDataUrl,
+        prompt: compiledSpec.prompt,
+        onStatus: (st, msg) => {
+          setRenderStatus(st);
+          if (msg) setRenderMessage(msg);
+        },
+      });
 
-      const result = hasBridge
-        ? await requestAiRender({
-            baseImageDataUrl,
-            prompt: compiledSpec.prompt,
-            onStatus: (st, msg) => {
-              setRenderStatus(st);
-              if (msg) setRenderMessage(msg);
-            },
-          })
-        : await requestBuiltInAiRender({
-            baseImageDataUrl,
-            prompt: compiledSpec.fluxPrompt,
-            onStatus: (st, msg) => {
-              setRenderStatus(st);
-              if (msg) setRenderMessage(msg);
-            },
-          });
-
-      await applyFinalRenderImage(
-        result.imageDataUrl,
-        hasBridge ? result.renderJobId : undefined
-      );
+      await applyFinalRenderImage(result.imageDataUrl, result.renderJobId);
       setRenderStatus("idle");
-      setRenderMessage(
-        hasBridge
-          ? "Final portrait rendered via Google AI Mode and saved cleanly."
-          : "Final portrait rendered via Built-In AI Finalizer and saved cleanly."
-      );
+      setRenderMessage("Final portrait rendered and saved cleanly.");
     } catch (err) {
       setRenderStatus("error");
       setRenderMessage(err instanceof Error ? err.message : "Render failed.");
@@ -243,12 +229,12 @@ export function FinalRenderPanel({
               {bridgeConnected === true ? (
                 <Badge variant="outline" className="text-xs border-emerald-500/40 text-emerald-400">
                   <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
-                  Google AI Mode Bridge Connected
+                  Extension Connected
                 </Badge>
               ) : bridgeConnected === false ? (
-                <Badge variant="outline" className="text-xs border-emerald-500/40 text-emerald-400">
-                  <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
-                  Built-In AI Finalizer Ready
+                <Badge variant="outline" className="text-xs border-amber-500/40 text-amber-400">
+                  <AlertTriangle className="w-3.5 h-3.5 mr-1" />
+                  Extension Not Detected
                 </Badge>
               ) : null}
             </div>
@@ -281,13 +267,7 @@ export function FinalRenderPanel({
                   ) : (
                     <div className="p-3 text-center text-xs text-muted-foreground space-y-1">
                       <Wand2 className="w-6 h-6 mx-auto text-primary/60" />
-                      <div>
-                        {isRunning
-                          ? activeBackend === "extension"
-                            ? "Rendering in Google AI Mode..."
-                            : "Rendering via Built-In AI..."
-                          : "Not rendered yet"}
-                      </div>
+                      <div>{isRunning ? "Rendering in Google AI Mode..." : "Not rendered yet"}</div>
                     </div>
                   )}
                 </div>
@@ -309,8 +289,7 @@ export function FinalRenderPanel({
                   : "Render Final Portrait"}
               </Button>
 
-              {activeBackend === "extension" &&
-                (isRunning || renderStatus === "needs-attention" || renderStatus === "error") && (
+              {(isRunning || renderStatus === "needs-attention" || renderStatus === "error") && (
                 <>
                   <Button size="sm" variant="outline" className="h-9 text-xs" onClick={focusRenderTab}>
                     <ExternalLink className="w-3.5 h-3.5 mr-1" />
@@ -382,26 +361,32 @@ export function FinalRenderPanel({
               </div>
             )}
 
-            {bridgeConnected === false && RENDER_BRIDGE_STORE_URL && (
+            {bridgeConnected === false && (
               <div className="rounded-md border border-border/80 bg-background/60 p-3 flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
                 <div className="space-y-0.5">
                   <div className="font-medium text-foreground">
-                    Optional: Use Your Google AI Mode Quota
+                    {RENDER_BRIDGE_STORE_URL
+                      ? "Install Render Bridge to enable 1-click Final Renders"
+                      : "Render Bridge extension not detected"}
                   </div>
                   <p>
-                    1-click install from the Chrome Web Store to render via Google AI Mode (Nano Banana) in addition to the built-in AI finalizer.
+                    {RENDER_BRIDGE_STORE_URL
+                      ? "1-click install from the Chrome Web Store using your browser's Google session—no API keys or Developer Mode required."
+                      : "Chrome Web Store listing is being configured for 1-click playgroup install. You can still toggle Pre-Render Directly or Import Image below."}
                   </p>
                 </div>
-                <Button asChild size="sm" variant="outline" className="h-7 text-xs shrink-0">
-                  <a
-                    href={RENDER_BRIDGE_STORE_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
-                    Add to Chrome
-                  </a>
-                </Button>
+                {RENDER_BRIDGE_STORE_URL && (
+                  <Button asChild size="sm" variant="default" className="h-7 text-xs shrink-0">
+                    <a
+                      href={RENDER_BRIDGE_STORE_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
+                      Add to Chrome
+                    </a>
+                  </Button>
+                )}
               </div>
             )}
           </Card>
