@@ -8,7 +8,18 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "test:alchemy": "esbuild scripts/test-alchemy.ts --bundle --platform=node --format=cjs --alias:@=./src --outfile=node_modules/.test-alchemy.cjs && node node_modules/.test-alchemy.cjs",
+    "test:brace": "esbuild scripts/test-brace.ts --bundle --platform=node --format=cjs --alias:@=./src --outfile=node_modules/.test-brace.cjs && node node_modules/.test-brace.cjs",
+    "test:damage": "esbuild scripts/test-damage.ts --bundle --platform=node --format=cjs --alias:@=./src --outfile=node_modules/.test-damage.cjs && node node_modules/.test-damage.cjs",
+    "test:creator": "esbuild scripts/test-creator.ts --bundle --platform=node --format=cjs --alias:@=./src --outfile=node_modules/.test-creator.cjs && node node_modules/.test-creator.cjs",
+    "test:emblems": "esbuild scripts/test-emblems.ts --bundle --platform=node --format=cjs --alias:@=./src --outfile=node_modules/.test-emblems.cjs && node node_modules/.test-emblems.cjs",
+    "check:types": "node node_modules/typescript/bin/tsc -p tsconfig.app.json --noEmit",
+    "preview": "vite preview",
+    "test:encounter": "esbuild scripts/test-encounter.ts --bundle --platform=node --format=cjs --alias:@=./src --outfile=node_modules/.test-encounter.cjs && node node_modules/.test-encounter.cjs",
+    "test:props": "esbuild scripts/test-props.ts --bundle --platform=node --format=cjs --alias:@=./src --outfile=node_modules/.test-props.cjs && node node_modules/.test-props.cjs",
+    "test:rooms": "esbuild scripts/test-rooms.ts --bundle --platform=node --format=cjs --alias:@=./src --outfile=node_modules/.test-rooms.cjs && node node_modules/.test-rooms.cjs",
+    "rooms:export": "esbuild scripts/export-rooms.ts --bundle --platform=node --format=cjs --alias:@=./src --outfile=node_modules/.export-rooms.cjs && node node_modules/.export-rooms.cjs",
+    "test:walk": "esbuild scripts/test-walk.ts --bundle --platform=node --format=cjs --alias:@=./src --outfile=node_modules/.test-walk.cjs && node node_modules/.test-walk.cjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -48,6 +59,7 @@
     "input-otp": "^1.4.2",
     "lucide-react": "^0.462.0",
     "next-themes": "^0.3.0",
+    "qrcode": "^1.5.4",
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
     "react-dom": "^18.3.1",
@@ -62,9 +74,11 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261031.1",
     "@eslint/js": "^9.32.0",
     "@tailwindcss/typography": "^0.5.16",
     "@types/node": "^22.16.5",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react-swc": "^3.11.0",
@@ -78,6 +92,7 @@
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.38.0",
-    "vite": "^5.4.19"
+    "vite": "^5.4.19",
+    "wrangler": "^4.156.0"
   }
 }

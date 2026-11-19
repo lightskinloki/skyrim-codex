@@ -6,6 +6,9 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ChevronDown, ChevronRight, Zap } from "lucide-react";
 import { Character, CharacterSkill } from "@/types/character";
 import { skills } from "@/data/skills";
+import { skillEmblemUrl } from "@/characters/skillEmblem";
+import { skillArtPath } from "@/characters/creatorArt";
+import { CreatorPlate } from "./creator/CreatorPlate";
 
 interface SkillsDisplayProps {
   character: Character;
@@ -63,16 +66,6 @@ export function SkillsDisplay({ character, onSpendFP }: SkillsDisplayProps) {
     return acc;
   }, {} as Record<string, typeof sortedSkills>);
 
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'Combat': return '⚔️';
-      case 'Magic': return '🔮';
-      case 'Armor': return '🛡️';
-      case 'Utility': return '🛠️';
-      default: return '❓';
-    }
-  };
-
   // Get unlocked perks based on character's rank in the skill
   const getUnlockedPerks = (skill: CharacterSkill) => {
     const skillData = skills.find(s => s.id === skill.skillId);
@@ -100,9 +93,8 @@ export function SkillsDisplay({ character, onSpendFP }: SkillsDisplayProps) {
       <div className="space-y-4">
         {Object.entries(skillsByType).map(([type, typeSkills]) => (
           <div key={type}>
-            <h4 className="text-sm font-medium text-muted-foreground mb-2 flex items-center">
-              <span className="mr-2">{getTypeIcon(type)}</span>
-              {type} Skills
+            <h4 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+              {type}
             </h4>
             
             <div className="space-y-2 ml-6">
@@ -116,11 +108,21 @@ export function SkillsDisplay({ character, onSpendFP }: SkillsDisplayProps) {
                     <div className="flex items-center justify-between p-3 bg-muted rounded hover:bg-muted/80 transition-colors">
                       <div className="flex items-center space-x-3">
                         {expandedSkills.has(skill.skillId) ? (
-                          <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                          <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
                         ) : (
-                          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                          <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
                         )}
-                        
+
+                        <img
+                          src={skillEmblemUrl(skill.skillId)}
+                          alt=""
+                          aria-hidden
+                          width={24}
+                          height={24}
+                          className="h-6 w-6 shrink-0"
+                          style={{ imageRendering: "pixelated" }}
+                        />
+
                          <div className="text-left">
                            <span className="font-medium">{skill.skillData?.name}</span>
                            {getUnlockedPerks(skill).length > 0 && (
@@ -138,7 +140,14 @@ export function SkillsDisplay({ character, onSpendFP }: SkillsDisplayProps) {
                   </CollapsibleTrigger>
                   
                    <CollapsibleContent>
-                     <div className="ml-7 mt-2 space-y-2">
+                     <div className="ml-7 mt-2 space-y-3">
+                       <CreatorPlate
+                         src={skillArtPath(skill.skillId)}
+                         alt={`${skill.skillData?.name ?? skill.skillId} artwork`}
+                         className="aspect-[16/9] rounded-md border border-border/60"
+                       />
+
+                       <div className="space-y-2">
                        {getUnlockedPerks(skill).length > 0 ? (
                          getUnlockedPerks(skill).map((perk) => (
                            <div key={perk.name} className="p-3 bg-primary/5 rounded border-l-2 border-primary/30">
@@ -174,6 +183,7 @@ export function SkillsDisplay({ character, onSpendFP }: SkillsDisplayProps) {
                            No perks unlocked for this skill.
                          </p>
                        )}
+                       </div>
                      </div>
                    </CollapsibleContent>
                 </Collapsible>

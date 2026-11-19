@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Sword, Shield, Users } from "lucide-react";
@@ -80,6 +81,21 @@ export function ModeSelector({ onSelectMode }: ModeSelectorProps) {
               </CardContent>
             </Card>
           )}
+        </div>
+
+        <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+          <Link
+            to="/battlemap"
+            className="text-xs text-muted-foreground underline decoration-dotted underline-offset-4 hover:text-primary"
+          >
+            Battle map — the four-buffer renderer, in development
+          </Link>
+          <Link
+            to="/characters"
+            className="text-xs text-muted-foreground underline decoration-dotted underline-offset-4 hover:text-primary"
+          >
+            Character creator — bust and body from one spec
+          </Link>
         </div>
       </div>
     </div>

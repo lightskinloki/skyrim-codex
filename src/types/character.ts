@@ -48,6 +48,8 @@ export interface Skill {
   name: string;
   type: 'Combat' | 'Magic' | 'Armor' | 'Utility';
   governingStat: 'Might' | 'Agility' | 'Magic' | 'Guile';
+  /** One line, in plain language, for the creator. "What will my character do?" */
+  summary?: string;
   perks: Perk[];
 }
 
@@ -77,13 +79,44 @@ export interface Equipment {
   enchantment?: Enchantment;
 }
 
+export interface InventoryItem {
+  name: string;
+  quantity: number;
+  /** Filled in automatically from the item catalog when the name is recognized. */
+  kind?: 'potion' | 'poison' | 'weapon' | 'armor' | 'shield' | 'misc';
+  effect?: string;
+  restoreHp?: number;
+  restoreFp?: number;
+  /**
+   * Built by a player in the item picker, not printed in the rulebook. Shown
+   * with a "Brewed" / "Homebrew" tag so a lookalike name can't pass as canon.
+   */
+  homebrew?: boolean;
+}
+
+/** A custom item the player built in the item picker, kept for reuse. */
+export interface HomebrewItem {
+  id: string;
+  name: string;
+  kind: 'potion' | 'poison' | 'misc';
+  effect: string;
+  restoreHp?: number;
+  restoreFp?: number;
+}
+
 export interface Kit {
   id: string;
   name: string;
   description: string;
   equipment: Equipment[];
-  items: Array<{ name: string; quantity: number }>;
+  items: InventoryItem[];
   gold: number;
+  /**
+   * Assembled from the book's own gear table rather than printed as a starting
+   * kit. The card says so: the printed three are canon, and these are an
+   * invitation to build a hybrid, not another rule.
+   */
+  house?: boolean;
 }
 
 export interface CustomAbility {
@@ -189,7 +222,9 @@ export interface Character {
   equipment: Equipment[];
   inventory: {
     gold: number;
-    items: Array<{ name: string; quantity: number }>;
+    items: InventoryItem[];
+    /** Custom items saved from the picker so they can be added again. */
+    homebrew?: HomebrewItem[];
   };
   progression: {
     combatProwessUnlocked: {

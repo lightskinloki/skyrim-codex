@@ -1,0 +1,239 @@
+{
+  "format": "skyrim-codex.room",
+  "version": 1,
+  "id": "trader-hall",
+  "name": "Ivarstead Traders",
+  "terrain": [
+    "2*14",
+    "2,1*12,2",
+    "2,1*12,2",
+    "2,1*12,2",
+    "2,1*12,2",
+    "2,1*12,2",
+    "2,1*12,2",
+    "2,1*12,2",
+    "2,1*12,2",
+    "2*7,1,2*6"
+  ],
+  "seed": 2061393645,
+  "props": [
+    {
+      "id": "p1",
+      "rule": "shelf",
+      "at": [
+        2,
+        1.1
+      ],
+      "w": 4
+    },
+    {
+      "id": "p2",
+      "rule": "shelf",
+      "at": [
+        10.2,
+        2
+      ],
+      "w": 2
+    },
+    {
+      "id": "p3",
+      "rule": "shelf",
+      "at": [
+        10.2,
+        4.5
+      ],
+      "w": 2
+    },
+    {
+      "id": "p4",
+      "rule": "table",
+      "at": [
+        3.2,
+        3.4
+      ],
+      "w": 4
+    },
+    {
+      "id": "p5",
+      "rule": "chest",
+      "at": [
+        8.4,
+        2.2
+      ],
+      "w": 1.2,
+      "bands": 2
+    },
+    {
+      "id": "p6",
+      "rule": "crate",
+      "at": [
+        2.2,
+        7.1
+      ]
+    },
+    {
+      "id": "p7",
+      "rule": "crate",
+      "at": [
+        2.9,
+        7.2
+      ]
+    },
+    {
+      "id": "p8",
+      "rule": "crate",
+      "at": [
+        2.6,
+        7.8
+      ]
+    },
+    {
+      "id": "p9",
+      "rule": "barrel",
+      "at": [
+        11.4,
+        7.1
+      ]
+    },
+    {
+      "id": "p10",
+      "rule": "barrel",
+      "at": [
+        10.6,
+        7.3
+      ]
+    },
+    {
+      "id": "p11",
+      "rule": "rug",
+      "at": [
+        5.2,
+        5.12
+      ],
+      "w": 3.2,
+      "h": 1.9,
+      "navy": false
+    },
+    {
+      "id": "p12",
+      "rule": "brazier",
+      "at": [
+        11.6,
+        1.2
+      ],
+      "lit": true
+    }
+  ],
+  "tokens": [
+    {
+      "id": "pc-1",
+      "spec": {
+        "id": "knight",
+        "name": "Sigrid",
+        "race": "nord",
+        "build": "burly",
+        "skinTone": "fair",
+        "hair": "black",
+        "hairStyle": "braid",
+        "beard": "none",
+        "garment": {
+          "torso": "plate",
+          "torsoCloth": "metal",
+          "legs": "greaves",
+          "legsCloth": "metal"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        7.4,
+        8.4
+      ],
+      "facing": 1,
+      "party": true
+    },
+    {
+      "id": "trader-1",
+      "spec": {
+        "id": "smith",
+        "name": "Alvar",
+        "race": "nord",
+        "build": "burly",
+        "skinTone": "fair",
+        "hair": "grey",
+        "hairStyle": "short",
+        "beard": "long",
+        "garment": {
+          "torso": "tank",
+          "torsoCloth": "grey",
+          "legs": "trousers",
+          "legsCloth": "navy"
+        },
+        "weapon": "hammer"
+      },
+      "at": [
+        4.2,
+        4.4
+      ],
+      "facing": 2
+    }
+  ],
+  "path": [
+    [
+      7,
+      8
+    ],
+    [
+      7,
+      6
+    ],
+    [
+      6,
+      5
+    ]
+  ],
+  "rig": {
+    "ambient": 0.24,
+    "sun": {
+      "azimuth": 210,
+      "elevation": 38,
+      "intensity": 0.62
+    },
+    "points": [
+      {
+        "x": 224,
+        "y": 67.2,
+        "radius": 128,
+        "intensity": 1.15,
+        "id": "counter-lamp",
+        "flicker": 0.2
+      }
+    ]
+  },
+  "ground": [
+    "0*14",
+    "0*14",
+    "0*14",
+    "0*14",
+    "0*14",
+    "0*14",
+    "0*14",
+    "0*14",
+    "0*14",
+    "0*14"
+  ],
+  "doors": [
+    {
+      "id": "trader-exit",
+      "at": [
+        7,
+        9
+      ],
+      "label": "Ivarstead",
+      "to": {
+        "room": "ivarstead",
+        "door": "trader-door"
+      }
+    }
+  ],
+  "wallHeight": 2.1
+}

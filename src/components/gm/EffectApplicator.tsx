@@ -21,6 +21,7 @@ const statusEffectDescriptions: Record<StatusEffectType, string> = {
   burning: "Takes fire damage at START of turn (intensity = damage)",
   slowed: "Cannot use Minor Action for movement",
   staggered: "Loses next Minor Action",
+  prone: "On the ground: Advantage on its own ranged attacks, any attack that hits it is an automatic critical; standing up costs a Minor",
   paralyzed: "Cannot act at all",
   invisible: "Cannot be targeted by enemies",
   hidden: "In stealth, advantage on first attack",
@@ -33,7 +34,7 @@ const statusEffectDescriptions: Record<StatusEffectType, string> = {
 };
 
 const statusEffects: StatusEffectType[] = [
-  'bleeding', 'burning', 'slowed', 'staggered', 'paralyzed',
+  'bleeding', 'burning', 'slowed', 'staggered', 'prone', 'paralyzed',
   'invisible', 'hidden', 'feared', 'frenzied', 'calmed',
   'encased', 'exposed', 'bracing'
 ];

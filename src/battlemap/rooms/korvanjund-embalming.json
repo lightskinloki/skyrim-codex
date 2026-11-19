@@ -1,0 +1,326 @@
+{
+  "format": "skyrim-codex.room",
+  "version": 1,
+  "id": "korvanjund-embalming",
+  "name": "Korvanjund: The Embalming Hall",
+  "terrain": [
+    "2*18",
+    "2,1*16,2",
+    "2,1*16,2",
+    "2,1*16,2",
+    "2,1*16,2",
+    "2,1*16,2",
+    "1*17,2",
+    "2,1*16,2",
+    "2,1*16,2",
+    "2,1*16,2",
+    "2,1*16,2",
+    "2*18"
+  ],
+  "seed": 14924317,
+  "props": [
+    {
+      "id": "p1",
+      "rule": "gear",
+      "at": [
+        16.55,
+        4.6
+      ],
+      "r": 0.9,
+      "along": "x",
+      "h": 1.2,
+      "speed": 0
+    },
+    {
+      "id": "p2",
+      "rule": "chain",
+      "at": [
+        10,
+        5
+      ],
+      "w": 5.5,
+      "along": "x",
+      "h": 0.07
+    },
+    {
+      "id": "p3",
+      "rule": "chain",
+      "at": [
+        11,
+        4.4
+      ],
+      "w": 2.6,
+      "along": "z",
+      "h": 0.07
+    },
+    {
+      "id": "p4",
+      "rule": "chain",
+      "at": [
+        9.6,
+        6.2
+      ],
+      "w": 4,
+      "along": "x",
+      "h": 0.07
+    },
+    {
+      "id": "p5",
+      "rule": "chain",
+      "at": [
+        13.2,
+        5.6
+      ],
+      "w": 2.2,
+      "along": "z",
+      "h": 0.07
+    },
+    {
+      "id": "p6",
+      "rule": "table",
+      "at": [
+        2.5,
+        2
+      ],
+      "w": 2.2,
+      "stone": true
+    },
+    {
+      "id": "p7",
+      "rule": "table",
+      "at": [
+        6,
+        2
+      ],
+      "w": 2.2,
+      "stone": true
+    },
+    {
+      "id": "p8",
+      "rule": "table",
+      "at": [
+        2.5,
+        8.6
+      ],
+      "w": 2.2,
+      "stone": true
+    },
+    {
+      "id": "p9",
+      "rule": "table",
+      "at": [
+        6,
+        8.6
+      ],
+      "w": 2.2,
+      "stone": true
+    },
+    {
+      "id": "p10",
+      "rule": "table",
+      "at": [
+        2.5,
+        5.3
+      ],
+      "w": 2.2,
+      "stone": true
+    },
+    {
+      "id": "p11",
+      "rule": "sprite",
+      "at": [
+        3,
+        2
+      ],
+      "y": 0.5,
+      "sprite": "urn",
+      "scale": 0.45
+    },
+    {
+      "id": "p12",
+      "rule": "sprite",
+      "at": [
+        6.9,
+        2.05
+      ],
+      "y": 0.5,
+      "sprite": "urn",
+      "scale": 0.4
+    },
+    {
+      "id": "p13",
+      "rule": "sprite",
+      "at": [
+        3.4,
+        8.65
+      ],
+      "y": 0.5,
+      "sprite": "urn",
+      "scale": 0.45
+    },
+    {
+      "id": "p14",
+      "rule": "sprite",
+      "at": [
+        7.3,
+        8.6
+      ],
+      "y": 0.5,
+      "sprite": "urn",
+      "scale": 0.42
+    },
+    {
+      "id": "p15",
+      "rule": "shelf",
+      "at": [
+        10,
+        1.05
+      ],
+      "w": 3
+    },
+    {
+      "id": "p16",
+      "rule": "shelf",
+      "at": [
+        10,
+        10.45
+      ],
+      "w": 3
+    },
+    {
+      "id": "p17",
+      "rule": "brazier",
+      "at": [
+        8.6,
+        1.2
+      ],
+      "lit": true
+    },
+    {
+      "id": "p18",
+      "rule": "brazier",
+      "at": [
+        14.6,
+        9.8
+      ],
+      "lit": true
+    }
+  ],
+  "tokens": [
+    {
+      "id": "scourge-1",
+      "spec": {
+        "id": "draugr-scourge",
+        "name": "Draugr Scourge",
+        "race": "nord",
+        "build": "slim",
+        "skinTone": "pale",
+        "hair": "grey",
+        "hairStyle": "long",
+        "beard": "long",
+        "garment": {
+          "torso": "vest",
+          "torsoCloth": "leather",
+          "legs": "trousers",
+          "legsCloth": "grey"
+        },
+        "weapon": "bow"
+      },
+      "at": [
+        5.2,
+        4.2
+      ],
+      "facing": 2
+    },
+    {
+      "id": "scourge-2",
+      "spec": {
+        "id": "draugr-scourge",
+        "name": "Draugr Scourge",
+        "race": "nord",
+        "build": "slim",
+        "skinTone": "pale",
+        "hair": "grey",
+        "hairStyle": "long",
+        "beard": "long",
+        "garment": {
+          "torso": "vest",
+          "torsoCloth": "leather",
+          "legs": "trousers",
+          "legsCloth": "grey"
+        },
+        "weapon": "bow"
+      },
+      "at": [
+        12,
+        9
+      ],
+      "facing": 2
+    },
+    {
+      "id": "pc-1",
+      "spec": {
+        "id": "knight",
+        "name": "Sigrid",
+        "race": "nord",
+        "build": "burly",
+        "skinTone": "fair",
+        "hair": "black",
+        "hairStyle": "braid",
+        "beard": "none",
+        "garment": {
+          "torso": "plate",
+          "torsoCloth": "metal",
+          "legs": "greaves",
+          "legsCloth": "metal"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        1.4,
+        6
+      ],
+      "facing": 3,
+      "party": true
+    }
+  ],
+  "path": [],
+  "rig": {
+    "ambient": 0.2,
+    "sun": {
+      "azimuth": 210,
+      "elevation": 50,
+      "intensity": 0.25
+    },
+    "points": []
+  },
+  "ground": [
+    "0*18",
+    "0*18",
+    "0*18",
+    "0*18",
+    "0*9,2*7,0*2",
+    "0*9,2*7,0*2",
+    "0*9,2*7,0*2",
+    "0*9,2*7,0*2",
+    "0*9,2*7,0*2",
+    "0*18",
+    "0*18",
+    "0*18"
+  ],
+  "doors": [
+    {
+      "id": "hub-door",
+      "at": [
+        0,
+        6
+      ],
+      "label": "The Silent Shaft",
+      "to": {
+        "room": "korvanjund-shaft",
+        "door": "embalming-door"
+      }
+    }
+  ],
+  "wallHeight": 1.7
+}

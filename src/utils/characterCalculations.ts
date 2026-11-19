@@ -81,7 +81,8 @@ export function calculateMaxFP(
   }
   
   // Standard calculation for all other stones
-  let maxFP = Math.floor(finalStats.agility / 2) + Math.floor(finalStats.magic / 2);
+  // Players guide: FP = (AGILITY + MAGIC) / 2 — "Add first, then divide. Round down."
+  let maxFP = Math.floor((finalStats.agility + finalStats.magic) / 2);
   
   // High Elf racial bonus
   if (race.id === "high-elf") {
@@ -111,7 +112,13 @@ export function calculateMaxFP(
 }
 
 export function calculateTotalDR(equipment: any[], standingStone: StandingStone): number {
-  let totalDR = equipment.reduce((total, item) => total + (item.dr || 0), 0);
+  // A shield's `dr` is its bracing bonus, not passive armour: the books list it
+  // under "Bracing Bonus" and only while bracing (players guide 823-824,
+  // Gear → Shields). Counting it here would give every shield two lives.
+  let totalDR = equipment.reduce(
+    (total, item) => total + (item.type === 'shield' ? 0 : item.dr || 0),
+    0,
+  );
   
   // Lord stone bonus
   if (standingStone.id === "lord") {

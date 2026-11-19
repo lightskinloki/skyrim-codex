@@ -1,216 +1,218 @@
-import { useState } from "react";
+// GM Campaign Suite shell — the 4 pillars (Hub / Forge / Live Play / Compendium)
+// plus the combat tracker, which is now a sub-view launched from Live Play's
+// "Deploy Encounter" as well as its own tab. Combat state is lifted here so a
+// scene's enemies flow straight into the tracker.
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { 
-  Swords, 
-  ArrowLeft, 
-  Play, 
-  Square, 
-  SkipForward, 
-  Undo2, 
-  ChevronDown,
-  ChevronUp,
-  Users,
-  Sparkles,
-  ListOrdered
-} from "lucide-react";
-import { GMCombatTracker } from "./GMCombatTracker";
-import { EnemyManager } from "./EnemyManager";
-import { InitiativeEditor } from "./InitiativeEditor";
-import { EffectApplicator } from "./EffectApplicator";
-import { CombatLog } from "./CombatLog";
+import { ArrowLeft, LayoutDashboard, Hammer, Play, Swords, BookOpen, Scroll, FlaskConical } from "lucide-react";
 import { CombatState } from "@/types/combat";
 import { combatManager } from "@/lib/combatManager";
+import { enemyTemplates } from "@/data/enemies";
+import { CampaignProvider } from "./CampaignContext";
+import { TableProvider } from "./TableContext";
+import { CampaignHub } from "./hub/CampaignHub";
+import { ModuleBuilder } from "./builder/ModuleBuilder";
+import { LivePlay } from "./play/LivePlay";
+import { CombatView } from "./CombatView";
+import { UniversalCompendium } from "./compendium/UniversalCompendium";
+import { AlchemyWorkbench } from "./alchemy/AlchemyWorkbench";
+import { TableBadge } from "./TableBadge";
+import { useTable } from "./TableContext";
 
 interface GMDashboardProps {
   onExit: () => void;
 }
 
-export function GMDashboard({ onExit }: GMDashboardProps) {
+function GMDashboardInner({ onExit }: GMDashboardProps) {
   const [combatState, setCombatState] = useState<CombatState>(combatManager.initializeCombat());
-  const [logOpen, setLogOpen] = useState(true);
+  const [activeTab, setActiveTab] = useState("hub");
+  const [liveModuleId, setLiveModuleId] = useState<string | null>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const { members, editCharacter, publishRoster } = useTable();
+  const lastRoster = useRef("");
+  const membersRef = useRef(members);
+  membersRef.current = members;
+  const lastCombat = useRef(combatState);
 
-  const handleStartCombat = () => {
-    setCombatState(prev => combatManager.startCombat(prev));
-  };
+  // A player's sheet and their combatant are one number, not two. The sheet
+  // wins the first direction: anything a player does to themselves on their
+  // own screen lands on the tracker without the GM copying it across.
+  useEffect(() => {
+    setCombatState((prev) => {
+      let next = prev;
+      for (const member of members) {
+        const combatant = prev.combatants.find((c) => c.characterId === member.character.id);
+        if (!combatant) continue;
+        const hp = member.character.resources.hp;
+        const fp = member.character.resources.fp;
+        if (
+          combatant.hp.current === hp.current &&
+          combatant.hp.max === hp.max &&
+          combatant.fp.current === fp.current &&
+          combatant.fp.max === fp.max
+        ) continue;
+        next = combatManager.updateCombatant(next, combatant.id, {
+          hp: { ...hp },
+          fp: { ...fp },
+          isDead: hp.current <= 0,
+        });
+      }
+      return next;
+    });
+  }, [members]);
 
-  const handleEndCombat = () => {
-    setCombatState(prev => combatManager.endCombat(prev));
-  };
+  // Keep the players' list of what is on the board current. Concealed enemies
+  // are simply not in it; there is no "something is there" placeholder to leak.
+  useEffect(() => {
+    const visible = combatState.combatants
+      .filter((c) => c.type === "enemy" && !c.isDead && !c.concealed)
+      .map((c) => ({ id: c.id, name: c.name }));
+    const key = JSON.stringify(visible);
+    if (key === lastRoster.current) return;
+    lastRoster.current = key;
+    publishRoster(visible);
+  }, [combatState.combatants, publishRoster]);
 
-  const handleNextTurn = () => {
-    setCombatState(prev => combatManager.nextTurn(prev));
-  };
+  // A brace the player reported becomes a status effect on their combatant, so
+  // the tracker's own damage path subtracts it once and then spends it. The
+  // player card shows the same number, for hits applied there instead.
+  useEffect(() => {
+    setCombatState((prev) => {
+      let next = prev;
+      for (const member of members) {
+        const combatant = prev.combatants.find((c) => c.characterId === member.character.id);
+        if (!combatant) continue;
+        const held = combatant.statusEffects.find((e) => e.type === 'bracing');
+        const want = member.brace?.bonus ?? 0;
+        if (want > 0 && held?.bonusValue !== want) {
+          if (held) next = combatManager.removeStatusEffect(next, combatant.id, held.id);
+          next = combatManager.addStatusEffect(next, combatant.id, 'bracing', 1, 'Brace', undefined, want);
+        } else if (want === 0 && held) {
+          next = combatManager.removeStatusEffect(next, combatant.id, held.id);
+        }
+      }
+      return next;
+    });
+  }, [members]);
 
-  const handleUndo = () => {
-    setCombatState(prev => combatManager.undo(prev));
-  };
+  // The other direction: a GM's damage or heal on the tracker writes back to
+  // the player's sheet. Only a combatant whose HP actually moved in this
+  // update is written, so unrelated tracker changes never touch a sheet.
+  useEffect(() => {
+    const before = lastCombat.current;
+    lastCombat.current = combatState;
+    for (const combatant of combatState.combatants) {
+      if (!combatant.characterId) continue;
+      const previous = before.combatants.find((c) => c.id === combatant.id);
+      if (!previous) continue;
+      if (
+        previous.hp.current === combatant.hp.current &&
+        previous.fp.current === combatant.fp.current
+      ) continue;
+      const member = membersRef.current.find((m) => m.character.id === combatant.characterId);
+      if (!member) continue;
+      if (
+        member.character.resources.hp.current === combatant.hp.current &&
+        member.character.resources.fp.current === combatant.fp.current
+      ) continue;
+      editCharacter(member.peerId, (character) => ({
+        ...character,
+        resources: {
+          ...character.resources,
+          hp: {
+            ...character.resources.hp,
+            current: Math.max(0, Math.min(character.resources.hp.max, combatant.hp.current)),
+          },
+          fp: {
+            ...character.resources.fp,
+            current: Math.max(0, Math.min(character.resources.fp.max, combatant.fp.current)),
+          },
+        },
+      }));
+    }
+  }, [combatState, editCharacter]);
 
-  const currentCombatant = combatState.combatants.find(
-    c => c.id === combatState.currentTurnCombatantId
-  );
+  // Ctrl/Cmd+K → jump to the compendium and focus search
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setActiveTab("compendium");
+        setTimeout(() => searchRef.current?.focus(), 50);
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  function handleDeployEncounter(enemyIds: string[]) {
+    setCombatState((prev) => {
+      let next = prev;
+      for (const id of enemyIds) {
+        const template = enemyTemplates.find((e) => e.id === id);
+        if (template) next = combatManager.addCombatant(next, combatManager.createCombatantFromEnemy(template));
+      }
+      return next;
+    });
+    setActiveTab("combat");
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="sm" onClick={onExit}>
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Exit GM Mode
-              </Button>
-              <div className="flex items-center gap-2">
-                <Swords className="h-5 w-5 text-primary" />
-                <h1 className="font-cinzel text-xl font-bold">GM Control Panel</h1>
-              </div>
+        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="sm" onClick={onExit}>
+              <ArrowLeft className="h-4 w-4 mr-2" /> Exit GM Mode
+            </Button>
+            <div className="flex items-center gap-2">
+              <Scroll className="h-5 w-5 text-primary" />
+              <h1 className="font-cinzel text-xl font-bold">GM Campaign Suite</h1>
             </div>
-            
-            <div className="flex items-center gap-4">
-              {combatState.active && (
-                <>
-                  <Badge variant="outline" className="text-amber-500 border-amber-500">
-                    Round {combatState.round}
-                  </Badge>
-                  {currentCombatant && (
-                    <Badge variant="secondary">
-                      Current: {currentCombatant.name}
-                    </Badge>
-                  )}
-                </>
-              )}
-              <Badge variant={combatState.active ? "default" : "secondary"}>
-                {combatState.active ? "Combat Active" : "Out of Combat"}
-              </Badge>
-            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {combatState.active && (
+              <Badge variant="outline" className="text-amber-500 border-amber-500">Combat · Round {combatState.round}</Badge>
+            )}
+            <TableBadge />
           </div>
         </div>
       </header>
 
-      {/* Control Bar */}
-      <div className="border-b bg-muted/30 py-3">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-center gap-4">
-            {!combatState.active ? (
-              <Button 
-                onClick={handleStartCombat}
-                disabled={combatState.combatants.length === 0}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                <Play className="h-4 w-4 mr-2" />
-                Start Combat
-              </Button>
-            ) : (
-              <>
-                <Button 
-                  onClick={handleNextTurn}
-                  size="lg"
-                  className="bg-amber-600 hover:bg-amber-700 px-8"
-                >
-                  <SkipForward className="h-5 w-5 mr-2" />
-                  Next Turn
-                </Button>
-                <Button 
-                  onClick={handleEndCombat}
-                  variant="destructive"
-                >
-                  <Square className="h-4 w-4 mr-2" />
-                  End Combat
-                </Button>
-              </>
-            )}
-            <Button
-              onClick={handleUndo}
-              variant="outline"
-              disabled={combatState.history.length === 0}
-            >
-              <Undo2 className="h-4 w-4 mr-2" />
-              Undo ({combatState.history.length})
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
       <div className="flex-1 container mx-auto px-4 py-4">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 h-full">
-          {/* Left Panel - Combat Tracker */}
-          <Card className="p-4 overflow-hidden flex flex-col">
-            <h2 className="font-cinzel text-lg font-bold mb-4 flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Combat Tracker
-            </h2>
-            <div className="flex-1 overflow-auto">
-              <GMCombatTracker 
-                combatState={combatState}
-                onUpdateState={setCombatState}
-              />
-            </div>
-          </Card>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full max-w-4xl mx-auto grid-cols-6">
+            <TabsTrigger value="hub"><LayoutDashboard className="h-4 w-4 mr-1" /><span className="hidden sm:inline">Hub</span></TabsTrigger>
+            <TabsTrigger value="forge"><Hammer className="h-4 w-4 mr-1" /><span className="hidden sm:inline">Forge</span></TabsTrigger>
+            <TabsTrigger value="live"><Play className="h-4 w-4 mr-1" /><span className="hidden sm:inline">Live Play</span></TabsTrigger>
+            <TabsTrigger value="combat"><Swords className="h-4 w-4 mr-1" /><span className="hidden sm:inline">Combat</span></TabsTrigger>
+            <TabsTrigger value="compendium"><BookOpen className="h-4 w-4 mr-1" /><span className="hidden sm:inline">Compendium</span></TabsTrigger>
+            <TabsTrigger value="alchemy"><FlaskConical className="h-4 w-4 mr-1" /><span className="hidden sm:inline">Alchemy</span></TabsTrigger>
+          </TabsList>
 
-          {/* Right Panel - Tabbed Interface */}
-          <Card className="p-4 overflow-hidden flex flex-col">
-            <Tabs defaultValue="enemies" className="flex-1 flex flex-col">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="enemies" className="flex items-center gap-1">
-                  <Users className="h-4 w-4" />
-                  <span className="hidden sm:inline">Enemies</span>
-                </TabsTrigger>
-                <TabsTrigger value="effects" className="flex items-center gap-1">
-                  <Sparkles className="h-4 w-4" />
-                  <span className="hidden sm:inline">Effects</span>
-                </TabsTrigger>
-                <TabsTrigger value="initiative" className="flex items-center gap-1">
-                  <ListOrdered className="h-4 w-4" />
-                  <span className="hidden sm:inline">Initiative</span>
-                </TabsTrigger>
-              </TabsList>
-              <TabsContent value="enemies" className="flex-1 overflow-auto mt-4">
-                <EnemyManager 
-                  combatState={combatState}
-                  onUpdateState={setCombatState}
-                />
-              </TabsContent>
-              <TabsContent value="effects" className="flex-1 overflow-auto mt-4">
-                <EffectApplicator 
-                  combatState={combatState}
-                  onUpdateState={setCombatState}
-                />
-              </TabsContent>
-              <TabsContent value="initiative" className="flex-1 overflow-auto mt-4">
-                <InitiativeEditor 
-                  combatState={combatState}
-                  onUpdateState={setCombatState}
-                />
-              </TabsContent>
-            </Tabs>
-          </Card>
-        </div>
-      </div>
-
-      {/* Bottom Panel - Combat Log */}
-      <div className="border-t bg-card/50">
-        <Collapsible open={logOpen} onOpenChange={setLogOpen}>
-          <CollapsibleTrigger asChild>
-            <Button variant="ghost" className="w-full py-2 flex items-center justify-center gap-2">
-              {logOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
-              Combat Log ({combatState.log.length} entries)
-            </Button>
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <div className="container mx-auto px-4 pb-4">
-              <CombatLog 
-                combatState={combatState}
-                onUpdateState={setCombatState}
-              />
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
+          <TabsContent value="hub" className="mt-4"><CampaignHub /></TabsContent>
+          {/* forceMount: leaving the Forge to peek at Live Play must not throw away what someone is in the middle of writing */}
+          <TabsContent value="forge" forceMount className="mt-4 data-[state=inactive]:hidden">
+            <ModuleBuilder onRunModule={(id) => { setLiveModuleId(id); setActiveTab("live"); }} />
+          </TabsContent>
+          <TabsContent value="live" className="mt-4"><LivePlay key={liveModuleId ?? "none"} initialModuleId={liveModuleId} onDeployEncounter={handleDeployEncounter} /></TabsContent>
+          <TabsContent value="combat" className="mt-4"><CombatView combatState={combatState} onUpdateState={setCombatState} /></TabsContent>
+          <TabsContent value="compendium" className="mt-4"><UniversalCompendium searchInputRef={searchRef} /></TabsContent>
+          <TabsContent value="alchemy" className="mt-4"><AlchemyWorkbench /></TabsContent>
+        </Tabs>
       </div>
     </div>
+  );
+}
+
+export function GMDashboard({ onExit }: GMDashboardProps) {
+  return (
+    <CampaignProvider>
+      <TableProvider>
+        <GMDashboardInner onExit={onExit} />
+      </TableProvider>
+    </CampaignProvider>
   );
 }

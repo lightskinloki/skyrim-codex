@@ -1,0 +1,23 @@
+{
+  // The hosted site. `npm run build` writes dist/; Cloudflare's GitHub build
+  // then runs `npx wrangler deploy`, which reads this file.
+  //
+  // Everything is served as static files exactly as before. Only /api/room/*
+  // reaches worker/index.ts — the introduction between a GM's browser and the
+  // players' devices, and the fallback path for table messages when a network
+  // won't let devices reach each other directly (docs/TABLE-SYNC-DECISIONS.md).
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "skyrim-codex",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  "durable_objects": {
+    "bindings": [{ "name": "ROOMS", "class_name": "RoomRelay" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["RoomRelay"] }]
+}

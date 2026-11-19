@@ -49,12 +49,13 @@ export function GMCombatTracker({ combatState, onUpdateState }: GMCombatTrackerP
     ? Math.min(...enemies.map(e => e.stats.agility))
     : 0;
 
-  // Sort players/allies by initiative (ascending - lowest first)
+  // Sort players/allies by initiative (ascending - lowest first). A tie keeps
+  // the existing order: the table rerolls a tied initiative, so Agility must
+  // not silently decide it (InitiativeEditor's rules note says the same).
   const sortedPlayersAndAllies = [...playersAndAllies].sort((a, b) => {
     const initA = a.initiative ?? 999;
     const initB = b.initiative ?? 999;
-    if (initA !== initB) return initA - initB;
-    return a.stats.agility - b.stats.agility;
+    return initA - initB;
   });
 
   // Build display order
@@ -219,8 +220,15 @@ export function GMCombatTracker({ combatState, onUpdateState }: GMCombatTrackerP
     onUpdateState(prev => combatManager.setCombatantNotes(prev, combatantId, notes));
   };
 
-  // ── Render ─────────────────────────────────────────────────
+  // Concealment is the GM's hold on an ambush: the card stays here, dimmed and
+  // usable, but the enemy never reaches the players' roster (S6).
+  const handleConcealToggle = (combatantId: string) => {
+    const combatant = combatState.combatants.find(c => c.id === combatantId);
+    if (!combatant) return;
+    onUpdateState(prev => combatManager.updateCombatant(prev, combatantId, { concealed: !combatant.concealed }));
+  };
 
+  // ── Render ─────────────────────────────────────────────────
   if (combatState.combatants.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-muted-foreground py-12">
@@ -247,6 +255,7 @@ export function GMCombatTracker({ combatState, onUpdateState }: GMCombatTrackerP
       onDuplicate={() => handleDuplicate(combatant.id)}
       onRemove={() => handleRemove(combatant.id)}
       onNotesChange={(notes) => handleNotesChange(combatant.id, notes)}
+      onConcealToggle={combatant.type === 'enemy' ? () => handleConcealToggle(combatant.id) : undefined}
     />
   );
 

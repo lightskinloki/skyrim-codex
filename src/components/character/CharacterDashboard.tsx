@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import { Character, Equipment, CustomAbility, Enchantment } from "@/types/character";
+import { Character, Equipment, CustomAbility, Enchantment, InventoryItem, HomebrewItem } from "@/types/character";
 import { CharacterCard } from "./CharacterCard";
+import { CompanionRoster } from "./CompanionRoster";
 import { StatBlock } from "./StatBlock";
 import { ResourceBar } from "./ResourceBar";
 import { SkillsDisplay } from "./SkillsDisplay";
@@ -10,8 +11,18 @@ import { AdvancementModal } from "./AdvancementModal";
 import { GrantAPModal } from "./GrantAPModal";
 import { EquipmentModal } from "./EquipmentModal";
 import { AppearanceStudioModal } from "./AppearanceStudioModal";
+import { ItemPickerModal } from "./ItemPickerModal";
 import { AbilityTracker } from "./AbilityTracker";
 import { PlayerCombatPortal } from "@/components/combat/player/PlayerCombatPortal";
+import { TableSeatControl } from "./TableSeatControl";
+import { TableSeat, FightMessage, RollCard, VisibleEnemy } from "@/net/table";
+import { spawnSummon, summonRuleFor, risePendingSummons, summonCapacityError, summonLimitsFor, raiseThrall, thrallCapacityError } from "@/utils/summoning";
+import { DeadThrallPicker } from "./DeadThrallPicker";
+import { EnemyTemplate } from "@/data/enemies";
+import { spells } from "@/data/spells";
+
+/** Read from the spell list rather than hardcoding, so a cost change lands here too. */
+const DEAD_THRALL_COST = spells.find((s) => s.name === "Dead Thrall")?.fpCost ?? 30;
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -20,9 +31,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ToastAction } from "@/components/ui/toast";
-import { Heart, Zap, Sword, Shield, Settings, Plus, UserPlus, Play, RotateCcw, Package, Download, Minus, BookText, Edit2, Trash2, X, Check, ScrollText, Sparkles, AlertTriangle, LogOut } from "lucide-react";
+import { Heart, Zap, Sword, Shield, Settings, Plus, UserPlus, Play, RotateCcw, Package, Download, Minus, BookText, Edit2, Trash2, X, Check, ScrollText, Sparkles, AlertTriangle, LogOut, Swords } from "lucide-react";
 import { officialEquipment } from "@/data/equipment";
+import { resolveInventoryItem } from "@/utils/itemLookup";
+import { isHomebrewItem, mergeHomebrewEntry, mergeInventoryItem } from "@/utils/itemPicker";
 import { 
   calculateMaxHP, 
   calculateMaxFP, 
@@ -345,10 +359,24 @@ interface CharacterDashboardProps {
   onUpdateCharacter: (character: Character) => void;
   onCreateNewCharacter: () => void;
   onEndSession: () => void;
+  /** A room code from a scanned QR link: join the GM's table straight away. */
+  joinCode?: string | null;
 }
 
-export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCharacter, onEndSession }: CharacterDashboardProps) {
+export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCharacter, onEndSession, joinCode }: CharacterDashboardProps) {
   const [currentCharacter, setCurrentCharacter] = useState<Character>(character);
+  // The live seat to the GM's table, once joined. Combat Mode sends a brace
+  // through it; the sheet itself travels from the control.
+  const [tableSeat, setTableSeat] = useState<TableSeat | null>(null);
+  // True between the GM opening a fight and ending it. Drives the way back
+  // into Combat Mode when a player has stepped out to read something.
+  const [fightActive, setFightActive] = useState(false);
+  // The enemies the GM has revealed. Concealed ones never arrive here.
+  const [tableRoster, setTableRoster] = useState<VisibleEnemy[]>([]);
+  const [activeTab, setActiveTab] = useState("sheet");
+  const [mapRevealed, setMapRevealed] = useState(
+    () => localStorage.getItem(`skyrimTTRPG_mapRevealed_${character.id}`) === 'true'
+  );
   const [showAdvancement, setShowAdvancement] = useState(false);
   const [showGrantAP, setShowGrantAP] = useState(false);
   const [showEquipment, setShowEquipment] = useState(false);
@@ -369,6 +397,10 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
     actionName: '',
     fpCost: 0
   });
+
+  // Dead Thrall: which corpse, chosen before the FP modal opens.
+  const [thrallPickerOpen, setThrallPickerOpen] = useState(false);
+  const [pendingThrallBody, setPendingThrallBody] = useState<EnemyTemplate | null>(null);
   
   // Equipment management state
   const [addingEquipment, setAddingEquipment] = useState(false);
@@ -378,8 +410,7 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
   const [equipmentSuggestions, setEquipmentSuggestions] = useState<typeof officialEquipment>([]);
   
   // Item management state
-  const [addingItem, setAddingItem] = useState(false);
-  const [newItemName, setNewItemName] = useState('');
+  const [showItemPicker, setShowItemPicker] = useState(false);
 
   // Exit warning dialog state
   const [showExitWarning, setShowExitWarning] = useState(false);
@@ -400,6 +431,17 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
     };
     window.addEventListener('beforeunload', handler);
     return () => window.removeEventListener('beforeunload', handler);
+  }, []);
+
+  // Listen for 'closeMap' message sent from inside the map iframe to return to character sheet
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data === 'closeMap') {
+        setActiveTab("sheet");
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
   }, []);
 
   const handleResourceAdjust = (type: 'hp' | 'fp', amount: number) => {
@@ -520,6 +562,41 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
   };
 
   const handleSpendFP = (amount: number, actionName: string) => {
+    const spell = actionName.replace(/^Cast\s+/i, "");
+
+    // Dead Thrall raises a specific corpse, so the body is chosen first and the
+    // FP modal opens once we know what's being raised. Refuse early if the
+    // caster has no thrall slot or no free summon slot.
+    if (spell === "Dead Thrall") {
+      const blocked = thrallCapacityError(currentCharacter.name, summonLimitsFor(currentCharacter));
+      if (blocked) {
+        toast({
+          title: blocked.reason === "thrall_slot_taken" ? "You already have a Thrall" : "No free summon slot",
+          description: blocked.reason === "thrall_slot_taken"
+            ? "Only one Thrall of any kind can be active. Dismiss the one you have first."
+            : `You already hold ${blocked.active} of ${blocked.limit} summoned creatures.`,
+          variant: "destructive",
+        });
+        return;
+      }
+      setThrallPickerOpen(true);
+      return;
+    }
+
+    // Refuse any other summoning cast before the FP goes out the door, not after.
+    const rule = summonRuleFor(spell);
+    if (rule) {
+      const blocked = summonCapacityError(currentCharacter.name, summonLimitsFor(currentCharacter));
+      if (blocked) {
+        toast({
+          title: "No more can be held",
+          description: `You already hold ${blocked.active} of ${blocked.limit} summoned creatures. Dismiss one first — Twin Souls (Expert Conjuration) raises the limit to two.`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     setFpSpendModal({
       isOpen: true,
       actionName,
@@ -540,22 +617,101 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
     };
     setCurrentCharacter(updatedCharacter);
     onUpdateCharacter(updatedCharacter);
+
+    // A confirmed summoning cast drops a finished creature card onto the sheet,
+    // with its guide stats already in place.
+    const castSpell = fpSpendModal.actionName.replace(/^Cast\s+/i, "");
+
+    // A confirmed Dead Thrall cast raises the corpse chosen in the picker.
+    if (castSpell === "Dead Thrall" && pendingThrallBody) {
+      const result = raiseThrall(pendingThrallBody, currentCharacter.name, {
+        limits: summonLimitsFor(currentCharacter),
+      });
+      setPendingThrallBody(null);
+      if (result.ok && result.summon) {
+        toast({
+          title: `Raised: ${result.summon.name}`,
+          description: `${result.summon.resources.hp?.max ?? "—"} HP · DR ${result.summon.resources.dr} · Until destroyed. It's on your sheet and in the combat portal.`,
+        });
+      } else {
+        toast({
+          title: "Nothing rose",
+          description: result.reason === "thrall_slot_taken"
+            ? "Only one Thrall of any kind can be active."
+            : `You already hold ${result.active ?? "?"} of ${result.limit ?? "?"} summoned creatures.`,
+          variant: "destructive",
+        });
+      }
+      return;
+    }
+
+    const summonRule = summonRuleFor(castSpell);
+    if (summonRule) {
+      const result = spawnSummon(summonRule.templateId, currentCharacter.name, {
+        duration: summonRule.duration,
+        limits: summonLimitsFor(currentCharacter),
+      });
+      if (result.ok && result.summon) {
+        toast({
+          title: `Summoned: ${result.summon.name}`,
+          description: `${result.summon.resources.hp?.max ?? "—"} HP · ${result.summon.duration ?? "Duration of the encounter"}. It's on your sheet and in the combat portal.`,
+        });
+      } else if (result.reason === "at_capacity") {
+        toast({
+          title: "No more can be held",
+          description: `You already hold ${result.active} of ${result.limit} summoned creatures.`,
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  // The GM corrected this sheet (damage, healing, a resource spend). Write it
+  // back through the same path a local edit takes, so storage and the seat's
+  // next frame both hold the correction.
+  // Applied verbatim: the GM's sheet is not re-derived here, because a
+  // recalculated copy would differ from the frame we just adopted and bounce
+  // straight back as a local edit.
+  const handleRemoteCharacter = (character: Character) => {
+    setCurrentCharacter(character);
+    onUpdateCharacter(character);
+  };
+
+  // Per-combat abilities are spent once per fight, so they come back when the
+  // fight starts — not every time the overlay is opened. Minimising Combat Mode
+  // mid-fight and coming back must not hand the player a second use.
+  const withPerCombatReset = (character: Character): Character => {
+    const perCombatIds = getPerCombatAbilityIds(character);
+    return {
+      ...character,
+      usedAbilities: (character.usedAbilities || []).filter(id => !perCombatIds.includes(id)),
+    };
+  };
+
+  // A fight opened: put this player in Combat Mode without asking. A fight
+  // ending never closes it — nobody's screen is pulled from under them.
+  const handleFightMessage = (message: FightMessage) => {
+    setFightActive(message.state === "start");
+    if (message.state === "end") {
+      toast({ title: "The fight is over", description: "Combat Mode is still open if you were mid-turn." });
+      return;
+    }
+    const fresh = { ...withPerCombatReset(currentCharacter), combatMode: true };
+    setCurrentCharacter(fresh);
+    onUpdateCharacter(fresh);
+    toast({
+      title: "Combat Mode",
+      description: message.title
+        ? `${message.title} — round ${message.round ?? 1}. Your sheet is on the combat card.`
+        : "The GM opened a fight. Your sheet is on the combat card.",
+    });
   };
 
   const handleCombatModeToggle = (enabled: boolean) => {
-    let updatedCharacter = { ...currentCharacter, combatMode: enabled };
-
-    // If enabling combat mode, reset per-combat abilities
-    if (enabled) {
-      const perCombatIds = getPerCombatAbilityIds(currentCharacter);
-      updatedCharacter.usedAbilities = (currentCharacter.usedAbilities || [])
-        .filter(id => !perCombatIds.includes(id));
-
-      toast({
-        title: "Combat Mode Activated",
-        description: "Per-combat abilities have been reset.",
-      });
-    }
+    // Outside a live fight, opening the mode is the start of one for this
+    // character; inside it, the mode is just a view and changes nothing.
+    const base = enabled && !fightActive ? withPerCombatReset(currentCharacter) : currentCharacter;
+    const updatedCharacter = { ...base, combatMode: enabled };
 
     // Apprentice stone FP regeneration happens at end of turn, not mode toggle
     setCurrentCharacter(updatedCharacter);
@@ -563,6 +719,15 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
   };
 
   const handleEndTurn = () => {
+    // Anything that fell this round comes back at the start of the next one.
+    const risen = risePendingSummons(currentCharacter.name);
+    if (risen > 0) {
+      toast({
+        title: "The dead do not stay down",
+        description: `${risen === 1 ? "A summon rises" : `${risen} summons rise`} for the next round.`,
+      });
+    }
+
     if (currentCharacter.standingStone.id === "apprentice") {
       const updatedCharacter = {
         ...currentCharacter,
@@ -627,13 +792,14 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
   };
   
   const handleSelectSuggestion = (item: typeof officialEquipment[0]) => {
-    setEquipmentForm({
+    setEquipmentForm(previous => ({
+      ...previous,
       name: item.name,
       type: item.type === 'clothing' ? 'armor' : item.type,
       damage: item.damage?.toString() || '',
       dr: item.dr?.toString() || '',
       description: item.description
-    });
+    }));
     setEquipmentSuggestions([]);
   };
   
@@ -769,38 +935,29 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
   };
 
   // Item Management Functions
-  const handleAddItem = () => {
-    if (!newItemName.trim()) return;
-    
-    const existingIndex = currentCharacter.inventory.items.findIndex(
-      item => item.name.toLowerCase() === newItemName.trim().toLowerCase()
-    );
-    
-    if (existingIndex >= 0) {
-      const newItems = [...currentCharacter.inventory.items];
-      newItems[existingIndex] = {
-        ...newItems[existingIndex],
-        quantity: newItems[existingIndex].quantity + 1
-      };
-      const updatedCharacter = {
-        ...currentCharacter,
-        inventory: { ...currentCharacter.inventory, items: newItems }
-      };
-      setCurrentCharacter(updatedCharacter);
-      onUpdateCharacter(updatedCharacter);
-    } else {
-      const updatedCharacter = {
-        ...currentCharacter,
-        inventory: {
-          ...currentCharacter.inventory,
-          items: [...currentCharacter.inventory.items, { name: newItemName.trim(), quantity: 1 }]
-        }
-      };
-      setCurrentCharacter(updatedCharacter);
-      onUpdateCharacter(updatedCharacter);
-    }
-    setNewItemName('');
-    setAddingItem(false);
+  // The picker hands over an item whose values are already resolved, plus an
+  // optional homebrew entry so the same custom item can be added again later.
+  const handleAddPickedItem = (item: InventoryItem, homebrew?: HomebrewItem) => {
+    const newItems = mergeInventoryItem(currentCharacter.inventory.items, item);
+    const savedHomebrew = homebrew
+      ? mergeHomebrewEntry(currentCharacter.inventory.homebrew ?? [], homebrew)
+      : currentCharacter.inventory.homebrew;
+
+    const updatedCharacter = {
+      ...currentCharacter,
+      inventory: {
+        ...currentCharacter.inventory,
+        items: newItems,
+        ...(savedHomebrew ? { homebrew: savedHomebrew } : {})
+      }
+    };
+    setCurrentCharacter(updatedCharacter);
+    onUpdateCharacter(updatedCharacter);
+
+    toast({
+      title: 'Item Added',
+      description: `${item.name} ×${item.quantity}${item.effect ? ` — ${item.effect}` : ''}`
+    });
   };
   
   const handleDeleteItem = (index: number) => {
@@ -987,6 +1144,14 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
               <Download className="w-3.5 h-3.5 mr-1.5" />
               Export
             </Button>
+            <TableSeatControl
+              character={currentCharacter}
+              autoJoinCode={joinCode}
+              onRemoteCharacter={handleRemoteCharacter}
+              onFight={handleFightMessage}
+              onRoster={setTableRoster}
+              onSeat={setTableSeat}
+            />
             <Badge
               variant="outline"
               className={`text-xs flex-shrink-0 ${hasExportedThisSession
@@ -1042,8 +1207,28 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
 
         </div>
 
-        {/* Three Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Tabs
+          value={activeTab}
+          onValueChange={(value) => {
+            setActiveTab(value);
+            if (value === "map" && !mapRevealed) {
+              setMapRevealed(true);
+              localStorage.setItem(`skyrimTTRPG_mapRevealed_${currentCharacter.id}`, 'true');
+            }
+          }}
+          className="w-full"
+        >
+          <div className="mb-6 flex justify-center">
+            <TabsList className="grid w-full max-w-lg grid-cols-3 bg-card-secondary/60">
+              <TabsTrigger value="sheet">Character Sheet</TabsTrigger>
+              <TabsTrigger value="companions">Companions</TabsTrigger>
+              <TabsTrigger value="map">{mapRevealed ? "Esbern's Map" : "Unlockable"}</TabsTrigger>
+            </TabsList>
+          </div>
+
+          <TabsContent value="sheet" className="mt-0 space-y-0">
+            {/* Three Column Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           {/* Left Column - Stats & Resources */}
           <div className="space-y-6">
@@ -1417,17 +1602,17 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
                           <div className="flex gap-2">
                             <button
                               type="button"
-                              onClick={() => setEquipmentForm({ ...equipmentForm, enchantActionSlot: 'major' })}
-                              className={`flex-1 text-xs py-1 rounded border transition-colors ${equipmentForm.enchantActionSlot === 'major' ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:bg-accent'}`}
+                              onClick={() => setEquipmentForm({ ...equipmentForm, enchantActionSlot: 'bonus' })}
+                              className={`flex-1 text-xs py-1 rounded border transition-colors ${equipmentForm.enchantActionSlot === 'bonus' ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:bg-accent'}`}
                             >
-                              Major Action
+                              Bonus Action
                             </button>
                             <button
                               type="button"
-                              onClick={() => setEquipmentForm({ ...equipmentForm, enchantActionSlot: 'minor' })}
-                              className={`flex-1 text-xs py-1 rounded border transition-colors ${equipmentForm.enchantActionSlot === 'minor' ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:bg-accent'}`}
+                              onClick={() => setEquipmentForm({ ...equipmentForm, enchantActionSlot: 'free' })}
+                              className={`flex-1 text-xs py-1 rounded border transition-colors ${equipmentForm.enchantActionSlot === 'free' ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:bg-accent'}`}
                             >
-                              Minor Action
+                              Free Action
                             </button>
                           </div>
                         </>
@@ -1493,9 +1678,24 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
                 
                 {currentCharacter.inventory.items.length > 0 && (
                   <div className="space-y-2">
-                    {currentCharacter.inventory.items.map((item, index) => (
-                      <div key={index} className="flex items-center justify-between p-2 bg-muted rounded gap-2">
-                        <span className="text-sm flex-1">{item.name}</span>
+                    {currentCharacter.inventory.items.map((item, index) => {
+                      const info = resolveInventoryItem(item);
+                      return (
+                      <div key={index} className="flex items-start justify-between p-2 bg-muted rounded gap-2">
+                        <div className="flex-1 min-w-0">
+                          <span className="text-sm">{item.name}</span>
+                          {isHomebrewItem(item) && (
+                            <Badge
+                              variant="outline"
+                              className="ml-2 align-middle text-[10px] py-0 h-4 border-emerald-400/60 text-emerald-400"
+                            >
+                              {item.kind === 'misc' ? 'Homebrew' : 'Brewed'}
+                            </Badge>
+                          )}
+                          {info && (
+                            <p className="text-xs text-muted-foreground leading-snug">{info.effect}</p>
+                          )}
+                        </div>
                         <div className="flex items-center gap-1">
                           <Button
                             size="sm"
@@ -1526,39 +1726,19 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
                           </Button>
                         </div>
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
                 
-                {addingItem ? (
-                  <div className="flex gap-2">
-                    <Input
-                      value={newItemName}
-                      onChange={(e) => setNewItemName(e.target.value)}
-                      placeholder="Item name"
-                      autoFocus
-                      onKeyDown={(e) => e.key === 'Enter' && handleAddItem()}
-                    />
-                    <Button size="sm" onClick={handleAddItem}>
-                      <Check className="w-4 h-4" />
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => {
-                      setAddingItem(false);
-                      setNewItemName('');
-                    }}>
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ) : (
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    onClick={() => setAddingItem(true)}
-                    className="w-full"
-                  >
-                    <Plus className="w-4 h-4 mr-2" /> Add Item
-                  </Button>
-                )}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowItemPicker(true)}
+                  className="w-full"
+                >
+                  <Plus className="w-4 h-4 mr-2" /> Add Item
+                </Button>
               </div>
             </Card>
 
@@ -1604,6 +1784,32 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
             </Card>
           </div>
         </div>
+      </TabsContent>
+
+        <TabsContent value="companions" className="mt-0">
+          <CompanionRoster />
+        </TabsContent>
+
+        <TabsContent value="map" className="mt-0">
+          {activeTab === "map" && (
+            <div className="fixed inset-0 z-[100] w-screen h-screen bg-[#120a05]">
+              {/* Floating Exit Button */}
+              <Button 
+                onClick={() => setActiveTab("sheet")}
+                className="fixed top-4 right-4 z-[110] bg-[#4a1212] hover:bg-[#631c1c] text-amber-200 border border-amber-600/50 font-cinzel text-xs py-2 px-4 shadow-2xl flex items-center gap-2"
+              >
+                <X className="w-4 h-4" /> Exit Map
+              </Button>
+              
+              {/* Fullscreen Iframe (Using cache-busting query parameter to force reload the fresh layout) */}
+              <iframe 
+                src="/esbern_map.html?v=reverted_smaller_v2" 
+                className="absolute inset-0 w-full h-full border-0"
+              />
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
         
         <AdvancementModal
           isOpen={showAdvancement}
@@ -1629,10 +1835,33 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
           character={currentCharacter}
           onUpdateCharacter={handleUpdateCharacter}
         />
+
+        <ItemPickerModal
+          isOpen={showItemPicker}
+          onClose={() => setShowItemPicker(false)}
+          homebrew={currentCharacter.inventory.homebrew ?? []}
+          onAdd={handleAddPickedItem}
+        />
         
+        <DeadThrallPicker
+          open={thrallPickerOpen}
+          onOpenChange={setThrallPickerOpen}
+          casterName={currentCharacter.name}
+          limits={summonLimitsFor(currentCharacter)}
+          onPick={(body) => {
+            setPendingThrallBody(body);
+            setThrallPickerOpen(false);
+            setFpSpendModal({ isOpen: true, actionName: "Cast Dead Thrall", fpCost: DEAD_THRALL_COST });
+          }}
+        />
+
         <FPSpendModal
           isOpen={fpSpendModal.isOpen}
-          onClose={() => setFpSpendModal(prev => ({ ...prev, isOpen: false }))}
+          onClose={() => {
+            // Cancelling the spend cancels the raising too.
+            setPendingThrallBody(null);
+            setFpSpendModal(prev => ({ ...prev, isOpen: false }));
+          }}
           onConfirm={confirmSpendFP}
           actionName={fpSpendModal.actionName}
           fpCost={fpSpendModal.fpCost}
@@ -1769,8 +1998,24 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
             character={currentCharacter}
             onUpdateCharacter={handleUpdateCharacter}
             onClose={() => handleCombatModeToggle(false)}
-            onMinimize={() => { /* Logic to minimize can go here later */ }}
+            onMinimize={() => handleCombatModeToggle(false)}
+            onBrace={(bonus, label) => tableSeat?.sendBrace(bonus, label)}
+            onBraceClear={() => tableSeat?.sendBrace(0, "")}
+            roster={tableRoster}
+            onRoll={(card: RollCard) => tableSeat?.sendRoll(card)}
           />
+        )}
+
+        {/* The way back in, without hunting for the toggle. */}
+        {!currentCharacter.combatMode && fightActive && (
+          <Button
+            size="lg"
+            className="fixed bottom-6 right-6 z-40 shadow-lg shadow-amber-500/20"
+            onClick={() => handleCombatModeToggle(true)}
+          >
+            <Swords className="h-5 w-5 mr-2" />
+            Return to combat
+          </Button>
         )}
         {/* --------------------------- */}
 

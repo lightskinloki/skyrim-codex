@@ -540,7 +540,16 @@ export function applyDamage(
     ...state,
     combatants: state.combatants.map(c =>
       c.id === targetId
-        ? { ...c, hp: { ...c.hp, current: newHP }, isDead }
+        ? {
+            ...c,
+            hp: { ...c.hp, current: newHP },
+            isDead,
+            // A brace is spent on the next hit that lands, whether or not it
+            // absorbed anything (players guide 824).
+            statusEffects: bracingEffect
+              ? c.statusEffects.filter(e => e.id !== bracingEffect.id)
+              : c.statusEffects,
+          }
         : c
     ),
   });

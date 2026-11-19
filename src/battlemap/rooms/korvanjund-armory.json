@@ -1,0 +1,410 @@
+{
+  "format": "skyrim-codex.room",
+  "version": 1,
+  "id": "korvanjund-armory",
+  "name": "Korvanjund: The Armory",
+  "terrain": [
+    "2*21",
+    "2,1*19,2",
+    "2,1*19,2",
+    "2,1*19,2",
+    "2,1*19,2",
+    "2,1*20",
+    "2,1*19,2",
+    "2,1*19,2",
+    "2,1*19,2",
+    "2,1*19,2",
+    "2*21"
+  ],
+  "seed": 10620439,
+  "props": [
+    {
+      "id": "p1",
+      "rule": "gear",
+      "at": [
+        1,
+        2
+      ],
+      "r": 1.8,
+      "along": "x",
+      "speed": 0
+    },
+    {
+      "id": "p2",
+      "rule": "gear",
+      "at": [
+        1,
+        5.7
+      ],
+      "r": 1,
+      "along": "x",
+      "h": 2.6,
+      "speed": 0
+    },
+    {
+      "id": "p3",
+      "rule": "gear",
+      "at": [
+        1.35,
+        0.6
+      ],
+      "r": 0.7,
+      "along": "x",
+      "h": 3.1,
+      "speed": 0
+    },
+    {
+      "id": "p4",
+      "rule": "gear",
+      "at": [
+        1,
+        7.3
+      ],
+      "r": 0.75,
+      "along": "x",
+      "speed": 0
+    },
+    {
+      "id": "p5",
+      "rule": "blade",
+      "at": [
+        2,
+        2.6
+      ],
+      "along": "x",
+      "dir": -1,
+      "h": 3.05
+    },
+    {
+      "id": "p6",
+      "rule": "chain",
+      "at": [
+        2.4,
+        3.3
+      ],
+      "w": 8,
+      "along": "x",
+      "h": 1.84
+    },
+    {
+      "id": "p7",
+      "rule": "chain",
+      "at": [
+        10.4,
+        3.3
+      ],
+      "w": 8,
+      "along": "x",
+      "h": 1.84
+    },
+    {
+      "id": "p8",
+      "rule": "chain",
+      "at": [
+        18.4,
+        3.3
+      ],
+      "w": 1.6,
+      "along": "x",
+      "h": 1.84
+    },
+    {
+      "id": "p9",
+      "rule": "shelf",
+      "at": [
+        1.05,
+        0.5
+      ],
+      "y": 3.7,
+      "w": 1.1
+    },
+    {
+      "id": "p10",
+      "rule": "sprite",
+      "at": [
+        1.1,
+        0.55
+      ],
+      "y": 3.72,
+      "sprite": "urn",
+      "scale": 0.55
+    },
+    {
+      "id": "p11",
+      "rule": "sprite",
+      "at": [
+        1.6,
+        0.6
+      ],
+      "y": 3.72,
+      "sprite": "urn",
+      "scale": 0.5
+    },
+    {
+      "id": "p12",
+      "rule": "shelf",
+      "at": [
+        1.05,
+        9.2
+      ],
+      "y": 2.4,
+      "w": 1.2
+    },
+    {
+      "id": "p13",
+      "rule": "shelf",
+      "at": [
+        5,
+        1.05
+      ],
+      "w": 2
+    },
+    {
+      "id": "p14",
+      "rule": "shelf",
+      "at": [
+        5,
+        9.45
+      ],
+      "w": 2
+    },
+    {
+      "id": "p15",
+      "rule": "shelf",
+      "at": [
+        8.5,
+        1.05
+      ],
+      "w": 2
+    },
+    {
+      "id": "p16",
+      "rule": "shelf",
+      "at": [
+        8.5,
+        9.45
+      ],
+      "w": 2
+    },
+    {
+      "id": "p17",
+      "rule": "shelf",
+      "at": [
+        12,
+        1.05
+      ],
+      "w": 2
+    },
+    {
+      "id": "p18",
+      "rule": "shelf",
+      "at": [
+        12,
+        9.45
+      ],
+      "w": 2
+    },
+    {
+      "id": "p19",
+      "rule": "shelf",
+      "at": [
+        15.5,
+        1.05
+      ],
+      "w": 2
+    },
+    {
+      "id": "p20",
+      "rule": "shelf",
+      "at": [
+        15.5,
+        9.45
+      ],
+      "w": 2
+    },
+    {
+      "id": "p21",
+      "rule": "sprite",
+      "at": [
+        13.5,
+        6.2
+      ],
+      "sprite": "anvil"
+    },
+    {
+      "id": "p22",
+      "rule": "crate",
+      "at": [
+        18.6,
+        1.2
+      ]
+    },
+    {
+      "id": "p23",
+      "rule": "barrel",
+      "at": [
+        18.7,
+        8.6
+      ]
+    },
+    {
+      "id": "p24",
+      "rule": "brazier",
+      "at": [
+        7,
+        7.6
+      ],
+      "lit": true
+    },
+    {
+      "id": "p25",
+      "rule": "brazier",
+      "at": [
+        16,
+        2.2
+      ],
+      "lit": true
+    }
+  ],
+  "tokens": [
+    {
+      "id": "wight-1",
+      "spec": {
+        "id": "draugr-wight",
+        "name": "Draugr Wight",
+        "race": "nord",
+        "build": "burly",
+        "skinTone": "pale",
+        "hair": "grey",
+        "hairStyle": "long",
+        "beard": "long",
+        "garment": {
+          "torso": "plate",
+          "torsoCloth": "metal",
+          "legs": "greaves",
+          "legsCloth": "metal"
+        },
+        "weapon": "hammer"
+      },
+      "at": [
+        4.4,
+        4.4
+      ],
+      "facing": 3
+    },
+    {
+      "id": "wight-2",
+      "spec": {
+        "id": "draugr-wight",
+        "name": "Draugr Wight",
+        "race": "nord",
+        "build": "burly",
+        "skinTone": "pale",
+        "hair": "grey",
+        "hairStyle": "long",
+        "beard": "long",
+        "garment": {
+          "torso": "plate",
+          "torsoCloth": "metal",
+          "legs": "greaves",
+          "legsCloth": "metal"
+        },
+        "weapon": "hammer"
+      },
+      "at": [
+        5.4,
+        7
+      ],
+      "facing": 3
+    },
+    {
+      "id": "wight-3",
+      "spec": {
+        "id": "draugr-wight",
+        "name": "Draugr Wight",
+        "race": "nord",
+        "build": "burly",
+        "skinTone": "pale",
+        "hair": "grey",
+        "hairStyle": "long",
+        "beard": "long",
+        "garment": {
+          "torso": "plate",
+          "torsoCloth": "metal",
+          "legs": "greaves",
+          "legsCloth": "metal"
+        },
+        "weapon": "hammer"
+      },
+      "at": [
+        6,
+        2.4
+      ],
+      "facing": 3
+    },
+    {
+      "id": "pc-1",
+      "spec": {
+        "id": "knight",
+        "name": "Sigrid",
+        "race": "nord",
+        "build": "burly",
+        "skinTone": "fair",
+        "hair": "black",
+        "hairStyle": "braid",
+        "beard": "none",
+        "garment": {
+          "torso": "plate",
+          "torsoCloth": "metal",
+          "legs": "greaves",
+          "legsCloth": "metal"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        18.6,
+        5
+      ],
+      "facing": 2,
+      "party": true
+    }
+  ],
+  "path": [],
+  "rig": {
+    "ambient": 0.2,
+    "sun": {
+      "azimuth": 210,
+      "elevation": 50,
+      "intensity": 0.3
+    },
+    "points": []
+  },
+  "ground": [
+    "0*21",
+    "0*21",
+    "0*21",
+    "0*21",
+    "0*21",
+    "0*21",
+    "0*21",
+    "0*21",
+    "0*21",
+    "0*21",
+    "0*21"
+  ],
+  "doors": [
+    {
+      "id": "hub-door",
+      "at": [
+        20,
+        5
+      ],
+      "label": "The Silent Shaft",
+      "to": {
+        "room": "korvanjund-shaft",
+        "door": "armory-door"
+      }
+    }
+  ],
+  "wallHeight": 4.2
+}

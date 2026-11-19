@@ -1,0 +1,327 @@
+{
+  "format": "skyrim-codex.room",
+  "version": 1,
+  "id": "vilemyr-inn",
+  "name": "Vilemyr Inn",
+  "terrain": [
+    "2*18",
+    "2,1*16,2",
+    "2,1*16,2",
+    "2,1*16,2",
+    "2,1*16,2",
+    "2,1*16,2",
+    "2,1*16,2",
+    "2,1*16,2",
+    "2,1*16,2",
+    "2,1*16,2",
+    "2,1*16,2",
+    "2,1*16,2",
+    "2,1*16,2",
+    "2*9,1,2*8"
+  ],
+  "seed": 86494,
+  "props": [
+    {
+      "id": "p1",
+      "rule": "shelf",
+      "at": [
+        2,
+        1.15
+      ],
+      "w": 5
+    },
+    {
+      "id": "p2",
+      "rule": "shelf",
+      "at": [
+        2,
+        3.1
+      ],
+      "w": 5
+    },
+    {
+      "id": "p3",
+      "rule": "table",
+      "at": [
+        2.2,
+        5.1
+      ],
+      "w": 5
+    },
+    {
+      "id": "p4",
+      "rule": "bench",
+      "at": [
+        2.2,
+        6.2
+      ],
+      "w": 5
+    },
+    {
+      "id": "p5",
+      "rule": "bench",
+      "at": [
+        2.2,
+        4.4
+      ],
+      "w": 5
+    },
+    {
+      "id": "p6",
+      "rule": "table",
+      "at": [
+        10.5,
+        4.2
+      ],
+      "w": 2
+    },
+    {
+      "id": "p7",
+      "rule": "bench",
+      "at": [
+        10.5,
+        5.2
+      ],
+      "w": 2
+    },
+    {
+      "id": "p8",
+      "rule": "bench",
+      "at": [
+        10.5,
+        3.6
+      ],
+      "w": 2
+    },
+    {
+      "id": "p9",
+      "rule": "table",
+      "at": [
+        10.5,
+        8.4
+      ],
+      "w": 2
+    },
+    {
+      "id": "p10",
+      "rule": "bench",
+      "at": [
+        10.5,
+        9.4
+      ],
+      "w": 2
+    },
+    {
+      "id": "p11",
+      "rule": "rug",
+      "at": [
+        9.8,
+        6.4
+      ],
+      "w": 3.4,
+      "h": 2.2,
+      "navy": true
+    },
+    {
+      "id": "p12",
+      "rule": "brazier",
+      "at": [
+        15.2,
+        1.4
+      ],
+      "lit": true
+    },
+    {
+      "id": "p13",
+      "rule": "barrel",
+      "at": [
+        13.6,
+        1.3
+      ]
+    },
+    {
+      "id": "p14",
+      "rule": "barrel",
+      "at": [
+        14.2,
+        2
+      ]
+    },
+    {
+      "id": "p15",
+      "rule": "chest",
+      "at": [
+        13.2,
+        9.4
+      ],
+      "w": 1.4,
+      "bands": 2
+    },
+    {
+      "id": "p16",
+      "rule": "crate",
+      "at": [
+        15.8,
+        9.2
+      ]
+    },
+    {
+      "id": "p17",
+      "rule": "crate",
+      "at": [
+        15.8,
+        8.5
+      ]
+    },
+    {
+      "id": "p18",
+      "rule": "rubble",
+      "at": [
+        6.4,
+        12.2
+      ],
+      "size": 1
+    }
+  ],
+  "tokens": [
+    {
+      "id": "pc-1",
+      "spec": {
+        "id": "knight",
+        "name": "Sigrid",
+        "race": "nord",
+        "build": "burly",
+        "skinTone": "fair",
+        "hair": "black",
+        "hairStyle": "braid",
+        "beard": "none",
+        "garment": {
+          "torso": "plate",
+          "torsoCloth": "metal",
+          "legs": "greaves",
+          "legsCloth": "metal"
+        },
+        "weapon": "sword"
+      },
+      "at": [
+        9.4,
+        12.4
+      ],
+      "facing": 1,
+      "party": true
+    },
+    {
+      "id": "innkeeper-1",
+      "spec": {
+        "id": "innkeep",
+        "name": "Runa",
+        "race": "imperial",
+        "build": "slim",
+        "skinTone": "pale",
+        "hair": "ginger",
+        "hairStyle": "long",
+        "beard": "none",
+        "garment": {
+          "torso": "tunic",
+          "torsoCloth": "wool",
+          "legs": "skirt",
+          "legsCloth": "navy"
+        },
+        "weapon": "none"
+      },
+      "at": [
+        4.2,
+        4.6
+      ],
+      "facing": 2
+    },
+    {
+      "id": "patron-1",
+      "spec": {
+        "id": "merchant",
+        "name": "Corvus",
+        "race": "breton",
+        "build": "average",
+        "skinTone": "tan",
+        "hair": "brown",
+        "hairStyle": "short",
+        "beard": "stubble",
+        "garment": {
+          "torso": "vest",
+          "torsoCloth": "olive",
+          "legs": "trousers",
+          "legsCloth": "leather"
+        },
+        "weapon": "none"
+      },
+      "at": [
+        11.4,
+        5.4
+      ],
+      "facing": 1
+    }
+  ],
+  "path": [
+    [
+      9,
+      12
+    ],
+    [
+      9,
+      10
+    ],
+    [
+      9,
+      8
+    ]
+  ],
+  "rig": {
+    "ambient": 0.22,
+    "sun": {
+      "azimuth": 190,
+      "elevation": 32,
+      "intensity": 0.6
+    },
+    "points": [
+      {
+        "x": 505.6,
+        "y": 70.4,
+        "radius": 160,
+        "intensity": 1.5,
+        "id": "hearth",
+        "flicker": 0.45
+      }
+    ]
+  },
+  "ground": [
+    "0*18",
+    "0,4*13,0*4",
+    "0,4*13,0*4",
+    "0,4*13,0*4",
+    "0,4*16,0",
+    "0,4*16,0",
+    "0,4*16,0",
+    "0,4*16,0",
+    "0,4*16,0",
+    "0,4*16,0",
+    "0,4*16,0",
+    "0,4*16,0",
+    "0,4*16,0",
+    "0*9,4,0*8"
+  ],
+  "doors": [
+    {
+      "id": "inn-exit",
+      "at": [
+        9,
+        13
+      ],
+      "label": "Ivarstead",
+      "to": {
+        "room": "ivarstead",
+        "door": "inn-door"
+      }
+    }
+  ],
+  "wallHeight": 2.2
+}

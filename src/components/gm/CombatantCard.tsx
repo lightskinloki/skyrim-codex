@@ -17,6 +17,8 @@ import {
   FileText,
   ChevronDown,
   ChevronUp,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import { Combatant, StatusEffectType } from "@/types/combat";
 import { cn } from "@/lib/utils";
@@ -35,6 +37,8 @@ interface CombatantCardProps {
   onDuplicate: () => void;
   onRemove: () => void;
   onNotesChange: (notes: string) => void;
+  /** Enemies only: hold this one out of the players' roster. */
+  onConcealToggle?: () => void;
 }
 
 const statusEffectIcons: Record<StatusEffectType, { icon: string; color: string }> = {
@@ -42,6 +46,7 @@ const statusEffectIcons: Record<StatusEffectType, { icon: string; color: string 
   burning: { icon: '🔥', color: 'bg-orange-500/20 text-orange-400 border-orange-500/50' },
   slowed: { icon: '🐌', color: 'bg-blue-500/20 text-blue-400 border-blue-500/50' },
   staggered: { icon: '💫', color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50' },
+  prone: { icon: '🛌', color: 'bg-amber-500/20 text-amber-400 border-amber-500/50' },
   paralyzed: { icon: '⚡', color: 'bg-purple-500/20 text-purple-400 border-purple-500/50' },
   invisible: { icon: '👻', color: 'bg-gray-500/20 text-gray-400 border-gray-500/50' },
   hidden: { icon: '🥷', color: 'bg-slate-500/20 text-slate-400 border-slate-500/50' },
@@ -73,6 +78,7 @@ export function CombatantCard({
   onDuplicate,
   onRemove,
   onNotesChange,
+  onConcealToggle,
 }: CombatantCardProps) {
   const hpPercent = (combatant.hp.current / combatant.hp.max) * 100;
   const fpPercent = combatant.fp.max > 0 ? (combatant.fp.current / combatant.fp.max) * 100 : 0;
@@ -117,6 +123,7 @@ export function CombatantCard({
         "border-l-4 rounded-lg p-3 transition-all",
         typeColors[combatant.type],
         combatant.isDead && "opacity-50 grayscale",
+        combatant.concealed && "border-dashed bg-muted/20",
         isCurrentTurn && "ring-2 ring-amber-500 ring-offset-2 ring-offset-background shadow-lg shadow-amber-500/20",
         isSelected && !isCurrentTurn && "ring-2 ring-primary ring-offset-1 ring-offset-background",
         !combatant.isDead && !isCurrentTurn && !isSelected && "bg-card hover:bg-accent/50"
@@ -135,6 +142,9 @@ export function CombatantCard({
           {combatant.isDead && <Skull className="h-4 w-4 text-muted-foreground" />}
           {combatant.isBoss && <Crown className="h-4 w-4 text-amber-500" />}
           <span className="font-semibold">{combatant.name}</span>
+          {combatant.concealed && (
+            <Badge variant="outline" className="border-amber-500/60 text-xs text-amber-400">hidden</Badge>
+          )}
           <Badge
             variant="outline"
             className={cn(
@@ -148,6 +158,17 @@ export function CombatantCard({
           </Badge>
         </div>
         <div className="flex items-center gap-1">
+          {onConcealToggle && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn("h-6 w-6", combatant.concealed && "text-amber-400")}
+              onClick={onConcealToggle}
+              title={combatant.concealed ? "Concealed from players — reveal" : "Conceal from players"}
+            >
+              {combatant.concealed ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+            </Button>
+          )}
           <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onDuplicate}>
             <Copy className="h-3 w-3" />
           </Button>

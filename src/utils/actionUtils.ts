@@ -3,6 +3,8 @@ import { Character, CharacterSkill, Equipment } from "@/types/character";
 import { Spell } from "@/types/spell";
 import { spells as allSpells } from "@/data/spells";
 import { skills as allSkills } from "@/data/skills";
+import { resolveInventoryItem } from "@/utils/itemLookup";
+import { isHomebrewItem } from "@/utils/itemPicker";
 
 // Bonus action ability definition
 export interface BonusActionAbility {
@@ -100,8 +102,8 @@ export function getBonusActions(character: Character): BonusActionAbility[] {
       id: 'fleet-footed',
       name: 'Fleet Footed',
       source: 'The Thief',
-      fpCost: 1, 
-      description: 'Impose disadvantage on one enemy attacking you.',
+      fpCost: 2,
+      description: 'At any time, including off-turn, impose disadvantage on one enemy attacking you this round. Costs 2 FP; consumes neither your Major nor Minor Action.',
     });
   }
 
@@ -233,24 +235,90 @@ export function getBonusActions(character: Character): BonusActionAbility[] {
     });
   }
 
+  // Shield Counter (Reaction + 2 FP, requires Bracing)
+  if (character.equipment.some(e => e.type === 'shield')) {
+    bonusActions.push({
+      id: 'shield-counter',
+      name: 'Shield Counter',
+      source: 'Shield',
+      fpCost: 2,
+      description: 'Reaction, usable off-turn. Requires you to be Bracing. When a melee attack hits your shield, roll Might: on success the target is Exposed (the next melee attack against them has Advantage).',
+    });
+  }
+
   return bonusActions;
 }
 
 /**
  * Get all valid major actions for a character
  */
-export function getValidMajorActions(character: Character): MajorActionOption[] {
+export function getValidMajorActions(character: Character, powerAttackStacks = 1): MajorActionOption[] {
   const actions: MajorActionOption[] = [];
+  const stacks = Number.isSafeInteger(powerAttackStacks) && powerAttackStacks > 0 ? powerAttackStacks : 1;
   
   // Standard actions available to everyone
   
-  // Tactical Withdrawal
+  // Tactical Withdrawal (Major + Minor): three distinct methods, one per stat
   actions.push({
-    id: 'tactical-withdrawal',
-    name: 'Tactical Withdrawal',
+    id: 'withdrawal-shove',
+    name: 'Shove (Tactical Withdrawal)',
     type: 'standard',
-    description: 'Roll Might (Shove), Agility (Slip), or Guile (Feint) to escape melee without taking a hit.',
+    description: 'Major Action, then a Minor to move. Standard Might. Success: you take no damage and the enemy is Pushed 5 feet, clearing the space. Failure: you still move but take the free attack.',
   });
+
+  actions.push({
+    id: 'withdrawal-slip',
+    name: 'Slip (Tactical Withdrawal)',
+    type: 'standard',
+    description: 'Major Action, then a Minor to move. Standard Agility. Success: you take no damage and may move through the enemy\'s space to escape. Failure: you still move but take the free attack.',
+  });
+
+  actions.push({
+    id: 'withdrawal-feint',
+    name: 'Feint (Tactical Withdrawal)',
+    type: 'standard',
+    description: 'Major Action, then a Minor to move. Standard Guile. Success: you take no damage and the enemy cannot take Reactions until the start of their next turn. Failure: you still move but take the free attack.',
+  });
+
+  // Sunder Armor (Major, melee only)
+  const hasMeleeWeapon = character.equipment.some(
+    e => e.type === 'weapon' && !!e.damage && !/bow|crossbow|sling|launcher|firearm|pistol|rifle/i.test(e.name)
+  );
+  if (hasMeleeWeapon) {
+    actions.push({
+      id: 'sunder-armor',
+      name: 'Sunder Armor',
+      type: 'standard',
+      description: 'Melee weapon, while Engaged. Standard Might. Success: deal no damage, but the target\'s DR is permanently reduced by 1 (stacks). Nat 1: reduce DR by 1 AND deal 1 damage. Nat 20: Disadvantage on your next attack. Permanent until the armor is repaired.',
+    });
+  }
+
+  // Shield Bash (Major + 2 FP)
+  const hasShield = character.equipment.some(e => e.type === 'shield');
+  if (hasShield) {
+    actions.push({
+      id: 'shield-bash',
+      name: 'Shield Bash',
+      type: 'standard',
+      fpCost: 2,
+      description: 'Shield only. Major Action + 2 FP. Standard Might. Success: the target is Staggered and loses their next Major Action.',
+    });
+  }
+
+  // Called Shot (bow/crossbow Major Action menu)
+  const bowEquipped = character.equipment.find(
+    e => e.type === 'weapon' && !!e.damage && /bow|crossbow/i.test(e.name)
+  );
+  if (bowEquipped) {
+    actions.push({
+      id: 'called-shot',
+      name: 'Called Shot',
+      type: 'attack',
+      damage: bowEquipped.damage,
+      source: bowEquipped.name,
+      description: 'Declare before rolling; the penalty applies to your Agility TN. Hard (-4): Leg Shot = Slowed / Distraction = Disadvantage on their next attack. Very Hard (-6): Pin = Restrained, action to break free / Hand Shot = drops a held item (not main weapon). Nearly Impossible (-8): Throat Shot = Silenced 1 round / The Sever = cut a rope or chain. Impossible (-14): Gap Shot = ignores DR / Disarm = drops main weapon. Mythic (-20): Eye Shot = Blinded for the encounter / Execution = target at 10 HP or less dies instantly.',
+    });
+  }
   
   // Add equipped weapon attacks
   for (const equip of character.equipment) {
@@ -269,24 +337,25 @@ export function getValidMajorActions(character: Character): MajorActionOption[] 
       
       // Check for Savage Strike Perk (One-Handed Adept)
       const oneHanded = character.skills.find(s => s.skillId === 'one-handed');
-      const isTwoHanded = equip.name.toLowerCase().includes('great') || 
-                          equip.name.toLowerCase().includes('hammer') || 
-                          equip.name.toLowerCase().includes('battleaxe') ||
-                          equip.name.toLowerCase().includes('bow') || 
-                          equip.name.toLowerCase().includes('crossbow');
+      const isRanged = /bow|crossbow|sling|launcher|firearm|pistol|rifle/i.test(equip.name);
+      const isTwoHanded = /greatsword|warhammer|battleaxe/i.test(equip.name);
+      const twoHanded = character.skills.find(s => s.skillId === 'two-handed');
+      const devastatingBlow = isTwoHanded && twoHanded && getRankValue(twoHanded.rank) >= 4;
 
       // If One-Handed Adept AND using a One-Handed weapon
       if (oneHanded && getRankValue(oneHanded.rank) >= 3 && !isTwoHanded) {
          powerAttackBonus = 3; // +2 Base + 1 Perk Bonus
       }
+      if (devastatingBlow) powerAttackBonus = 3;
 
-      actions.push({
+      // Power Attack is melee-only; Power Shot is a separate archery perk.
+      if (!isRanged) actions.push({
         id: `power-attack-${equip.id}`,
         name: `Power Attack (${equip.name})`,
         type: 'attack',
-        fpCost: 3,
-        damage: equip.damage + powerAttackBonus,
-        description: `Spend 3 FP. Deal +${powerAttackBonus} Damage.`,
+        fpCost: 3 * stacks,
+        damage: equip.damage + powerAttackBonus * stacks,
+        description: `Major Action. Before rolling, spend ${3 * stacks} FP for +${powerAttackBonus * stacks} damage on a hit (${stacks} × ${powerAttackBonus}). FP is spent even on a miss. Add this before critical multipliers; then apply enemy DR.${devastatingBlow ? ' Devastating Blow: after this attack you cannot be staggered or knocked prone until the start of your next turn.' : ''}`,
         source: equip.name,
       });
      }
@@ -359,11 +428,12 @@ export function getValidMajorActions(character: Character): MajorActionOption[] 
 
   // Argonian: Histskin (per adventure)
   if (character.race.id === 'argonian') {
+    const regeneration = character.skills.filter(s => getRankValue(s.rank) >= 4).length >= 2 ? 2 : 1;
     actions.push({
       id: 'racial-argonian',
       name: 'Histskin',
       type: 'ability',
-      description: 'Regain 1 HP at the start of each turn for the rest of the encounter.',
+      description: `Major Action, once per adventure. Regain ${regeneration} HP at the start of each of your turns for the rest of the encounter. The rate becomes 2 HP when you have at least two Expert-or-higher skills.`,
       source: 'Argonian',
       limitation: 'per adventure',
       usedAbilityId: 'racial-argonian',
@@ -428,9 +498,17 @@ export function getValidMinorActions(character: Character): MinorActionOption[] 
     id: 'move',
     name: 'Move',
     type: 'movement',
-    description: 'Move up to your normal movement speed.',
+    description: 'Move to another location. There is no movement speed — one Minor Action moves you anywhere the situation allows; leaving melee reach still permits a free attack from the enemy you leave.',
   });
   
+  // Prone: standing up costs a Minor (core condition; the GM marks a character Prone in the tracker)
+  actions.push({
+    id: 'stand-up',
+    name: 'Stand Up (from Prone)',
+    type: 'movement',
+    description: 'Stand from Prone. Only usable while Prone. While Prone you have Advantage on ranged attacks you make, and any attack that hits you is an automatic critical.',
+  });
+
   actions.push({
     id: 'draw-weapon',
     name: 'Draw/Stow Weapon',
@@ -458,30 +536,32 @@ export function getValidMinorActions(character: Character): MinorActionOption[] 
   }
   
  // Drink potion from inventory
-  const potions = character.inventory.items.filter(item => 
-    item.name?.toLowerCase().includes('potion') && item.quantity > 0
+  const potions = character.inventory.items.filter(item =>
+    item.quantity > 0 && resolveInventoryItem(item)?.kind === 'potion'
   );
   for (const potion of potions) {
     const safeName = potion.name || 'unknown-potion';
+    const info = resolveInventoryItem(potion);
     actions.push({
       id: `drink-${safeName.toLowerCase().replace(/\s+/g, '-')}`,
-      name: `Drink ${safeName}`,
+      name: `Drink ${safeName}${isHomebrewItem(potion) ? ' (Brewed)' : ''}`,
       type: 'item',
-      description: `Consume one ${safeName} from your inventory.`,
+      description: `${info ? info.effect : 'Consume one potion.'} Qty: ${potion.quantity}`,
     });
   }
 
   // POISONS (Rulebook: "Applying a poison is a Minor Action")
-  const poisons = character.inventory.items.filter(item => 
-    item.name?.toLowerCase().includes('poison') && item.quantity > 0
+  const poisons = character.inventory.items.filter(item =>
+    item.quantity > 0 && resolveInventoryItem(item)?.kind === 'poison'
   );
   for (const poison of poisons) {
     const safeName = poison.name || 'Unknown Poison';
+    const info = resolveInventoryItem(poison);
     actions.push({
       id: `apply-${safeName.toLowerCase().replace(/\s+/g, '-')}`,
-      name: `Apply ${safeName}`,
+      name: `Apply ${safeName}${isHomebrewItem(poison) ? ' (Brewed)' : ''}`,
       type: 'item',
-      description: `Coat weapon with poison.`,
+      description: `${info ? info.effect : 'Coat weapon with poison.'} Qty: ${poison.quantity}`,
     });
   }
   
@@ -490,8 +570,8 @@ export function getValidMinorActions(character: Character): MinorActionOption[] 
     id: 'dodge',
     name: 'Dodge',
     type: 'defensive',
-    fpCost: 1,
-    description: 'Spend 1 FP. The next enemy that attacks you this round does so with Disadvantage.',
+    fpCost: 2,
+    description: 'Spend 2 FP. The next enemy that attacks you this round does so with Disadvantage.',
   });
   
   // Sneak: Hide (Novice+)

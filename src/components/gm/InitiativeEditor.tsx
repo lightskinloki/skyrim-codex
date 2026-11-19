@@ -237,7 +237,7 @@ export function InitiativeEditor({ combatState, onUpdateState }: InitiativeEdito
 
       {/* Legend */}
       <div className="text-xs text-muted-foreground border-t pt-3 space-y-1">
-        <p><strong>Note:</strong> Lower initiative goes first. Ties broken by lower Agility.</p>
+        <p><strong>Note:</strong> Lowest initiative goes first (a natural 1 is a Critical Success). Tied actors reroll; do not break ties by Agility.</p>
         <p><strong>GM Turn:</strong> All enemies act together on the GM's single initiative roll.</p>
       </div>
     </div>
