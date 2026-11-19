@@ -35,7 +35,9 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
   AlertTriangle,
+  Check,
   CheckCircle2,
+  Copy,
   Download,
   ExternalLink,
   RefreshCw,
@@ -61,6 +63,7 @@ export function FinalRenderPanel({
   const [bridgeConnected, setBridgeConnected] = useState<boolean | null>(null);
   const [renderStatus, setRenderStatus] = useState<RenderBridgeStatus>("idle");
   const [renderMessage, setRenderMessage] = useState<string>("");
+  const [copiedExtensionsUrl, setCopiedExtensionsUrl] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const renderOptions: PortraitRenderOptions = {
@@ -148,7 +151,7 @@ export function FinalRenderPanel({
       if (!hasBridge) {
         setRenderStatus("error");
         setRenderMessage(
-          "Companion extension not detected. Load C:\\Users\\fbrown\\skyrim-codex\\render-bridge-extension in chrome://extensions and refresh this page."
+          "Render Bridge extension not connected yet. Follow the 4 quick steps below, then click Re-check Extension (no page refresh needed)."
         );
         return;
       }
@@ -362,31 +365,112 @@ export function FinalRenderPanel({
             )}
 
             {bridgeConnected === false && (
-              <div className="rounded-md border border-border/80 bg-background/60 p-3 flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
-                <div className="space-y-0.5">
-                  <div className="font-medium text-foreground">
-                    {RENDER_BRIDGE_STORE_URL
-                      ? "Install Render Bridge to enable 1-click Final Renders"
-                      : "Render Bridge extension not detected"}
+              <div className="rounded-md border border-primary/30 bg-background/70 p-3.5 space-y-3 text-xs text-muted-foreground">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <div className="font-semibold text-foreground text-xs">
+                      Quick Setup for Playtesters (~60 seconds, uses your Google account)
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">
+                      One-time setup in Chrome or Edge — your progress on this page stays safe.
+                    </p>
                   </div>
-                  <p>
-                    {RENDER_BRIDGE_STORE_URL
-                      ? "1-click install from the Chrome Web Store using your browser's Google session—no API keys or Developer Mode required."
-                      : "Chrome Web Store listing is being configured for 1-click playgroup install. You can still toggle Pre-Render Directly or Import Image below."}
-                  </p>
+                  <div className="flex items-center gap-1.5">
+                    {RENDER_BRIDGE_STORE_URL && (
+                      <Button asChild size="sm" variant="default" className="h-7 text-xs">
+                        <a
+                          href={RENDER_BRIDGE_STORE_URL}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
+                          Add to Chrome
+                        </a>
+                      </Button>
+                    )}
+                    <Button asChild size="sm" variant={RENDER_BRIDGE_STORE_URL ? "outline" : "default"} className="h-7 text-xs">
+                      <a
+                        href="/downloads/skyrim-codex-render-bridge.zip"
+                        download="skyrim-codex-render-bridge.zip"
+                      >
+                        <Download className="w-3.5 h-3.5 mr-1.5" />
+                        Download Extension (.zip)
+                      </a>
+                    </Button>
+                  </div>
                 </div>
-                {RENDER_BRIDGE_STORE_URL && (
-                  <Button asChild size="sm" variant="default" className="h-7 text-xs shrink-0">
-                    <a
-                      href={RENDER_BRIDGE_STORE_URL}
-                      target="_blank"
-                      rel="noopener noreferrer"
+
+                <ol className="space-y-1.5 text-[11px] text-foreground/90">
+                  <li className="flex items-start gap-2">
+                    <span className="font-semibold text-primary shrink-0">1.</span>
+                    <span>
+                      Click <strong className="text-foreground">Download Extension (.zip)</strong> above and unzip it
+                      (Windows: right-click → <em className="text-foreground">Extract All</em>; Mac: double-click the zip).
+                    </span>
+                  </li>
+                  <li className="flex items-center flex-wrap gap-1.5">
+                    <span className="font-semibold text-primary shrink-0">2.</span>
+                    <span>Open a new browser tab and go to</span>
+                    <code className="px-1.5 py-0.5 rounded bg-muted text-foreground font-mono text-[11px]">
+                      chrome://extensions
+                    </code>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-6 px-2 text-[10px]"
+                      onClick={() => {
+                        navigator.clipboard?.writeText("chrome://extensions");
+                        setCopiedExtensionsUrl(true);
+                        window.setTimeout(() => setCopiedExtensionsUrl(false), 2000);
+                      }}
                     >
-                      <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
-                      Add to Chrome
-                    </a>
-                  </Button>
-                )}
+                      {copiedExtensionsUrl ? (
+                        <>
+                          <Check className="w-3 h-3 mr-1 text-emerald-400" />
+                          Copied
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3 h-3 mr-1" />
+                          Copy
+                        </>
+                      )}
+                    </Button>
+                    <span>then switch <strong className="text-foreground">Developer mode</strong> ON (top right).</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="font-semibold text-primary shrink-0">3.</span>
+                    <span>
+                      Click <strong className="text-foreground">Load unpacked</strong> (top left) and select the
+                      extracted <code className="text-foreground">skyrim-codex-render-bridge</code> folder.
+                    </span>
+                  </li>
+                  <li className="flex items-center flex-wrap gap-2">
+                    <span className="font-semibold text-primary shrink-0">4.</span>
+                    <span>Make sure you&apos;re signed into Google in Chrome, then click</span>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      className="h-6 px-2.5 text-[11px]"
+                      onClick={async () => {
+                        const ok = await pingRenderBridge();
+                        setBridgeConnected(ok);
+                        if (ok) {
+                          setRenderStatus("idle");
+                          setRenderMessage("Render Bridge detected and ready!");
+                        } else {
+                          setRenderStatus("error");
+                          setRenderMessage("Still not detected — make sure Developer mode is ON and you selected the folder with manifest.json, or reload this tab once.");
+                        }
+                      }}
+                    >
+                      <RefreshCw className="w-3 h-3 mr-1" />
+                      Re-check Extension
+                    </Button>
+                  </li>
+                </ol>
               </div>
             )}
           </Card>

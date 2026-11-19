@@ -179,6 +179,29 @@ function waitForTabComplete(tabId) {
   });
 }
 
+// Auto-attach content script into already-open Skyrim Codex tabs on install/reload
+// so playtesters never lose unsaved creator state by refreshing.
+chrome.runtime.onInstalled.addListener(async () => {
+  try {
+    const tabs = await chrome.tabs.query({
+      url: [
+        "https://skyrim-codex.frankbrown8810.workers.dev/*",
+        "http://localhost/*",
+        "http://127.0.0.1/*",
+      ],
+    });
+    for (const tab of tabs) {
+      if (tab.id) {
+        chrome.scripting
+          .executeScript({ target: { tabId: tab.id }, files: ["app-bridge.js"] })
+          .catch(() => {});
+      }
+    }
+  } catch {
+    // Ignore tab query errors
+  }
+});
+
 chrome.runtime.onConnect.addListener((port) => {
   if (port.name === "aimode-keepalive") {
     port.onDisconnect.addListener(() => {});

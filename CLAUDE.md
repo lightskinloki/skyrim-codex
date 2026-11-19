@@ -22,6 +22,8 @@ These govern every feature decision. Read `README.md` for full detail.
 2. **GM Vision** — The GM's only job at the table is to decide what happens. The app handles everything else.
 3. **Mirror Principle** — Every AI feature has an excellent non-AI equivalent built first. AI is opt-in enhancement, never a requirement.
 4. **Privacy by Design** — All AI runs locally in-browser (WebLLM/Transformers.js). No data ever leaves the device. No API keys. This is architectural, not a policy promise.
+5. **User-Account / `$0` Server Cost Mandate (Stage 2 Portraits)** — Stage 2 portrait finalization runs strictly through the user's own browser Google session via Google Search AI Mode (`Nano Banana`) and the Chrome companion extension (`render-bridge-extension/`). NEVER add server-side AI endpoints, paid/developer-billed API bindings (e.g., Cloudflare Workers AI, OpenAI, or shared Gemini API keys), or global quota pools charged to the project owner.
+6. **Director Approval Before Architectural Changes** — The project owner is the director. NEVER switch image models, rewrite prompt schemas, alter backend/billing bindings, or push UX/architectural pivots without first discussing options, costs, and trade-offs with the owner and getting explicit approval. If a step requires owner credentials/action (e.g., Chrome Web Store publish), stop and state that plainly.
 
 ---
 
