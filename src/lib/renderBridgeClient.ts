@@ -12,6 +12,9 @@ export interface RenderBridgeResult {
   renderJobId: string;
 }
 
+export const RENDER_BRIDGE_STORE_URL =
+  (import.meta.env.VITE_RENDER_BRIDGE_STORE_URL as string | undefined)?.trim() || "";
+
 const EXTENSION_PROBE_TIMEOUT_MS = 900;
 
 export function pingRenderBridge(): Promise<boolean> {

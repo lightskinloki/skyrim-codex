@@ -3,6 +3,11 @@
   "name": "Skyrim Codex Render Bridge",
   "version": "1.0.0",
   "description": "Zero-click companion bridge connecting Skyrim TTRPG Character Manager to Google Search AI Mode using your own browser Google account.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
   "permissions": [
     "scripting",
     "tabs",
@@ -12,6 +17,7 @@
     "https://www.google.com/*",
     "https://*.googleusercontent.com/*",
     "https://*.gstatic.com/*",
+    "https://skyrim-codex.frankbrown8810.workers.dev/*",
     "http://localhost:*/*",
     "http://127.0.0.1:*/*"
   ],
@@ -21,6 +27,7 @@
   "content_scripts": [
     {
       "matches": [
+        "https://skyrim-codex.frankbrown8810.workers.dev/*",
         "http://localhost:*/*",
         "http://127.0.0.1:*/*"
       ],

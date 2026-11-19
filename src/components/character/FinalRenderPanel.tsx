@@ -17,6 +17,7 @@ import {
 } from "@/lib/renderSpecCompiler";
 import { savePortraitRender, useStoredPortrait } from "@/lib/portraitStorage";
 import {
+  RENDER_BRIDGE_STORE_URL,
   RenderBridgeStatus,
   focusRenderTab,
   pingRenderBridge,
@@ -361,10 +362,32 @@ export function FinalRenderPanel({
             )}
 
             {bridgeConnected === false && (
-              <p className="text-[11px] text-muted-foreground text-center">
-                To run automatic Google AI Mode renders, load <code className="text-foreground">C:\Users\fbrown\skyrim-codex\render-bridge-extension</code> in{" "}
-                <code className="text-foreground">chrome://extensions</code> (Developer mode) and refresh.
-              </p>
+              <div className="rounded-md border border-border/80 bg-background/60 p-3 flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
+                <div className="space-y-0.5">
+                  <div className="font-medium text-foreground">
+                    {RENDER_BRIDGE_STORE_URL
+                      ? "Install Render Bridge to enable 1-click Final Renders"
+                      : "Render Bridge extension not detected"}
+                  </div>
+                  <p>
+                    {RENDER_BRIDGE_STORE_URL
+                      ? "1-click install from the Chrome Web Store using your browser's Google session—no API keys or Developer Mode required."
+                      : "Chrome Web Store listing is being configured for 1-click playgroup install. You can still toggle Pre-Render Directly or Import Image below."}
+                  </p>
+                </div>
+                {RENDER_BRIDGE_STORE_URL && (
+                  <Button asChild size="sm" variant="default" className="h-7 text-xs shrink-0">
+                    <a
+                      href={RENDER_BRIDGE_STORE_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
+                      Add to Chrome
+                    </a>
+                  </Button>
+                )}
+              </div>
             )}
           </Card>
 
