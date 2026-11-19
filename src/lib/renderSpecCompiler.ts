@@ -256,26 +256,48 @@ export function compileRenderPrompt(params: {
     );
   }
 
+  const skills = sheet?.skills || [];
+  const MAGIC_SCHOOL_IDS = ["destruction", "conjuration", "restoration", "alteration", "illusion"];
+  const COMBAT_SKILL_IDS = ["one-handed", "two-handed", "archery"];
+
+  const magicSchools = skills
+    .filter((s) => MAGIC_SCHOOL_IDS.includes(s.skillId.toLowerCase()))
+    .map((s) => s.skillId.toLowerCase());
+  const hasAdeptMagic = skills.some(
+    (s) => s.rank === "Adept" && MAGIC_SCHOOL_IDS.includes(s.skillId.toLowerCase())
+  );
+  const hasCombatSkill = skills.some((s) => COMBAT_SKILL_IDS.includes(s.skillId.toLowerCase()));
+  const isMageStone = sheet?.standingStone?.archetype?.toLowerCase() === "magic";
+  const isMagicFocused =
+    magicSchools.length > 0 && (hasAdeptMagic || (isMageStone && !hasCombatSkill));
+  const onlyMinorBackupDagger =
+    weapons.length > 0 && weapons.every((w) => /\bdagger\b/i.test(w.name));
+
   const equippedList: string[] = [];
   if (armors.length > 0 && !portrait.slots?.["13_armor_torso.png"]) {
     equippedList.push(armors.map((a) => a.name).join(", "));
   }
-  for (const w of weapons) {
-    equippedList.push(
-      w.enchantment ? `${w.name} (${w.enchantment.name} glow)` : w.name
-    );
+  const omitWeaponsForSpellcasting =
+    isMagicFocused && (weapons.length === 0 || onlyMinorBackupDagger);
+  if (!omitWeaponsForSpellcasting) {
+    for (const w of weapons) {
+      equippedList.push(
+        w.enchantment ? `${w.name} (${w.enchantment.name} glow)` : w.name
+      );
+    }
   }
   for (const s of shields) {
     equippedList.push(s.name);
   }
 
-  const magicSchools = (sheet?.skills || [])
-    .filter((s) =>
-      ["destruction", "conjuration", "restoration", "alteration", "illusion"].includes(
-        s.skillId.toLowerCase()
-      )
-    )
-    .map((s) => s.skillId.toLowerCase());
+  let equippedLine = "";
+  if (omitWeaponsForSpellcasting || (weapons.length === 0 && magicSchools.length > 0)) {
+    const schoolList = magicSchools.slice(0, 2).join("/");
+    const armorOrShield = equippedList.length > 0 ? `, also wearing/holding ${equippedList.join(", ")}` : "";
+    equippedLine = `Equipped: casting ${schoolList} magic with active spell energy in hand (no weapon equipped${armorOrShield}).`;
+  } else if (equippedList.length > 0) {
+    equippedLine = `Equipped: wielding ${equippedList.join(", ")}.`;
+  }
 
   const physiqueText = [
     (BODY_TYPE_DESCRIPTIONS[opts.bodyType] || BODY_TYPE_DESCRIPTIONS.athletic).prompt,
@@ -321,12 +343,12 @@ export function compileRenderPrompt(params: {
       : "";
 
   const prompt = [
-    `Re-draw and unify the attached rough layered portrait collage as a ${physiqueText} ${genderWord} ${raceName} in a cohesive, polished dark-fantasy 32-bit pixel art portrait. Fix any visual glitches and errors from kitbashing.`,
-    `Subject: ${physiqueOverride ? `${physiqueOverride} ` : ""}Continuous ${targetSkinTone} across face, neck, chest, and arms, ${ageText}, ${expressionText}.`,
+    `Finalize the construction and do the final render and unification of the attached rough layered kitbash collage as a ${physiqueText} ${genderWord} ${raceName} in a cohesive, polished dark-fantasy 32-bit pixel art portrait. Fix any visual glitches and errors from kitbashing as well as extraneous masking artifacts. The final product must be a cohesive PFP of the subject. It is a 3/4 bust headshot.`,
+    `Subject: ${raceName} from Skyrim. ${physiqueOverride ? `${physiqueOverride} ` : ""}Continuous ${targetSkinTone} across face, neck, chest, and arms, ${ageText}, ${expressionText}.`,
     visualFeatures.length > 0 ? `Appearance & Outfit: ${visualFeatures.join(", ")}.` : "",
-    equippedList.length > 0 ? `Equipped: wielding ${equippedList.join(", ")}.` : "",
-    magicSchools.length > 0 ? `Magic flourish: strong ${magicSchools.slice(0, 2).join("/")} sparks.` : "",
-    `Colors & Style: keep exact hair, eyebrow, eye, heterochromia, warpaint, cloak, and garment colors from the reference image; hand-crafted 32-bit RPG pixel art, crisp 1px dark ink outlines, sculpted cel shading, dithering, upper-left key light, seamless hair roots, sculpted lips, natural shoulder drape.`,
+    equippedLine,
+    magicSchools.length > 0 ? `Magic flourish: strong ${magicSchools.slice(0, 2).join("/")} energy.` : "",
+    `Colors & Style: keep exact hair, eyebrow, eye coloring, warpaint, cloak, and garment colors from the reference image as you construct and finalize the profile picture; hand-crafted 32-bit RPG pixel art, crisp 1px dark ink outlines, sculpted cel shading, dithering, upper-left key light, seamless hair roots, sculpted lips, natural clothing drape.`,
     `Composition & Backdrop: centered 3:4 bust portrait with generous headroom, ${backdropText}, keep exact backdrop void, halo, and ember colors from the image, no border.`,
     `Cleanup Note: Provided image is a multi-race kitbashed pre-render reference with assembly errors—repair seams, skin mismatches, clipped hair/ears, and layer artifacts into one clean, unified portrait.`,
   ]

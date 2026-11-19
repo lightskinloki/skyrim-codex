@@ -151,7 +151,7 @@ export function FinalRenderPanel({
       if (!hasBridge) {
         setRenderStatus("error");
         setRenderMessage(
-          "Render Bridge extension not connected yet. Follow the 4 quick steps below, then click Re-check Extension (no page refresh needed)."
+          "Render Bridge extension not connected yet. Follow the quick setup steps below, then click Re-check Extension (no page refresh needed)."
         );
         return;
       }
@@ -404,12 +404,22 @@ export function FinalRenderPanel({
                   <li className="flex items-start gap-2">
                     <span className="font-semibold text-primary shrink-0">1.</span>
                     <span>
-                      Click <strong className="text-foreground">Download Extension (.zip)</strong> above and unzip it
-                      (Windows: right-click → <em className="text-foreground">Extract All</em>; Mac: double-click the zip).
+                      Click <strong className="text-foreground">Download Extension (.zip)</strong> above to save{" "}
+                      <code className="text-foreground">skyrim-codex-render-bridge.zip</code>.
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="font-semibold text-primary shrink-0">2.</span>
+                    <span>
+                      <strong className="text-foreground">Unpack the zip folder first</strong> (Chrome cannot load a{" "}
+                      <code className="text-foreground">.zip</code> directly): on Windows, right-click the file →{" "}
+                      <em className="text-foreground">Extract All</em> → <em className="text-foreground">Extract</em>; on Mac, double-click the{" "}
+                      <code className="text-foreground">.zip</code> to extract the{" "}
+                      <code className="text-foreground">skyrim-codex-render-bridge</code> folder.
                     </span>
                   </li>
                   <li className="flex items-center flex-wrap gap-1.5">
-                    <span className="font-semibold text-primary shrink-0">2.</span>
+                    <span className="font-semibold text-primary shrink-0">3.</span>
                     <span>Open a new browser tab and go to</span>
                     <code className="px-1.5 py-0.5 rounded bg-muted text-foreground font-mono text-[11px]">
                       chrome://extensions
@@ -440,14 +450,16 @@ export function FinalRenderPanel({
                     <span>then switch <strong className="text-foreground">Developer mode</strong> ON (top right).</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="font-semibold text-primary shrink-0">3.</span>
+                    <span className="font-semibold text-primary shrink-0">4.</span>
                     <span>
-                      Click <strong className="text-foreground">Load unpacked</strong> (top left) and select the
-                      extracted <code className="text-foreground">skyrim-codex-render-bridge</code> folder.
+                      Click <strong className="text-foreground">Load unpacked</strong> (top left) and select the{" "}
+                      <strong className="text-foreground">unpacked</strong>{" "}
+                      <code className="text-foreground">skyrim-codex-render-bridge</code> folder (the folder containing{" "}
+                      <code className="text-foreground">manifest.json</code>).
                     </span>
                   </li>
                   <li className="flex items-center flex-wrap gap-2">
-                    <span className="font-semibold text-primary shrink-0">4.</span>
+                    <span className="font-semibold text-primary shrink-0">5.</span>
                     <span>Make sure you&apos;re signed into Google in Chrome, then click</span>
                     <Button
                       type="button"
