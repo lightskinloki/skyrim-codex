@@ -1,0 +1,21 @@
+{
+  "character_id": "redguard_female",
+  "variant_id": "pack_thieves_guild",
+  "label": "Riften Thieves Guild Master",
+  "archetype": "rogue",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\scratch\\flow_chrome_bridge\\outputs\\pack_redguard_female_thieves_guild_v1.jpg",
+  "provided_slots": {
+    "06_mouth.png": "Confident Rogue Expression",
+    "08_eyes.png": "Warm Amber Redguard Eyes",
+    "09_eyebrows.png": "Arched Dark Brows",
+    "10_face_markings.png": "Turquoise Cheek Warpaint & Gold Nose Rings",
+    "12_earring_ears.png": "Triple Gold Hoop Earrings",
+    "13_armor_torso.png": "Studded Thieves Guild Coat & Harness",
+    "14_cloak_mantle.png": "Dropped Brown Guild Master Hood",
+    "15_hair_front.png": "Braided Afro-Puffs & Gold Wire Cuffs"
+  },
+  "clear_slots": [
+    "02_hair_back.png",
+    "16_headgear_horns.png"
+  ]
+}

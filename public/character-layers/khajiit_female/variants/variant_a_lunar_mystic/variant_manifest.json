@@ -1,0 +1,16 @@
+{
+  "character_id": "khajiit_female",
+  "variant_id": "variant_a_lunar_mystic",
+  "label": "Elsweyr Lunar Mane Mystic",
+  "archetype": "mage",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\scratch\\flow_chrome_bridge\\outputs\\khajiit_female_variant_a_lunar_mystic_v1.jpg",
+  "provided_slots": {
+    "07_tusks_whiskers.png": "Silver-Tipped Feline Whiskers",
+    "08_eyes.png": "Amber Feline Eyes",
+    "10_face_markings.png": "Silver Crescent Moon Cheek Sigils",
+    "12_earring_ears.png": "Gold Ear Rings & Crimson Silk Tassels",
+    "13_armor_torso.png": "Crimson & Gold Elsweyr Silk Sari",
+    "14_cloak_mantle.png": "Crescent Moon Clasp & Turquoise Bead Chains",
+    "16_headgear_horns.png": "Golden Lunar Moonstone Diadem"
+  }
+}

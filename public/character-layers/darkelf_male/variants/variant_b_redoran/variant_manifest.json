@@ -1,0 +1,19 @@
+{
+  "character_id": "darkelf_male",
+  "variant_id": "variant_b_redoran",
+  "label": "House Redoran Bonemold Knight",
+  "archetype": "warrior",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\dunmer_redoran_bonemold_knight_1794947664089.jpg",
+  "provided_slots": {
+    "02_hair_back.png": "Cropped Ash-Brown Nape Trim",
+    "06_mouth.png": "Stern Warrior Expression",
+    "08_eyes.png": "Crimson Dunmer Warrior Eyes",
+    "09_eyebrows.png": "Scarred Dark Dunmer Brows",
+    "10_face_markings.png": "Vertical Diagonal Brow-to-Cheek Scar",
+    "11_facial_hair.png": "Dark Rugged Dunmer Stubble",
+    "12_earring_ears.png": "Triple Brass Ear Cuffs",
+    "13_armor_torso.png": "Sculpted Redoran Bonemold Pauldrons & Chestplate",
+    "14_cloak_mantle.png": "Charcoal Wrapped Ash Scarf",
+    "15_hair_front.png": "Ash-Brown Cropped War-Cut"
+  }
+}

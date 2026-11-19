@@ -1,0 +1,21 @@
+{
+  "character_id": "highelf_female",
+  "variant_id": "pack_glass_armor",
+  "label": "Gilded Malachite Glass Armor",
+  "archetype": "battlemage",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\scratch\\flow_chrome_bridge\\outputs\\pack_highelf_female_glass_armor_v1.jpg",
+  "provided_slots": {
+    "02_hair_back.png": "Shaved Temple Rose-Copper Back Trim",
+    "06_mouth.png": "Serene Elven Expression",
+    "08_eyes.png": "Amber High Elven Eyes",
+    "09_eyebrows.png": "Rose-Brown Brows",
+    "10_face_markings.png": "Neon-Cyan Arcane Circuit Tattoos",
+    "12_earring_ears.png": "Triple Chained Gold Ear Rings",
+    "13_armor_torso.png": "Gilded Malachite Glass Plate",
+    "15_hair_front.png": "Rose-Copper Shaved Cyber Bob"
+  },
+  "clear_slots": [
+    "14_cloak_mantle.png",
+    "16_headgear_horns.png"
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "character_id": "woodelf_male",
+  "variant_id": "pack_forsworn_stag",
+  "label": "Hircine Stag-Crown Forsworn",
+  "archetype": "rogue",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\scratch\\flow_chrome_bridge\\outputs\\pack_woodelf_male_forsworn_stag_v1.jpg",
+  "provided_slots": {
+    "02_hair_back.png": "Wild Auburn Forest Dreads",
+    "06_mouth.png": "Stoic Reachmen Hunter Expression",
+    "08_eyes.png": "Glowing Amber-Gold Hunter Eyes",
+    "09_eyebrows.png": "Fierce Dark-Auburn Brows",
+    "10_face_markings.png": "Crimson Ash Cheek & Brow Warpaint",
+    "12_earring_ears.png": "Carved Bone Ear Cuffs",
+    "13_armor_torso.png": "Reachmen Strapped Leather & Bone Tooth Necklace",
+    "14_cloak_mantle.png": "Forsworn Raven-Feather & Fur Shoulder Mantle",
+    "15_hair_front.png": "Braided Chestnut-Auburn Topknot Crest",
+    "16_headgear_horns.png": "Ivory Stag Antlers & Reachmen Headband"
+  },
+  "clear_slots": [
+    "04_body_markings.png",
+    "11_facial_hair.png"
+  ]
+}

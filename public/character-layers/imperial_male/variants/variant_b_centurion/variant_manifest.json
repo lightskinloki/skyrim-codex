@@ -1,0 +1,17 @@
+{
+  "character_id": "imperial_male",
+  "variant_id": "variant_b_centurion",
+  "label": "Colovian Golden Centurion",
+  "archetype": "warrior",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\male_imperial_variant_b_centurion_flow.png",
+  "provided_slots": {
+    "06_mouth.png": "Stern Centurion Expression",
+    "08_eyes.png": "Fierce Golden-Hazel Gaze",
+    "09_eyebrows.png": "Furrowed Warrior Brows",
+    "10_face_markings.png": "Dual Cheek & Brow Battle Scars",
+    "11_facial_hair.png": "Full Rugged Auburn Roman Beard",
+    "13_armor_torso.png": "Gilded Dragon Cuirass & Pauldrons",
+    "14_cloak_mantle.png": "Heavy Crimson Centurion Cape",
+    "15_hair_front.png": "Tousled Auburn Warrior Curls"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "character_id": "highelf_male",
+  "variant_id": "variant_a_psijic",
+  "label": "Artaeum Psijic Lorekeeper",
+  "archetype": "mage",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\male_high_elf_psijic_lorekeeper_1794947292812.jpg",
+  "provided_slots": {
+    "02_hair_back.png": "Silver-White Long Mane",
+    "06_mouth.png": "Stern High Elven Expression",
+    "08_eyes.png": "Luminous Arcane Cyan Eyes",
+    "09_eyebrows.png": "Silver-Grey Arched Brows",
+    "10_face_markings.png": "Luminous Pale-Cyan Cheek Sigils",
+    "12_earring_ears.png": "Altmer Pointed Ear",
+    "13_armor_torso.png": "Pearl-White Psijic High-Collar Robes",
+    "14_cloak_mantle.png": "Cerulean Trim & Sapphire Chest Gem",
+    "15_hair_front.png": "Silver-White Swept Crown",
+    "16_headgear_horns.png": "Silver Vine & Sapphire Circlet"
+  }
+}

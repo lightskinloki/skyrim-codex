@@ -1,21 +1,23 @@
-import { useState } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { useEffect, useRef, useState } from "react";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { RaceSelection } from "./creator/RaceSelection";
+import { AppearanceStudio } from "./AppearanceStudio";
 import { StandingStoneSelection } from "./creator/StandingStoneSelection";
 import { SkillSelection } from "./creator/SkillSelection";
 import { KitSelection } from "./creator/KitSelection";
 import { CharacterFinalization } from "./creator/CharacterFinalization";
 import { CreatorSummaryPanel } from "./creator/CreatorSummaryPanel";
 
-import { Race, StandingStone, Kit, CharacterSkill, Character, Stats } from "@/types/character";
+import { Race, StandingStone, Kit, CharacterSkill, Character, PortraitConfig } from "@/types/character";
 import { races } from "@/data/races";
 import { standingStones } from "@/data/standingStones";
 import { kits } from "@/data/kits";
 import { skills } from "@/data/skills";
 import { calculateFinalStats, calculateMaxHP, calculateMaxFP, calculateTotalDR } from "@/utils/characterCalculations";
+import { buildDefaultPortraitConfig, loadPortraitCatalog, raceToCharacterId } from "@/lib/portraitCatalog";
 
 interface CharacterCreatorModalProps {
   isOpen: boolean;
@@ -25,6 +27,7 @@ interface CharacterCreatorModalProps {
 
 interface CreatorState {
   selectedRace: Race | null;
+  portrait?: PortraitConfig;
   selectedStone: StandingStone | null;
   selectedSkills: CharacterSkill[];
   selectedKit: Kit | null;
@@ -33,20 +36,27 @@ interface CreatorState {
 
 const STEP_TITLES = [
   "Choose Your Race",
-  "Choose Your Standing Stone", 
+  "Choose Your Standing Stone",
   "Choose Your Skills",
   "Choose Your Starting Kit",
-  "Finalize Your Legend"
+  "Customize Starter Appearance",
+  "Finalize & Render Portrait",
 ];
 
 export function CharacterCreatorModal({ isOpen, onClose, onCharacterCreated }: CharacterCreatorModalProps) {
+  const stepScrollRef = useRef<HTMLDivElement | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
+
+  useEffect(() => {
+    stepScrollRef.current?.scrollTo({ top: 0 });
+  }, [currentStep]);
   const [creatorState, setCreatorState] = useState<CreatorState>({
     selectedRace: null,
+    portrait: undefined,
     selectedStone: null,
     selectedSkills: [],
     selectedKit: null,
-    characterName: ""
+    characterName: "",
   });
 
   const canProceed = () => {
@@ -55,7 +65,8 @@ export function CharacterCreatorModal({ isOpen, onClose, onCharacterCreated }: C
       case 1: return creatorState.selectedStone !== null;
       case 2: return isValidSkillSelection();
       case 3: return creatorState.selectedKit !== null;
-      case 4: return creatorState.characterName.trim() !== "";
+      case 4: return creatorState.selectedRace !== null;
+      case 5: return creatorState.characterName.trim() !== "";
       default: return false;
     }
   };
@@ -69,11 +80,28 @@ export function CharacterCreatorModal({ isOpen, onClose, onCharacterCreated }: C
   };
 
   const handleNext = () => {
-    if (currentStep < 4) {
+    if (currentStep < 5) {
       setCurrentStep(currentStep + 1);
     } else {
       handleFinishCharacter();
     }
+  };
+
+  const handleRacePicked = (race: Race) => {
+    setCreatorState((prev) => ({
+      ...prev,
+      selectedRace: race,
+      portrait: prev.selectedRace?.id === race.id ? prev.portrait : undefined,
+    }));
+    loadPortraitCatalog().then((catalog) => {
+      const targetId = raceToCharacterId(race.id, "female");
+      const entry = catalog.characters.find((c) => c.id === targetId) || catalog.characters[0];
+      if (!entry) return;
+      setCreatorState((prev) => {
+        if (prev.selectedRace?.id !== race.id || prev.portrait) return prev;
+        return { ...prev, portrait: buildDefaultPortraitConfig(entry) };
+      });
+    });
   };
 
   const handleBack = () => {
@@ -122,11 +150,20 @@ export function CharacterCreatorModal({ isOpen, onClose, onCharacterCreated }: C
       progression: {
         combatProwessUnlocked: { adept: false, expert: false, master: false },
         arcaneStudiesUnlocked: { adept: false, expert: false, master: false }
-      }
+      },
+      portrait: creatorState.portrait,
     };
 
     onCharacterCreated(newCharacter);
     onClose();
+  };
+
+  const sheetContext = {
+    name: creatorState.characterName,
+    race: creatorState.selectedRace || undefined,
+    standingStone: creatorState.selectedStone || undefined,
+    skills: creatorState.selectedSkills,
+    equipment: creatorState.selectedKit?.equipment,
   };
 
   const renderStepContent = () => {
@@ -136,7 +173,7 @@ export function CharacterCreatorModal({ isOpen, onClose, onCharacterCreated }: C
           <RaceSelection
             races={races}
             selectedRace={creatorState.selectedRace}
-            onRaceSelect={(race) => setCreatorState(prev => ({ ...prev, selectedRace: race }))}
+            onRaceSelect={handleRacePicked}
           />
         );
       case 1:
@@ -166,9 +203,25 @@ export function CharacterCreatorModal({ isOpen, onClose, onCharacterCreated }: C
         );
       case 4:
         return (
+          <AppearanceStudio
+            value={creatorState.portrait}
+            raceId={creatorState.selectedRace?.id || "nord"}
+            onChange={(portrait) => setCreatorState((prev) => ({ ...prev, portrait }))}
+            allowSkeletonSwitch={false}
+            starterMode={true}
+            hideRenderTab={true}
+            sheetContext={sheetContext}
+          />
+        );
+      case 5:
+        return (
           <CharacterFinalization
             characterName={creatorState.characterName}
             onNameChange={(name) => setCreatorState(prev => ({ ...prev, characterName: name }))}
+            portrait={creatorState.portrait}
+            onPortraitChange={(portrait) => setCreatorState((prev) => ({ ...prev, portrait }))}
+            sheetContext={sheetContext}
+            fallbackRaceImage={creatorState.selectedRace?.image}
           />
         );
       default:
@@ -183,14 +236,17 @@ export function CharacterCreatorModal({ isOpen, onClose, onCharacterCreated }: C
           {/* Main Content Area */}
           <div className="flex-1 flex flex-col">
             {/* Header */}
-            <div className="p-6 border-b border-border">
+            <div className="px-6 py-4 border-b border-border">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-cinzel text-primary">
-                    Step {currentStep + 1} of 5: {STEP_TITLES[currentStep]}
-                  </h2>
+                  <DialogTitle className="text-2xl font-cinzel font-normal text-primary">
+                    Step {currentStep + 1} of 6: {STEP_TITLES[currentStep]}
+                  </DialogTitle>
+                  <DialogDescription className="sr-only">
+                    Create and customize your Skyrim character across six steps.
+                  </DialogDescription>
                   <div className="flex mt-2 space-x-1">
-                    {Array.from({ length: 5 }).map((_, i) => (
+                    {Array.from({ length: 6 }).map((_, i) => (
                       <div
                         key={i}
                         className={`h-2 w-12 rounded-full ${
@@ -204,7 +260,7 @@ export function CharacterCreatorModal({ isOpen, onClose, onCharacterCreated }: C
             </div>
 
             {/* Step Content */}
-            <div className="flex-1 p-6 overflow-y-auto">
+            <div ref={stepScrollRef} className="flex-1 p-6 overflow-y-auto">
               {renderStepContent()}
             </div>
 
@@ -226,7 +282,7 @@ export function CharacterCreatorModal({ isOpen, onClose, onCharacterCreated }: C
                   disabled={!canProceed()}
                   className="flex items-center gap-2"
                 >
-                  {currentStep === 4 ? (
+                  {currentStep === 5 ? (
                     "Finish Character"
                   ) : (
                     <>
@@ -243,6 +299,7 @@ export function CharacterCreatorModal({ isOpen, onClose, onCharacterCreated }: C
           <div className="w-80 border-l border-border bg-card">
             <CreatorSummaryPanel
               race={creatorState.selectedRace}
+              portrait={creatorState.portrait}
               stone={creatorState.selectedStone}
               skills={creatorState.selectedSkills}
               kit={creatorState.selectedKit}

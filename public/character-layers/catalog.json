@@ -1,173 +1,2933 @@
 {
-  "version": 1,
-  "canvas_size": [
-    764,
-    1024
+  "version": 2,
+  "canvas": {
+    "width": 764,
+    "height": 1024
+  },
+  "layerOrder": [
+    "01_background.png",
+    "02_hair_back.png",
+    "03_body_head_base.png",
+    "04_body_markings.png",
+    "05_nose.png",
+    "06_mouth.png",
+    "07_tusks_whiskers.png",
+    "08_eyes.png",
+    "09_eyebrows.png",
+    "10_face_markings.png",
+    "11_facial_hair.png",
+    "12_earring_ears.png",
+    "13_armor_torso.png",
+    "14_cloak_mantle.png",
+    "15_hair_front.png",
+    "16_headgear_horns.png",
+    "17_frame.png"
   ],
-  "shared": {
-    "background": "/character-layers/shared/01_background.png",
-    "frame": "/character-layers/shared/17_frame.png"
+  "slots": {
+    "02_hair_back.png": {
+      "label": "Back Hair / Fins / Plumes",
+      "category": "Hair",
+      "tintGroup": "hair",
+      "canHide": true,
+      "anchorType": "eye"
+    },
+    "04_body_markings.png": {
+      "label": "Body Markings",
+      "category": "Face & Body",
+      "tintGroup": "warpaint",
+      "canHide": true,
+      "anchorType": "body"
+    },
+    "05_nose.png": {
+      "label": "Nose",
+      "category": "Face & Body",
+      "tintGroup": "skin",
+      "canHide": false,
+      "anchorType": "eye"
+    },
+    "06_mouth.png": {
+      "label": "Mouth & Lips",
+      "category": "Face & Body",
+      "tintGroup": "skin",
+      "canHide": false,
+      "anchorType": "mouth"
+    },
+    "07_tusks_whiskers.png": {
+      "label": "Tusks / Whiskers / Spikes",
+      "category": "Face & Body",
+      "tintGroup": "none",
+      "canHide": true,
+      "anchorType": "mouth"
+    },
+    "08_eyes.png": {
+      "label": "Eyes & Gaze",
+      "category": "Eyes & Brows",
+      "tintGroup": "eyes",
+      "canHide": false,
+      "anchorType": "eye"
+    },
+    "09_eyebrows.png": {
+      "label": "Eyebrows",
+      "category": "Eyes & Brows",
+      "tintGroup": "hair",
+      "canHide": true,
+      "anchorType": "eye"
+    },
+    "10_face_markings.png": {
+      "label": "Scars / Warpaint / Piercings",
+      "category": "Markings",
+      "tintGroup": "warpaint",
+      "canHide": true,
+      "anchorType": "eye"
+    },
+    "11_facial_hair.png": {
+      "label": "Beard & Stubble",
+      "category": "Hair",
+      "tintGroup": "hair",
+      "canHide": true,
+      "anchorType": "mouth"
+    },
+    "12_earring_ears.png": {
+      "label": "Ears & Earrings",
+      "category": "Accessories",
+      "tintGroup": "skin",
+      "canHide": false,
+      "anchorType": "eye"
+    },
+    "13_armor_torso.png": {
+      "label": "Armor & Tunic",
+      "category": "Wardrobe",
+      "tintGroup": "gear",
+      "canHide": true,
+      "anchorType": "body"
+    },
+    "14_cloak_mantle.png": {
+      "label": "Cloak / Collar / Scarf / Amulet",
+      "category": "Wardrobe",
+      "tintGroup": "cloak",
+      "canHide": true,
+      "anchorType": "body"
+    },
+    "15_hair_front.png": {
+      "label": "Crown & Front Hair",
+      "category": "Hair",
+      "tintGroup": "hair",
+      "canHide": true,
+      "anchorType": "eye"
+    },
+    "16_headgear_horns.png": {
+      "label": "Circlet / Diadem / Horns",
+      "category": "Accessories",
+      "tintGroup": "gear",
+      "canHide": true,
+      "anchorType": "eye"
+    }
   },
   "characters": [
     {
       "id": "nord_female",
-      "race_id": "nord",
-      "race_name": "nord",
+      "raceId": "nord",
+      "raceName": "Nord",
       "gender": "female",
-      "manifest_path": "/character-layers/nord_female/layers_manifest.json",
-      "active_layers": 12
+      "displayName": "Nord (Female)",
+      "compatibilityGroup": "humanoid_female",
+      "anchor": {
+        "eyeX": 461,
+        "eyeY": 337,
+        "mouthX": 470,
+        "mouthY": 482
+      },
+      "baseLayers": {
+        "01_background.png": "/character-layers/shared/01_background.png",
+        "02_hair_back.png": "/character-layers/nord_female/02_hair_back.png",
+        "03_body_head_base.png": "/character-layers/nord_female/03_body_head_base.png",
+        "05_nose.png": "/character-layers/nord_female/05_nose.png",
+        "06_mouth.png": "/character-layers/nord_female/06_mouth.png",
+        "08_eyes.png": "/character-layers/nord_female/08_eyes.png",
+        "09_eyebrows.png": "/character-layers/nord_female/09_eyebrows.png",
+        "10_face_markings.png": "/character-layers/nord_female/10_face_markings.png",
+        "12_earring_ears.png": "/character-layers/nord_female/12_earring_ears.png",
+        "13_armor_torso.png": "/character-layers/nord_female/13_armor_torso.png",
+        "14_cloak_mantle.png": "/character-layers/nord_female/14_cloak_mantle.png",
+        "15_hair_front.png": "/character-layers/nord_female/15_hair_front.png",
+        "17_frame.png": "/character-layers/shared/17_frame.png"
+      },
+      "baseSlotLabels": {
+        "01_background.png": "Background plate with glowing Nordic rune circle and embers",
+        "02_hair_back.png": "Back hanging blonde braid behind ear and left shoulder",
+        "03_body_head_base.png": "Nordic base bust (no extra skin dome under the raised braids)",
+        "04_body_markings.png": "Body tattoos / scars (empty on Female Nord)",
+        "05_nose.png": "Nose (clean skin with woad stripe separated)",
+        "06_mouth.png": "Lips / mouth",
+        "07_tusks_whiskers.png": "Tusks / whiskers (empty on Nord)",
+        "08_eyes.png": "Piercing ice-blue Nordic eyes and dark eyelashes",
+        "09_eyebrows.png": "Arched sandy-brown eyebrows (with woad ticks separated)",
+        "10_face_markings.png": "Dark blue Nordic woad war-paint and shaved-temple knotwork tattoo",
+        "11_facial_hair.png": "Beard / mustache (empty on Female Nord)",
+        "12_earring_ears.png": "Earrings / ear attachments (empty on Female Nord)",
+        "13_armor_torso.png": "Olive-brown quilted leather tunic, pauldrons, laced V-neck, and crossed straps",
+        "14_cloak_mantle.png": "Thick grey-brown wolf-fur shoulder mantle (reconstructed under braids)",
+        "15_hair_front.png": "Ash-blonde braided Viking mohawk crest and twin shoulder braids",
+        "16_headgear_horns.png": "Headgear / helmet / crown / horns (empty on unhelmeted Nord)",
+        "17_frame.png": "Outer dark pixel-art portrait border frame"
+      },
+      "variants": [
+        {
+          "id": "pack_nightingale",
+          "label": "Nightingale Shadow Agent",
+          "archetype": "assassin",
+          "isExpansionPack": true,
+          "layers": {
+            "02_hair_back.png": "/character-layers/nord_female/variants/pack_nightingale/02_hair_back.png",
+            "06_mouth.png": "/character-layers/nord_female/variants/pack_nightingale/06_mouth.png",
+            "08_eyes.png": "/character-layers/nord_female/variants/pack_nightingale/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/nord_female/variants/pack_nightingale/09_eyebrows.png",
+            "10_face_markings.png": "/character-layers/nord_female/variants/pack_nightingale/10_face_markings.png",
+            "12_earring_ears.png": "/character-layers/nord_female/variants/pack_nightingale/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/nord_female/variants/pack_nightingale/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/nord_female/variants/pack_nightingale/14_cloak_mantle.png",
+            "15_hair_front.png": "/character-layers/nord_female/variants/pack_nightingale/15_hair_front.png"
+          },
+          "slotLabels": {
+            "02_hair_back.png": "Platinum Shaved-Side Back Braid",
+            "06_mouth.png": "Fierce Nightingale Expression",
+            "08_eyes.png": "Luminous Nocturnal Violet Eyes",
+            "09_eyebrows.png": "Pierced Nordic Brows",
+            "10_face_markings.png": "Vertical Eye Scar & Silver Brow Ring",
+            "12_earring_ears.png": "Quadruple Silver Ear Hoops",
+            "13_armor_torso.png": "Obsidian Quilted Nightingale Leather",
+            "14_cloak_mantle.png": "Raven-Feathered Nightingale Collar",
+            "15_hair_front.png": "Platinum Braided Cyber-Mohawk"
+          },
+          "clearSlots": []
+        },
+        {
+          "id": "pack_volkihar",
+          "label": "Volkihar Royal Vampire",
+          "archetype": "mage",
+          "isExpansionPack": true,
+          "layers": {
+            "02_hair_back.png": "/character-layers/nord_female/variants/pack_volkihar/02_hair_back.png",
+            "06_mouth.png": "/character-layers/nord_female/variants/pack_volkihar/06_mouth.png",
+            "08_eyes.png": "/character-layers/nord_female/variants/pack_volkihar/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/nord_female/variants/pack_volkihar/09_eyebrows.png",
+            "10_face_markings.png": "/character-layers/nord_female/variants/pack_volkihar/10_face_markings.png",
+            "12_earring_ears.png": "/character-layers/nord_female/variants/pack_volkihar/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/nord_female/variants/pack_volkihar/13_armor_torso.png",
+            "15_hair_front.png": "/character-layers/nord_female/variants/pack_volkihar/15_hair_front.png"
+          },
+          "slotLabels": {
+            "02_hair_back.png": "Midnight Braided Nape",
+            "06_mouth.png": "Dark Plum Lips & Silver Lip Ring",
+            "08_eyes.png": "Glowing Blood-Crimson Vampire Eyes",
+            "09_eyebrows.png": "Sharp Dark Vampire Brows",
+            "10_face_markings.png": "Gothic Crimson Cheek Lace Tattoos",
+            "12_earring_ears.png": "Garnet Drop Vampire Earring",
+            "13_armor_torso.png": "Volkihar High-Collar Velvet & Silver Corset",
+            "15_hair_front.png": "Midnight-Black Silver-Streaked Braid Crown"
+          },
+          "clearSlots": [
+            "14_cloak_mantle.png"
+          ]
+        },
+        {
+          "id": "variant_a_shieldmaiden",
+          "label": "Stormcloak Steel Shieldmaiden",
+          "archetype": "warrior",
+          "isExpansionPack": false,
+          "layers": {
+            "02_hair_back.png": "/character-layers/nord_female/variants/variant_a_shieldmaiden/02_hair_back.png",
+            "06_mouth.png": "/character-layers/nord_female/variants/variant_a_shieldmaiden/06_mouth.png",
+            "08_eyes.png": "/character-layers/nord_female/variants/variant_a_shieldmaiden/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/nord_female/variants/variant_a_shieldmaiden/09_eyebrows.png",
+            "10_face_markings.png": "/character-layers/nord_female/variants/variant_a_shieldmaiden/10_face_markings.png",
+            "12_earring_ears.png": "/character-layers/nord_female/variants/variant_a_shieldmaiden/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/nord_female/variants/variant_a_shieldmaiden/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/nord_female/variants/variant_a_shieldmaiden/14_cloak_mantle.png",
+            "15_hair_front.png": "/character-layers/nord_female/variants/variant_a_shieldmaiden/15_hair_front.png",
+            "16_headgear_horns.png": "/character-layers/nord_female/variants/variant_a_shieldmaiden/16_headgear_horns.png"
+          },
+          "slotLabels": {
+            "02_hair_back.png": "Auburn Flowing Back Waves",
+            "06_mouth.png": "Battle-Ready Smirk",
+            "08_eyes.png": "Fierce Ice-Blue Gaze",
+            "09_eyebrows.png": "Determined Arched Brows",
+            "10_face_markings.png": "Crimson Chevron & Nose Scar",
+            "12_earring_ears.png": "Silver Warrior Hoop",
+            "13_armor_torso.png": "Carved Nordic Steel & Blue Sash",
+            "14_cloak_mantle.png": "Charcoal Wolf-Pelt Mantle",
+            "15_hair_front.png": "Auburn Waves & Ringed Braid",
+            "16_headgear_horns.png": "Engraved Silver Sapphire Circlet"
+          },
+          "clearSlots": []
+        },
+        {
+          "id": "variant_b_mage",
+          "label": "Winterhold Seer / Archmage",
+          "archetype": "mage",
+          "isExpansionPack": false,
+          "layers": {
+            "06_mouth.png": "/character-layers/nord_female/variants/variant_b_mage/06_mouth.png",
+            "08_eyes.png": "/character-layers/nord_female/variants/variant_b_mage/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/nord_female/variants/variant_b_mage/09_eyebrows.png",
+            "10_face_markings.png": "/character-layers/nord_female/variants/variant_b_mage/10_face_markings.png",
+            "12_earring_ears.png": "/character-layers/nord_female/variants/variant_b_mage/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/nord_female/variants/variant_b_mage/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/nord_female/variants/variant_b_mage/14_cloak_mantle.png",
+            "15_hair_front.png": "/character-layers/nord_female/variants/variant_b_mage/15_hair_front.png",
+            "16_headgear_horns.png": "/character-layers/nord_female/variants/variant_b_mage/16_headgear_horns.png"
+          },
+          "slotLabels": {
+            "06_mouth.png": "Serene Composed Lips",
+            "08_eyes.png": "Luminous Arcane Pale-Ice Eyes",
+            "09_eyebrows.png": "Soft Dark Arched Brows",
+            "10_face_markings.png": "Glowing Frost-Rune Cheeks",
+            "12_earring_ears.png": "Dangling Moonstone Pendant",
+            "13_armor_torso.png": "Winterhold Indigo Robes & Medallion",
+            "14_cloak_mantle.png": "Snow-Fox White Fur Stole",
+            "15_hair_front.png": "Charcoal Fringe & Beaded Braids",
+            "16_headgear_horns.png": "Midnight Nordic Knotwork Hood"
+          },
+          "clearSlots": []
+        }
+      ]
     },
     {
       "id": "nord_male",
-      "race_id": "nord",
-      "race_name": "nord",
+      "raceId": "nord",
+      "raceName": "Nord",
       "gender": "male",
-      "manifest_path": "/character-layers/nord_male/layers_manifest.json",
-      "active_layers": 13
+      "displayName": "Nord (Male)",
+      "compatibilityGroup": "humanoid_male",
+      "anchor": {
+        "eyeX": 463,
+        "eyeY": 337,
+        "mouthX": 470,
+        "mouthY": 482
+      },
+      "baseLayers": {
+        "01_background.png": "/character-layers/shared/01_background.png",
+        "03_body_head_base.png": "/character-layers/nord_male/03_body_head_base.png",
+        "04_body_markings.png": "/character-layers/nord_male/04_body_markings.png",
+        "05_nose.png": "/character-layers/nord_male/05_nose.png",
+        "06_mouth.png": "/character-layers/nord_male/06_mouth.png",
+        "08_eyes.png": "/character-layers/nord_male/08_eyes.png",
+        "09_eyebrows.png": "/character-layers/nord_male/09_eyebrows.png",
+        "10_face_markings.png": "/character-layers/nord_male/10_face_markings.png",
+        "11_facial_hair.png": "/character-layers/nord_male/11_facial_hair.png",
+        "12_earring_ears.png": "/character-layers/nord_male/12_earring_ears.png",
+        "13_armor_torso.png": "/character-layers/nord_male/13_armor_torso.png",
+        "14_cloak_mantle.png": "/character-layers/nord_male/14_cloak_mantle.png",
+        "15_hair_front.png": "/character-layers/nord_male/15_hair_front.png",
+        "17_frame.png": "/character-layers/shared/17_frame.png"
+      },
+      "baseSlotLabels": {
+        "01_background.png": "Background plate with glowing Nordic rune circle and embers",
+        "02_hair_back.png": "Back hair (empty on short Viking undercut)",
+        "03_body_head_base.png": "Muscular Male Nord base mannequin bust, broad jaw, shaved temple, and bare chest",
+        "04_body_markings.png": "Blue Nordic Eye-of-Kyne shoulder swirl tattoo, arm bands, and chest battle scars",
+        "05_nose.png": "Broad masculine Nordic nose",
+        "06_mouth.png": "Stern masculine mouth / lips",
+        "07_tusks_whiskers.png": "Tusks / whiskers (empty on Nord)",
+        "08_eyes.png": "Piercing masculine ice-blue Nordic eyes",
+        "09_eyebrows.png": "Thick furrowed sandy-brown eyebrows",
+        "10_face_markings.png": "Vertical red eye battle scar, diagonal blue woad war-paint, and temple rune",
+        "11_facial_hair.png": "Full ash-brown/blond Nordic beard and mustache",
+        "12_earring_ears.png": "Earrings / ear attachments (empty on Male Nord)",
+        "13_armor_torso.png": "Diagonal studded brown leather chest baldric and iron buckle over bare chest",
+        "14_cloak_mantle.png": "Dark-brown bear/wolf fur shoulder mantle",
+        "15_hair_front.png": "Swept-back ash-blond/brown Viking undercut hair",
+        "16_headgear_horns.png": "Headgear / helmet / crown / horns (empty on unhelmeted Nord)",
+        "17_frame.png": "Outer dark pixel-art portrait border frame"
+      },
+      "variants": [
+        {
+          "id": "pack_daedric",
+          "label": "Daedric Oblivion Warlord",
+          "archetype": "warrior",
+          "isExpansionPack": true,
+          "layers": {
+            "06_mouth.png": "/character-layers/nord_male/variants/pack_daedric/06_mouth.png",
+            "08_eyes.png": "/character-layers/nord_male/variants/pack_daedric/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/nord_male/variants/pack_daedric/09_eyebrows.png",
+            "10_face_markings.png": "/character-layers/nord_male/variants/pack_daedric/10_face_markings.png",
+            "11_facial_hair.png": "/character-layers/nord_male/variants/pack_daedric/11_facial_hair.png",
+            "12_earring_ears.png": "/character-layers/nord_male/variants/pack_daedric/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/nord_male/variants/pack_daedric/13_armor_torso.png",
+            "15_hair_front.png": "/character-layers/nord_male/variants/pack_daedric/15_hair_front.png"
+          },
+          "slotLabels": {
+            "06_mouth.png": "Grim Warlord Expression",
+            "08_eyes.png": "Fiery Glowing Daedric Eyes",
+            "09_eyebrows.png": "Ash-Scarred Nordic Brows",
+            "10_face_markings.png": "Soot Ash & Eye-Cheek Scar",
+            "11_facial_hair.png": "Ringed Braided Full Warlord Beard",
+            "12_earring_ears.png": "Human Ear",
+            "13_armor_torso.png": "Spiked Obsidian & Molten Daedric Plate",
+            "15_hair_front.png": "Shaved-Side Iron-Grey Mohawk Crest"
+          },
+          "clearSlots": [
+            "02_hair_back.png",
+            "14_cloak_mantle.png",
+            "04_body_markings.png"
+          ]
+        },
+        {
+          "id": "variant_a_jarl",
+          "label": "Nordic Carved Steel Jarl",
+          "archetype": "warrior",
+          "isExpansionPack": false,
+          "layers": {
+            "02_hair_back.png": "/character-layers/nord_male/variants/variant_a_jarl/02_hair_back.png",
+            "08_eyes.png": "/character-layers/nord_male/variants/variant_a_jarl/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/nord_male/variants/variant_a_jarl/09_eyebrows.png",
+            "10_face_markings.png": "/character-layers/nord_male/variants/variant_a_jarl/10_face_markings.png",
+            "11_facial_hair.png": "/character-layers/nord_male/variants/variant_a_jarl/11_facial_hair.png",
+            "12_earring_ears.png": "/character-layers/nord_male/variants/variant_a_jarl/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/nord_male/variants/variant_a_jarl/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/nord_male/variants/variant_a_jarl/14_cloak_mantle.png",
+            "15_hair_front.png": "/character-layers/nord_male/variants/variant_a_jarl/15_hair_front.png",
+            "16_headgear_horns.png": "/character-layers/nord_male/variants/variant_a_jarl/16_headgear_horns.png"
+          },
+          "slotLabels": {
+            "02_hair_back.png": "Golden Swept Back Locks",
+            "08_eyes.png": "Fierce Northern Gaze",
+            "09_eyebrows.png": "Heavy Furrowed Jarl Brows",
+            "10_face_markings.png": "Pale Diagonal Cheek & Brow Scar",
+            "11_facial_hair.png": "Ringed Braided Viking Fork-Beard",
+            "12_earring_ears.png": "Forged Iron Ear Cuff",
+            "13_armor_torso.png": "Nordic Carved Steel & Wolf Pauldrons",
+            "14_cloak_mantle.png": "Royal Crimson Shoulder Cloak",
+            "15_hair_front.png": "Golden Mane & Temple Braid",
+            "16_headgear_horns.png": "Forged Steel Knotwork Circlet"
+          },
+          "clearSlots": [
+            "04_body_markings.png"
+          ]
+        },
+        {
+          "id": "variant_b_battlemage",
+          "label": "Winterhold Battlemage",
+          "archetype": "mage",
+          "isExpansionPack": false,
+          "layers": {
+            "06_mouth.png": "/character-layers/nord_male/variants/variant_b_battlemage/06_mouth.png",
+            "08_eyes.png": "/character-layers/nord_male/variants/variant_b_battlemage/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/nord_male/variants/variant_b_battlemage/09_eyebrows.png",
+            "10_face_markings.png": "/character-layers/nord_male/variants/variant_b_battlemage/10_face_markings.png",
+            "11_facial_hair.png": "/character-layers/nord_male/variants/variant_b_battlemage/11_facial_hair.png",
+            "13_armor_torso.png": "/character-layers/nord_male/variants/variant_b_battlemage/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/nord_male/variants/variant_b_battlemage/14_cloak_mantle.png",
+            "15_hair_front.png": "/character-layers/nord_male/variants/variant_b_battlemage/15_hair_front.png"
+          },
+          "slotLabels": {
+            "06_mouth.png": "Composed Firm Lips",
+            "08_eyes.png": "Luminous Arcane Cyan Eyes",
+            "09_eyebrows.png": "Dark Sharp Battlemage Brows",
+            "10_face_markings.png": "Glowing Pale-Blue Frost Runes",
+            "11_facial_hair.png": "Trimmed Anchor Goatee",
+            "13_armor_torso.png": "Winterhold Indigo Gambeson & Strap",
+            "14_cloak_mantle.png": "Storm-Grey Wolf Fur Collar",
+            "15_hair_front.png": "Ash-Brown Swept Undercut"
+          },
+          "clearSlots": [
+            "04_body_markings.png"
+          ]
+        }
+      ]
     },
     {
       "id": "breton_female",
-      "race_id": "breton",
-      "race_name": "Breton",
+      "raceId": "breton",
+      "raceName": "Breton",
       "gender": "female",
-      "manifest_path": "/character-layers/breton_female/layers_manifest.json",
-      "active_layers": 13
+      "displayName": "Breton (Female)",
+      "compatibilityGroup": "humanoid_female",
+      "anchor": {
+        "eyeX": 450,
+        "eyeY": 359,
+        "mouthX": 477,
+        "mouthY": 486
+      },
+      "baseLayers": {
+        "01_background.png": "/character-layers/shared/01_background.png",
+        "03_body_head_base.png": "/character-layers/breton_female/03_body_head_base.png",
+        "05_nose.png": "/character-layers/breton_female/05_nose.png",
+        "06_mouth.png": "/character-layers/breton_female/06_mouth.png",
+        "08_eyes.png": "/character-layers/breton_female/08_eyes.png",
+        "09_eyebrows.png": "/character-layers/breton_female/09_eyebrows.png",
+        "10_face_markings.png": "/character-layers/breton_female/10_face_markings.png",
+        "12_earring_ears.png": "/character-layers/breton_female/12_earring_ears.png",
+        "13_armor_torso.png": "/character-layers/breton_female/13_armor_torso.png",
+        "14_cloak_mantle.png": "/character-layers/breton_female/14_cloak_mantle.png",
+        "15_hair_front.png": "/character-layers/breton_female/15_hair_front.png",
+        "16_headgear_horns.png": "/character-layers/breton_female/16_headgear_horns.png",
+        "17_frame.png": "/character-layers/shared/17_frame.png"
+      },
+      "baseSlotLabels": {
+        "01_background.png": "Nordic glowing cyan rune circle and embers background plate",
+        "02_hair_back.png": "Back hair (empty)",
+        "03_body_head_base.png": "Clean delicate half-elven female mannequin base",
+        "04_body_markings.png": "Body markings (empty)",
+        "05_nose.png": "Delicate nose with soft shading",
+        "06_mouth.png": "Soft rose-tinted lips",
+        "07_tusks_whiskers.png": "Tusks / whiskers (empty)",
+        "08_eyes.png": "Warm amber / hazel half-elven eyes",
+        "09_eyebrows.png": "Gentle arched dark brown brows",
+        "10_face_markings.png": "Delicate bridge and cheek freckles",
+        "11_facial_hair.png": "Facial hair (empty)",
+        "12_earring_ears.png": "Pointed half-elven ear",
+        "13_armor_torso.png": "Segmented steel pauldrons and laced forest-green leather tunic",
+        "14_cloak_mantle.png": "Sage-green draped cowl mantle",
+        "15_hair_front.png": "Parted dark brown shoulder-length bob",
+        "16_headgear_horns.png": "Natural branching stag antlers",
+        "17_frame.png": "Portrait border frame"
+      },
+      "variants": [
+        {
+          "id": "pack_dark_brotherhood",
+          "label": "Dark Brotherhood Shrouded",
+          "archetype": "assassin",
+          "isExpansionPack": true,
+          "layers": {
+            "02_hair_back.png": "/character-layers/breton_female/variants/pack_dark_brotherhood/02_hair_back.png",
+            "06_mouth.png": "/character-layers/breton_female/variants/pack_dark_brotherhood/06_mouth.png",
+            "08_eyes.png": "/character-layers/breton_female/variants/pack_dark_brotherhood/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/breton_female/variants/pack_dark_brotherhood/09_eyebrows.png",
+            "10_face_markings.png": "/character-layers/breton_female/variants/pack_dark_brotherhood/10_face_markings.png",
+            "12_earring_ears.png": "/character-layers/breton_female/variants/pack_dark_brotherhood/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/breton_female/variants/pack_dark_brotherhood/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/breton_female/variants/pack_dark_brotherhood/14_cloak_mantle.png",
+            "15_hair_front.png": "/character-layers/breton_female/variants/pack_dark_brotherhood/15_hair_front.png"
+          },
+          "slotLabels": {
+            "02_hair_back.png": "Undercut Short Nape",
+            "06_mouth.png": "Composed Expression",
+            "08_eyes.png": "Heterochromia Violet & Emerald Eyes",
+            "09_eyebrows.png": "Dark Assassin Brows",
+            "10_face_markings.png": "Cross-Cheek Scar & Silver Septum Ring",
+            "12_earring_ears.png": "Pointed Ear",
+            "13_armor_torso.png": "Dark Brotherhood Shrouded Leather",
+            "14_cloak_mantle.png": "Rolled Crimson Shrouded Cowl",
+            "15_hair_front.png": "Crimson-Streaked Cyber Undercut Bob"
+          },
+          "clearSlots": [
+            "16_headgear_horns.png"
+          ]
+        },
+        {
+          "id": "variant_a_courtmage",
+          "label": "High Rock Royal Court Battlemage",
+          "archetype": "mage",
+          "isExpansionPack": false,
+          "layers": {
+            "06_mouth.png": "/character-layers/breton_female/variants/variant_a_courtmage/06_mouth.png",
+            "08_eyes.png": "/character-layers/breton_female/variants/variant_a_courtmage/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/breton_female/variants/variant_a_courtmage/09_eyebrows.png",
+            "12_earring_ears.png": "/character-layers/breton_female/variants/variant_a_courtmage/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/breton_female/variants/variant_a_courtmage/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/breton_female/variants/variant_a_courtmage/14_cloak_mantle.png",
+            "15_hair_front.png": "/character-layers/breton_female/variants/variant_a_courtmage/15_hair_front.png",
+            "16_headgear_horns.png": "/character-layers/breton_female/variants/variant_a_courtmage/16_headgear_horns.png"
+          },
+          "slotLabels": {
+            "06_mouth.png": "Berry-Tinted Noble Smile",
+            "08_eyes.png": "Luminous Royal Violet Eyes",
+            "09_eyebrows.png": "Refined Espresso Arched Brows",
+            "12_earring_ears.png": "Gold & Amethyst Drop Earring",
+            "13_armor_torso.png": "Sapphire Filigree Robes & Silk Ruff",
+            "14_cloak_mantle.png": "Amethyst-Clasped Violet Velvet Mantle",
+            "15_hair_front.png": "Espresso Braided Chignon Updo",
+            "16_headgear_horns.png": "Filigree Gold & Amethyst Circlet"
+          },
+          "clearSlots": []
+        },
+        {
+          "id": "variant_b_knight",
+          "label": "Daggerfall Arcane Knight",
+          "archetype": "warrior",
+          "isExpansionPack": false,
+          "layers": {
+            "02_hair_back.png": "/character-layers/breton_female/variants/variant_b_knight/02_hair_back.png",
+            "06_mouth.png": "/character-layers/breton_female/variants/variant_b_knight/06_mouth.png",
+            "08_eyes.png": "/character-layers/breton_female/variants/variant_b_knight/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/breton_female/variants/variant_b_knight/09_eyebrows.png",
+            "10_face_markings.png": "/character-layers/breton_female/variants/variant_b_knight/10_face_markings.png",
+            "12_earring_ears.png": "/character-layers/breton_female/variants/variant_b_knight/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/breton_female/variants/variant_b_knight/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/breton_female/variants/variant_b_knight/14_cloak_mantle.png",
+            "15_hair_front.png": "/character-layers/breton_female/variants/variant_b_knight/15_hair_front.png"
+          },
+          "slotLabels": {
+            "02_hair_back.png": "Copper Braided Ponytail",
+            "06_mouth.png": "Resolute Knight Lips",
+            "08_eyes.png": "Focused Steel-Blue Eyes",
+            "09_eyebrows.png": "Determined Auburn Brows",
+            "10_face_markings.png": "Thin Cheek Scar & Freckles",
+            "12_earring_ears.png": "Twin Silver Ear Cuffs",
+            "13_armor_torso.png": "Silver Gorget, Pauldrons & Gambeson",
+            "14_cloak_mantle.png": "Crimson Half-Cape Trim",
+            "15_hair_front.png": "Copper Swept Half-Up Bangs"
+          },
+          "clearSlots": []
+        }
+      ]
     },
     {
       "id": "breton_male",
-      "race_id": "breton",
-      "race_name": "Breton",
+      "raceId": "breton",
+      "raceName": "Breton",
       "gender": "male",
-      "manifest_path": "/character-layers/breton_male/layers_manifest.json",
-      "active_layers": 12
+      "displayName": "Breton (Male)",
+      "compatibilityGroup": "humanoid_male",
+      "anchor": {
+        "eyeX": 458,
+        "eyeY": 343,
+        "mouthX": 483,
+        "mouthY": 468
+      },
+      "baseLayers": {
+        "01_background.png": "/character-layers/shared/01_background.png",
+        "03_body_head_base.png": "/character-layers/breton_male/03_body_head_base.png",
+        "05_nose.png": "/character-layers/breton_male/05_nose.png",
+        "06_mouth.png": "/character-layers/breton_male/06_mouth.png",
+        "08_eyes.png": "/character-layers/breton_male/08_eyes.png",
+        "09_eyebrows.png": "/character-layers/breton_male/09_eyebrows.png",
+        "10_face_markings.png": "/character-layers/breton_male/10_face_markings.png",
+        "11_facial_hair.png": "/character-layers/breton_male/11_facial_hair.png",
+        "13_armor_torso.png": "/character-layers/breton_male/13_armor_torso.png",
+        "14_cloak_mantle.png": "/character-layers/breton_male/14_cloak_mantle.png",
+        "15_hair_front.png": "/character-layers/breton_male/15_hair_front.png",
+        "17_frame.png": "/character-layers/shared/17_frame.png"
+      },
+      "baseSlotLabels": {
+        "01_background.png": "Nordic glowing cyan rune circle and embers background plate",
+        "02_hair_back.png": "Back hair (empty)",
+        "03_body_head_base.png": "Clean athletic male Breton mannequin base",
+        "04_body_markings.png": "Body markings (empty)",
+        "05_nose.png": "Chiseled nose with soft shading",
+        "06_mouth.png": "Masculine lips",
+        "07_tusks_whiskers.png": "Tusks / whiskers (empty)",
+        "08_eyes.png": "Focused grey-blue eyes",
+        "09_eyebrows.png": "Furrowed dark brown masculine brows",
+        "10_face_markings.png": "Vertical brow battle scar",
+        "11_facial_hair.png": "Trimmed dark brown beard and mustache",
+        "12_earring_ears.png": "Ears (base)",
+        "13_armor_torso.png": "Segmented steel plate pauldrons, crossed baldric straps, and leather tunic",
+        "14_cloak_mantle.png": "Forest-green hooded cowl mantle",
+        "15_hair_front.png": "Textured dark brown crew cut fade",
+        "16_headgear_horns.png": "Headgear (empty)",
+        "17_frame.png": "Portrait border frame"
+      },
+      "variants": [
+        {
+          "id": "pack_archmage",
+          "label": "Winterhold Archmage Robes",
+          "archetype": "mage",
+          "isExpansionPack": true,
+          "layers": {
+            "02_hair_back.png": "/character-layers/breton_male/variants/pack_archmage/02_hair_back.png",
+            "06_mouth.png": "/character-layers/breton_male/variants/pack_archmage/06_mouth.png",
+            "08_eyes.png": "/character-layers/breton_male/variants/pack_archmage/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/breton_male/variants/pack_archmage/09_eyebrows.png",
+            "10_face_markings.png": "/character-layers/breton_male/variants/pack_archmage/10_face_markings.png",
+            "11_facial_hair.png": "/character-layers/breton_male/variants/pack_archmage/11_facial_hair.png",
+            "12_earring_ears.png": "/character-layers/breton_male/variants/pack_archmage/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/breton_male/variants/pack_archmage/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/breton_male/variants/pack_archmage/14_cloak_mantle.png",
+            "15_hair_front.png": "/character-layers/breton_male/variants/pack_archmage/15_hair_front.png"
+          },
+          "slotLabels": {
+            "02_hair_back.png": "Long Silver Flowing Mane",
+            "06_mouth.png": "Calm Archmage Expression",
+            "08_eyes.png": "Blind Scarred Eye & Arcane Azure Eye",
+            "09_eyebrows.png": "Silver-White Stern Brows",
+            "10_face_markings.png": "Celestial Gold Third-Eye Rune",
+            "11_facial_hair.png": "Trimmed Silver Archmage Beard",
+            "12_earring_ears.png": "Human Ear",
+            "13_armor_torso.png": "Archmage Brown & Gold Rune Silk Robes",
+            "14_cloak_mantle.png": "Snow-Pelt Mantle & Arcane Chain Clasp",
+            "15_hair_front.png": "Silver Aristocrat Sweep & Collar Lock"
+          },
+          "clearSlots": []
+        },
+        {
+          "id": "variant_a_arcanist",
+          "label": "Wayrest Royal Court Arcanist",
+          "archetype": "mage",
+          "isExpansionPack": false,
+          "layers": {
+            "06_mouth.png": "/character-layers/breton_male/variants/variant_a_arcanist/06_mouth.png",
+            "08_eyes.png": "/character-layers/breton_male/variants/variant_a_arcanist/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/breton_male/variants/variant_a_arcanist/09_eyebrows.png",
+            "13_armor_torso.png": "/character-layers/breton_male/variants/variant_a_arcanist/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/breton_male/variants/variant_a_arcanist/14_cloak_mantle.png",
+            "15_hair_front.png": "/character-layers/breton_male/variants/variant_a_arcanist/15_hair_front.png",
+            "16_headgear_horns.png": "/character-layers/breton_male/variants/variant_a_arcanist/16_headgear_horns.png"
+          },
+          "slotLabels": {
+            "06_mouth.png": "Poised Scholarly Expression",
+            "08_eyes.png": "Luminous Emerald Arcane Eyes",
+            "09_eyebrows.png": "Calm Arched Dark Brows",
+            "10_face_markings.png": "Clean Unscarred Complexion",
+            "11_facial_hair.png": "Clean-Shaven Jawline",
+            "13_armor_torso.png": "Burgundy & Gold Court Robes",
+            "14_cloak_mantle.png": "Emerald Mantle & Sun-Crest Clasp",
+            "15_hair_front.png": "Silver-Streaked Swept Scholar Locks",
+            "16_headgear_horns.png": "Bronze & Emerald Arcane Circlet"
+          },
+          "clearSlots": [
+            "10_face_markings.png",
+            "11_facial_hair.png"
+          ]
+        },
+        {
+          "id": "variant_b_paladin",
+          "label": "Daggerfall Knightly Paladin",
+          "archetype": "warrior",
+          "isExpansionPack": false,
+          "layers": {
+            "06_mouth.png": "/character-layers/breton_male/variants/variant_b_paladin/06_mouth.png",
+            "08_eyes.png": "/character-layers/breton_male/variants/variant_b_paladin/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/breton_male/variants/variant_b_paladin/09_eyebrows.png",
+            "11_facial_hair.png": "/character-layers/breton_male/variants/variant_b_paladin/11_facial_hair.png",
+            "13_armor_torso.png": "/character-layers/breton_male/variants/variant_b_paladin/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/breton_male/variants/variant_b_paladin/14_cloak_mantle.png",
+            "15_hair_front.png": "/character-layers/breton_male/variants/variant_b_paladin/15_hair_front.png"
+          },
+          "slotLabels": {
+            "06_mouth.png": "Determined Knight Expression",
+            "08_eyes.png": "Steel-Blue Noble Gaze",
+            "09_eyebrows.png": "Thick Furrowed Paladin Brows",
+            "11_facial_hair.png": "Full Sculpted Royal Chestnut Beard",
+            "13_armor_torso.png": "Lion-Crest Pauldrons & Cobalt Surcoat",
+            "14_cloak_mantle.png": "Crimson Paladin Mantle",
+            "15_hair_front.png": "Windswept Chestnut Locks"
+          },
+          "clearSlots": []
+        }
+      ]
     },
     {
       "id": "imperial_female",
-      "race_id": "imperial",
-      "race_name": "Imperial",
+      "raceId": "imperial",
+      "raceName": "Imperial",
       "gender": "female",
-      "manifest_path": "/character-layers/imperial_female/layers_manifest.json",
-      "active_layers": 12
+      "displayName": "Imperial (Female)",
+      "compatibilityGroup": "humanoid_female",
+      "anchor": {
+        "eyeX": 457,
+        "eyeY": 342,
+        "mouthX": 474,
+        "mouthY": 478
+      },
+      "baseLayers": {
+        "01_background.png": "/character-layers/shared/01_background.png",
+        "03_body_head_base.png": "/character-layers/imperial_female/03_body_head_base.png",
+        "05_nose.png": "/character-layers/imperial_female/05_nose.png",
+        "06_mouth.png": "/character-layers/imperial_female/06_mouth.png",
+        "08_eyes.png": "/character-layers/imperial_female/08_eyes.png",
+        "09_eyebrows.png": "/character-layers/imperial_female/09_eyebrows.png",
+        "12_earring_ears.png": "/character-layers/imperial_female/12_earring_ears.png",
+        "13_armor_torso.png": "/character-layers/imperial_female/13_armor_torso.png",
+        "14_cloak_mantle.png": "/character-layers/imperial_female/14_cloak_mantle.png",
+        "15_hair_front.png": "/character-layers/imperial_female/15_hair_front.png",
+        "16_headgear_horns.png": "/character-layers/imperial_female/16_headgear_horns.png",
+        "17_frame.png": "/character-layers/shared/17_frame.png"
+      },
+      "baseSlotLabels": {
+        "01_background.png": "Nordic glowing cyan rune circle and embers background plate",
+        "02_hair_back.png": "Back hair (empty)",
+        "03_body_head_base.png": "Clean 1:1 Cyrodiilic female bald bare-shoulder mannequin base",
+        "04_body_markings.png": "Body markings (empty)",
+        "05_nose.png": "Cyrodiilic straight nose",
+        "06_mouth.png": "Refined Imperial lips",
+        "07_tusks_whiskers.png": "Tusks / whiskers (empty)",
+        "08_eyes.png": "Hazel-brown determined eyes",
+        "09_eyebrows.png": "Arched dark Cyrodiilic brows",
+        "10_face_markings.png": "Face markings (empty)",
+        "11_facial_hair.png": "Facial hair (empty)",
+        "12_earring_ears.png": "Natural human ear visible through helmet cutout",
+        "13_armor_torso.png": "Segmented steel Imperial lorica cuirass, pauldrons, and leather straps",
+        "14_cloak_mantle.png": "Draped crimson Roman cloak with golden dragon medallion brooch",
+        "15_hair_front.png": "Wavy dark brown curls framing cheeks and neck",
+        "16_headgear_horns.png": "Polished golden Imperial legionary helmet with embossed brow and cheekguards",
+        "17_frame.png": "Portrait border frame"
+      },
+      "variants": [
+        {
+          "id": "pack_dragonscale",
+          "label": "Bone Dragonscale Valkyrie",
+          "archetype": "warrior",
+          "isExpansionPack": true,
+          "layers": {
+            "02_hair_back.png": "/character-layers/imperial_female/variants/pack_dragonscale/02_hair_back.png",
+            "06_mouth.png": "/character-layers/imperial_female/variants/pack_dragonscale/06_mouth.png",
+            "08_eyes.png": "/character-layers/imperial_female/variants/pack_dragonscale/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/imperial_female/variants/pack_dragonscale/09_eyebrows.png",
+            "10_face_markings.png": "/character-layers/imperial_female/variants/pack_dragonscale/10_face_markings.png",
+            "12_earring_ears.png": "/character-layers/imperial_female/variants/pack_dragonscale/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/imperial_female/variants/pack_dragonscale/13_armor_torso.png",
+            "15_hair_front.png": "/character-layers/imperial_female/variants/pack_dragonscale/15_hair_front.png"
+          },
+          "slotLabels": {
+            "02_hair_back.png": "Thick Brass-Ringed Copper Ponytail",
+            "06_mouth.png": "Stoic Shieldmaiden Expression",
+            "08_eyes.png": "Blind Scarred Eye & Amber Left Eye",
+            "09_eyebrows.png": "Copper-Brown Arched Brows",
+            "10_face_markings.png": "Reachmen Geometric Brow Warpaint & Eye Scar",
+            "12_earring_ears.png": "Quadruple Gold Ear Cuffs",
+            "13_armor_torso.png": "Carved Bone Dragonscale Plate & Harness",
+            "15_hair_front.png": "High Braided Copper Valkyrie Crown"
+          },
+          "clearSlots": [
+            "14_cloak_mantle.png",
+            "16_headgear_horns.png"
+          ]
+        },
+        {
+          "id": "variant_a_synod",
+          "label": "Cyrodiil Synod Imperial Mage",
+          "archetype": "mage",
+          "isExpansionPack": false,
+          "layers": {
+            "06_mouth.png": "/character-layers/imperial_female/variants/variant_a_synod/06_mouth.png",
+            "08_eyes.png": "/character-layers/imperial_female/variants/variant_a_synod/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/imperial_female/variants/variant_a_synod/09_eyebrows.png",
+            "12_earring_ears.png": "/character-layers/imperial_female/variants/variant_a_synod/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/imperial_female/variants/variant_a_synod/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/imperial_female/variants/variant_a_synod/14_cloak_mantle.png",
+            "15_hair_front.png": "/character-layers/imperial_female/variants/variant_a_synod/15_hair_front.png",
+            "16_headgear_horns.png": "/character-layers/imperial_female/variants/variant_a_synod/16_headgear_horns.png"
+          },
+          "slotLabels": {
+            "06_mouth.png": "Composed Bronze-Rose Smile",
+            "08_eyes.png": "Bright Amber-Gold Arcane Eyes",
+            "09_eyebrows.png": "Finely Arched Dark Brows",
+            "12_earring_ears.png": "Gold & Ruby Laurel Drop",
+            "13_armor_torso.png": "Crimson Gold-Brocaded Synod Robes",
+            "14_cloak_mantle.png": "Ivory Gold Cape & Ruby Medallions",
+            "15_hair_front.png": "Jet-Black Braided Roman Halo",
+            "16_headgear_horns.png": "Golden Roman Laurel & Ruby Circlet"
+          },
+          "clearSlots": []
+        },
+        {
+          "id": "variant_b_praetorian",
+          "label": "Cyrodiil Praetorian Centurion",
+          "archetype": "warrior",
+          "isExpansionPack": false,
+          "layers": {
+            "02_hair_back.png": "/character-layers/imperial_female/variants/variant_b_praetorian/02_hair_back.png",
+            "06_mouth.png": "/character-layers/imperial_female/variants/variant_b_praetorian/06_mouth.png",
+            "08_eyes.png": "/character-layers/imperial_female/variants/variant_b_praetorian/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/imperial_female/variants/variant_b_praetorian/09_eyebrows.png",
+            "10_face_markings.png": "/character-layers/imperial_female/variants/variant_b_praetorian/10_face_markings.png",
+            "12_earring_ears.png": "/character-layers/imperial_female/variants/variant_b_praetorian/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/imperial_female/variants/variant_b_praetorian/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/imperial_female/variants/variant_b_praetorian/14_cloak_mantle.png",
+            "15_hair_front.png": "/character-layers/imperial_female/variants/variant_b_praetorian/15_hair_front.png"
+          },
+          "slotLabels": {
+            "02_hair_back.png": "Bronze-Ringed Auburn Curls",
+            "06_mouth.png": "Resolute Warrior Expression",
+            "08_eyes.png": "Intense Bronze-Gold Gaze",
+            "09_eyebrows.png": "Focused Determined Brows",
+            "10_face_markings.png": "Thin Cheek Battle Scar",
+            "12_earring_ears.png": "Engraved Gold Stud Earring",
+            "13_armor_torso.png": "Gilded Dragon Cuirass & Pauldrons",
+            "14_cloak_mantle.png": "Crimson Officer Cloak & Dragon Clasp",
+            "15_hair_front.png": "Auburn High Crown & Curls"
+          },
+          "clearSlots": []
+        }
+      ]
     },
     {
       "id": "imperial_male",
-      "race_id": "imperial",
-      "race_name": "Imperial",
+      "raceId": "imperial",
+      "raceName": "Imperial",
       "gender": "male",
-      "manifest_path": "/character-layers/imperial_male/layers_manifest.json",
-      "active_layers": 12
+      "displayName": "Imperial (Male)",
+      "compatibilityGroup": "humanoid_male",
+      "anchor": {
+        "eyeX": 462,
+        "eyeY": 339,
+        "mouthX": 474,
+        "mouthY": 477
+      },
+      "baseLayers": {
+        "01_background.png": "/character-layers/shared/01_background.png",
+        "03_body_head_base.png": "/character-layers/imperial_male/03_body_head_base.png",
+        "05_nose.png": "/character-layers/imperial_male/05_nose.png",
+        "06_mouth.png": "/character-layers/imperial_male/06_mouth.png",
+        "08_eyes.png": "/character-layers/imperial_male/08_eyes.png",
+        "09_eyebrows.png": "/character-layers/imperial_male/09_eyebrows.png",
+        "10_face_markings.png": "/character-layers/imperial_male/10_face_markings.png",
+        "11_facial_hair.png": "/character-layers/imperial_male/11_facial_hair.png",
+        "13_armor_torso.png": "/character-layers/imperial_male/13_armor_torso.png",
+        "14_cloak_mantle.png": "/character-layers/imperial_male/14_cloak_mantle.png",
+        "15_hair_front.png": "/character-layers/imperial_male/15_hair_front.png",
+        "17_frame.png": "/character-layers/shared/17_frame.png"
+      },
+      "baseSlotLabels": {
+        "01_background.png": "Nordic glowing cyan rune circle and embers background plate",
+        "02_hair_back.png": "Back hair (empty)",
+        "03_body_head_base.png": "Clean 1:1 athletic Cyrodiilic male bald bare-shoulder mannequin base",
+        "04_body_markings.png": "Body markings (empty)",
+        "05_nose.png": "Chiseled Roman nose",
+        "06_mouth.png": "Determined commander lips",
+        "07_tusks_whiskers.png": "Tusks / whiskers (empty)",
+        "08_eyes.png": "Battle-hardened hazel eyes",
+        "09_eyebrows.png": "Heavy masculine Cyrodiilic brows",
+        "10_face_markings.png": "Diagonal battle scar under right eye",
+        "11_facial_hair.png": "Jawline and chin cleft commander stubble",
+        "12_earring_ears.png": "Ears (base)",
+        "13_armor_torso.png": "Segmented steel lorica plate armor and crossed leather straps",
+        "14_cloak_mantle.png": "Crimson Roman legionary cloak with golden dragon medallion brooch",
+        "15_hair_front.png": "Textured Roman Caesar crop fade",
+        "16_headgear_horns.png": "Headgear (empty)",
+        "17_frame.png": "Portrait border frame"
+      },
+      "variants": [
+        {
+          "id": "pack_ebony",
+          "label": "Gilded Ebony Knight",
+          "archetype": "warrior",
+          "isExpansionPack": true,
+          "layers": {
+            "06_mouth.png": "/character-layers/imperial_male/variants/pack_ebony/06_mouth.png",
+            "08_eyes.png": "/character-layers/imperial_male/variants/pack_ebony/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/imperial_male/variants/pack_ebony/09_eyebrows.png",
+            "11_facial_hair.png": "/character-layers/imperial_male/variants/pack_ebony/11_facial_hair.png",
+            "12_earring_ears.png": "/character-layers/imperial_male/variants/pack_ebony/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/imperial_male/variants/pack_ebony/13_armor_torso.png",
+            "15_hair_front.png": "/character-layers/imperial_male/variants/pack_ebony/15_hair_front.png",
+            "16_headgear_horns.png": "/character-layers/imperial_male/variants/pack_ebony/16_headgear_horns.png"
+          },
+          "slotLabels": {
+            "06_mouth.png": "Steely Commander Expression",
+            "08_eyes.png": "Amber Veteran Left Eye",
+            "09_eyebrows.png": "Salt-and-Pepper Brow",
+            "11_facial_hair.png": "Silver-Streaked Mutton Chops & Mustache",
+            "12_earring_ears.png": "Human Ear",
+            "13_armor_torso.png": "Jet-Black Gilded Ebony Plate",
+            "15_hair_front.png": "Slicked Silver-Temple Pompadour",
+            "16_headgear_horns.png": "Black Leather Commander Eyepatch"
+          },
+          "clearSlots": [
+            "14_cloak_mantle.png"
+          ]
+        },
+        {
+          "id": "variant_a_tribune",
+          "label": "Cyrodiil Arcane Tribune",
+          "archetype": "mage",
+          "isExpansionPack": false,
+          "layers": {
+            "06_mouth.png": "/character-layers/imperial_male/variants/variant_a_tribune/06_mouth.png",
+            "08_eyes.png": "/character-layers/imperial_male/variants/variant_a_tribune/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/imperial_male/variants/variant_a_tribune/09_eyebrows.png",
+            "11_facial_hair.png": "/character-layers/imperial_male/variants/variant_a_tribune/11_facial_hair.png",
+            "13_armor_torso.png": "/character-layers/imperial_male/variants/variant_a_tribune/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/imperial_male/variants/variant_a_tribune/14_cloak_mantle.png",
+            "15_hair_front.png": "/character-layers/imperial_male/variants/variant_a_tribune/15_hair_front.png",
+            "16_headgear_horns.png": "/character-layers/imperial_male/variants/variant_a_tribune/16_headgear_horns.png"
+          },
+          "slotLabels": {
+            "06_mouth.png": "Dignified Tribune Expression",
+            "08_eyes.png": "Luminous Amber-Gold Arcane Eyes",
+            "09_eyebrows.png": "Composed Dark Roman Brows",
+            "11_facial_hair.png": "Trimmed Charcoal Royal Goatee",
+            "13_armor_torso.png": "Crimson & Gold Tribune Robes",
+            "14_cloak_mantle.png": "Ivory & Purple Toga with Eagle Brooch",
+            "15_hair_front.png": "Silver-Streaked Dark Roman Curls",
+            "16_headgear_horns.png": "Golden Roman Laurel & Ruby Diadem"
+          },
+          "clearSlots": []
+        },
+        {
+          "id": "variant_b_centurion",
+          "label": "Colovian Golden Centurion",
+          "archetype": "warrior",
+          "isExpansionPack": false,
+          "layers": {
+            "06_mouth.png": "/character-layers/imperial_male/variants/variant_b_centurion/06_mouth.png",
+            "08_eyes.png": "/character-layers/imperial_male/variants/variant_b_centurion/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/imperial_male/variants/variant_b_centurion/09_eyebrows.png",
+            "10_face_markings.png": "/character-layers/imperial_male/variants/variant_b_centurion/10_face_markings.png",
+            "11_facial_hair.png": "/character-layers/imperial_male/variants/variant_b_centurion/11_facial_hair.png",
+            "13_armor_torso.png": "/character-layers/imperial_male/variants/variant_b_centurion/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/imperial_male/variants/variant_b_centurion/14_cloak_mantle.png",
+            "15_hair_front.png": "/character-layers/imperial_male/variants/variant_b_centurion/15_hair_front.png"
+          },
+          "slotLabels": {
+            "06_mouth.png": "Stern Centurion Expression",
+            "08_eyes.png": "Fierce Golden-Hazel Gaze",
+            "09_eyebrows.png": "Furrowed Warrior Brows",
+            "10_face_markings.png": "Dual Cheek & Brow Battle Scars",
+            "11_facial_hair.png": "Full Rugged Auburn Roman Beard",
+            "13_armor_torso.png": "Gilded Dragon Cuirass & Pauldrons",
+            "14_cloak_mantle.png": "Heavy Crimson Centurion Cape",
+            "15_hair_front.png": "Tousled Auburn Warrior Curls"
+          },
+          "clearSlots": []
+        }
+      ]
     },
     {
       "id": "redguard_female",
-      "race_id": "redguard",
-      "race_name": "Redguard",
+      "raceId": "redguard",
+      "raceName": "Redguard",
       "gender": "female",
-      "manifest_path": "/character-layers/redguard_female/layers_manifest.json",
-      "active_layers": 13
+      "displayName": "Redguard (Female)",
+      "compatibilityGroup": "humanoid_female",
+      "anchor": {
+        "eyeX": 462,
+        "eyeY": 346,
+        "mouthX": 475,
+        "mouthY": 482
+      },
+      "baseLayers": {
+        "01_background.png": "/character-layers/shared/01_background.png",
+        "02_hair_back.png": "/character-layers/redguard_female/02_hair_back.png",
+        "03_body_head_base.png": "/character-layers/redguard_female/03_body_head_base.png",
+        "05_nose.png": "/character-layers/redguard_female/05_nose.png",
+        "06_mouth.png": "/character-layers/redguard_female/06_mouth.png",
+        "08_eyes.png": "/character-layers/redguard_female/08_eyes.png",
+        "09_eyebrows.png": "/character-layers/redguard_female/09_eyebrows.png",
+        "12_earring_ears.png": "/character-layers/redguard_female/12_earring_ears.png",
+        "13_armor_torso.png": "/character-layers/redguard_female/13_armor_torso.png",
+        "14_cloak_mantle.png": "/character-layers/redguard_female/14_cloak_mantle.png",
+        "15_hair_front.png": "/character-layers/redguard_female/15_hair_front.png",
+        "16_headgear_horns.png": "/character-layers/redguard_female/16_headgear_horns.png",
+        "17_frame.png": "/character-layers/shared/17_frame.png"
+      },
+      "baseSlotLabels": {
+        "01_background.png": "Nordic glowing cyan rune circle and embers background plate",
+        "02_hair_back.png": "Flowing beaded dark dreadlocks behind left shoulder and neck",
+        "03_body_head_base.png": "Clean 1:1 Redguard female shaved bald bare-shoulder mannequin base",
+        "04_body_markings.png": "Body markings (empty)",
+        "05_nose.png": "Broad sculpted Redguard nose",
+        "06_mouth.png": "Full defined Redguard lips",
+        "07_tusks_whiskers.png": "Tusks / whiskers (empty)",
+        "08_eyes.png": "Warm amber-brown fierce Redguard eyes",
+        "09_eyebrows.png": "Strong arched dark eyebrows",
+        "10_face_markings.png": "Face markings (empty)",
+        "11_facial_hair.png": "Facial hair (empty)",
+        "12_earring_ears.png": "Polished gold Hammerfell hoop earrings",
+        "13_armor_torso.png": "Hammered bronze desert pauldron and olive-brown leather armor with crossed straps",
+        "14_cloak_mantle.png": "Wrapped cream desert linen scarf cowl",
+        "15_hair_front.png": "Woven dark dreadlocks with brass and gold beads",
+        "16_headgear_horns.png": "Slender golden Hammerfell circlet with amber forehead gem",
+        "17_frame.png": "Portrait border frame"
+      },
+      "variants": [
+        {
+          "id": "pack_thieves_guild",
+          "label": "Riften Thieves Guild Master",
+          "archetype": "rogue",
+          "isExpansionPack": true,
+          "layers": {
+            "06_mouth.png": "/character-layers/redguard_female/variants/pack_thieves_guild/06_mouth.png",
+            "08_eyes.png": "/character-layers/redguard_female/variants/pack_thieves_guild/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/redguard_female/variants/pack_thieves_guild/09_eyebrows.png",
+            "10_face_markings.png": "/character-layers/redguard_female/variants/pack_thieves_guild/10_face_markings.png",
+            "12_earring_ears.png": "/character-layers/redguard_female/variants/pack_thieves_guild/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/redguard_female/variants/pack_thieves_guild/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/redguard_female/variants/pack_thieves_guild/14_cloak_mantle.png",
+            "15_hair_front.png": "/character-layers/redguard_female/variants/pack_thieves_guild/15_hair_front.png"
+          },
+          "slotLabels": {
+            "06_mouth.png": "Confident Rogue Expression",
+            "08_eyes.png": "Warm Amber Redguard Eyes",
+            "09_eyebrows.png": "Arched Dark Brows",
+            "10_face_markings.png": "Turquoise Cheek Warpaint & Gold Nose Rings",
+            "12_earring_ears.png": "Triple Gold Hoop Earrings",
+            "13_armor_torso.png": "Studded Thieves Guild Coat & Harness",
+            "14_cloak_mantle.png": "Dropped Brown Guild Master Hood",
+            "15_hair_front.png": "Braided Afro-Puffs & Gold Wire Cuffs"
+          },
+          "clearSlots": [
+            "02_hair_back.png",
+            "16_headgear_horns.png"
+          ]
+        },
+        {
+          "id": "variant_a_corsair",
+          "label": "Abecean Corsair Captain",
+          "archetype": "skirmisher",
+          "isExpansionPack": false,
+          "layers": {
+            "06_mouth.png": "/character-layers/redguard_female/variants/variant_a_corsair/06_mouth.png",
+            "08_eyes.png": "/character-layers/redguard_female/variants/variant_a_corsair/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/redguard_female/variants/variant_a_corsair/09_eyebrows.png",
+            "10_face_markings.png": "/character-layers/redguard_female/variants/variant_a_corsair/10_face_markings.png",
+            "12_earring_ears.png": "/character-layers/redguard_female/variants/variant_a_corsair/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/redguard_female/variants/variant_a_corsair/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/redguard_female/variants/variant_a_corsair/14_cloak_mantle.png",
+            "15_hair_front.png": "/character-layers/redguard_female/variants/variant_a_corsair/15_hair_front.png",
+            "16_headgear_horns.png": "/character-layers/redguard_female/variants/variant_a_corsair/16_headgear_horns.png"
+          },
+          "slotLabels": {
+            "06_mouth.png": "Confident Battle Smirk",
+            "08_eyes.png": "Kohl-Lined Golden-Amber Eyes",
+            "09_eyebrows.png": "Sharp Arched Brows",
+            "10_face_markings.png": "Gold Cheek & Temple Henna Marks",
+            "12_earring_ears.png": "Large Engraved Gold Hoop Earring",
+            "13_armor_torso.png": "Turquoise Gold Vest & Sabre Belts",
+            "14_cloak_mantle.png": "Crimson Silk Shoulder Sash",
+            "15_hair_front.png": "Cornrow Crown & High Braided Bun",
+            "16_headgear_horns.png": "Crimson & Gold Coin Headwrap"
+          },
+          "clearSlots": []
+        },
+        {
+          "id": "variant_b_seer",
+          "label": "Alik'r Sword-Singer Mystic",
+          "archetype": "mage",
+          "isExpansionPack": false,
+          "layers": {
+            "02_hair_back.png": "/character-layers/redguard_female/variants/variant_b_seer/02_hair_back.png",
+            "06_mouth.png": "/character-layers/redguard_female/variants/variant_b_seer/06_mouth.png",
+            "08_eyes.png": "/character-layers/redguard_female/variants/variant_b_seer/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/redguard_female/variants/variant_b_seer/09_eyebrows.png",
+            "10_face_markings.png": "/character-layers/redguard_female/variants/variant_b_seer/10_face_markings.png",
+            "12_earring_ears.png": "/character-layers/redguard_female/variants/variant_b_seer/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/redguard_female/variants/variant_b_seer/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/redguard_female/variants/variant_b_seer/14_cloak_mantle.png",
+            "15_hair_front.png": "/character-layers/redguard_female/variants/variant_b_seer/15_hair_front.png",
+            "16_headgear_horns.png": "/character-layers/redguard_female/variants/variant_b_seer/16_headgear_horns.png"
+          },
+          "slotLabels": {
+            "02_hair_back.png": "Swept Black Gold-Cuffed Coils",
+            "06_mouth.png": "Serene Mystic Expression",
+            "08_eyes.png": "Glowing Pale-Cyan Mystic Eyes",
+            "09_eyebrows.png": "Dark Arched Mystic Brows",
+            "10_face_markings.png": "Gold Geometric Brow & Chin Dots",
+            "12_earring_ears.png": "Turquoise-Gold Drop Earrings",
+            "13_armor_torso.png": "Ivory & Brass Pauldron Silk Robes",
+            "14_cloak_mantle.png": "Amber Silk Mantle & Sapphire Clasp",
+            "15_hair_front.png": "Braided Black Crown Coils",
+            "16_headgear_horns.png": "Hammered Sun-Crescent Circlet"
+          },
+          "clearSlots": []
+        }
+      ]
     },
     {
       "id": "redguard_male",
-      "race_id": "redguard",
-      "race_name": "Redguard",
+      "raceId": "redguard",
+      "raceName": "Redguard",
       "gender": "male",
-      "manifest_path": "/character-layers/redguard_male/layers_manifest.json",
-      "active_layers": 13
+      "displayName": "Redguard (Male)",
+      "compatibilityGroup": "humanoid_male",
+      "anchor": {
+        "eyeX": 462,
+        "eyeY": 340,
+        "mouthX": 475,
+        "mouthY": 482
+      },
+      "baseLayers": {
+        "01_background.png": "/character-layers/shared/01_background.png",
+        "02_hair_back.png": "/character-layers/redguard_male/02_hair_back.png",
+        "03_body_head_base.png": "/character-layers/redguard_male/03_body_head_base.png",
+        "05_nose.png": "/character-layers/redguard_male/05_nose.png",
+        "06_mouth.png": "/character-layers/redguard_male/06_mouth.png",
+        "08_eyes.png": "/character-layers/redguard_male/08_eyes.png",
+        "09_eyebrows.png": "/character-layers/redguard_male/09_eyebrows.png",
+        "10_face_markings.png": "/character-layers/redguard_male/10_face_markings.png",
+        "11_facial_hair.png": "/character-layers/redguard_male/11_facial_hair.png",
+        "13_armor_torso.png": "/character-layers/redguard_male/13_armor_torso.png",
+        "14_cloak_mantle.png": "/character-layers/redguard_male/14_cloak_mantle.png",
+        "15_hair_front.png": "/character-layers/redguard_male/15_hair_front.png",
+        "17_frame.png": "/character-layers/shared/17_frame.png"
+      },
+      "baseSlotLabels": {
+        "01_background.png": "Nordic glowing cyan rune circle and embers background plate",
+        "02_hair_back.png": "Loose braided dreadlocks framing neck and left shoulder",
+        "03_body_head_base.png": "Clean 1:1 athletic Redguard male shaved bald bare-shoulder mannequin base",
+        "04_body_markings.png": "Body markings (empty)",
+        "05_nose.png": "Broad chiseled Redguard nose",
+        "06_mouth.png": "Defined warrior lips",
+        "07_tusks_whiskers.png": "Tusks / whiskers (empty)",
+        "08_eyes.png": "Piercing dark Redguard warrior eyes",
+        "09_eyebrows.png": "Heavy furrowed dark eyebrows",
+        "10_face_markings.png": "Diagonal cheek battle scar",
+        "11_facial_hair.png": "Trimmed Redguard warrior goatee and connected mustache",
+        "12_earring_ears.png": "Ears (base)",
+        "13_armor_torso.png": "Patinaed bronze segmented pauldron and studded brown leather chest armor",
+        "14_cloak_mantle.png": "Heavy wrapped cream-sand desert linen scarf cowl",
+        "15_hair_front.png": "Swept dreadlocks topknot bun with loose side locs",
+        "16_headgear_horns.png": "Headgear (empty)",
+        "17_frame.png": "Portrait border frame"
+      },
+      "variants": [
+        {
+          "id": "pack_companions_wolf",
+          "label": "Companions Skyforge Harbinger",
+          "archetype": "warrior",
+          "isExpansionPack": true,
+          "layers": {
+            "02_hair_back.png": "/character-layers/redguard_male/variants/pack_companions_wolf/02_hair_back.png",
+            "06_mouth.png": "/character-layers/redguard_male/variants/pack_companions_wolf/06_mouth.png",
+            "08_eyes.png": "/character-layers/redguard_male/variants/pack_companions_wolf/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/redguard_male/variants/pack_companions_wolf/09_eyebrows.png",
+            "10_face_markings.png": "/character-layers/redguard_male/variants/pack_companions_wolf/10_face_markings.png",
+            "11_facial_hair.png": "/character-layers/redguard_male/variants/pack_companions_wolf/11_facial_hair.png",
+            "12_earring_ears.png": "/character-layers/redguard_male/variants/pack_companions_wolf/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/redguard_male/variants/pack_companions_wolf/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/redguard_male/variants/pack_companions_wolf/14_cloak_mantle.png",
+            "15_hair_front.png": "/character-layers/redguard_male/variants/pack_companions_wolf/15_hair_front.png"
+          },
+          "slotLabels": {
+            "02_hair_back.png": "Thick Black Back Dreadlocs",
+            "06_mouth.png": "Pierced Warrior Expression",
+            "08_eyes.png": "Dark Piercing Warrior Eyes",
+            "09_eyebrows.png": "Silver-Ringed Brow",
+            "10_face_markings.png": "White Fang Warpaint & Lip/Brow Rings",
+            "11_facial_hair.png": "Close-Trimmed Warrior Beard",
+            "12_earring_ears.png": "Redguard Ear",
+            "13_armor_torso.png": "Skyforge Steel Companions Wolf Plate",
+            "14_cloak_mantle.png": "Silver Wolf-Pelt Shoulder Mantle",
+            "15_hair_front.png": "Bone-Beaded Black Dreadlocs"
+          },
+          "clearSlots": []
+        },
+        {
+          "id": "variant_a_sword_singer",
+          "label": "Yokudan Sword-Singer Paladin",
+          "archetype": "warrior",
+          "isExpansionPack": false,
+          "layers": {
+            "02_hair_back.png": "/character-layers/redguard_male/variants/variant_a_sword_singer/02_hair_back.png",
+            "06_mouth.png": "/character-layers/redguard_male/variants/variant_a_sword_singer/06_mouth.png",
+            "08_eyes.png": "/character-layers/redguard_male/variants/variant_a_sword_singer/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/redguard_male/variants/variant_a_sword_singer/09_eyebrows.png",
+            "10_face_markings.png": "/character-layers/redguard_male/variants/variant_a_sword_singer/10_face_markings.png",
+            "11_facial_hair.png": "/character-layers/redguard_male/variants/variant_a_sword_singer/11_facial_hair.png",
+            "12_earring_ears.png": "/character-layers/redguard_male/variants/variant_a_sword_singer/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/redguard_male/variants/variant_a_sword_singer/13_armor_torso.png",
+            "15_hair_front.png": "/character-layers/redguard_male/variants/variant_a_sword_singer/15_hair_front.png",
+            "16_headgear_horns.png": "/character-layers/redguard_male/variants/variant_a_sword_singer/16_headgear_horns.png"
+          },
+          "slotLabels": {
+            "02_hair_back.png": "Gold-Cuffed Cornrow Tail",
+            "06_mouth.png": "Composed Paladin Lips",
+            "08_eyes.png": "Luminous Pale-Gold Sword-Singer Eyes",
+            "09_eyebrows.png": "Stern Dark Brows",
+            "10_face_markings.png": "White Tribal Cheek & Temple Paint",
+            "11_facial_hair.png": "Sculpted Black Royal Goatee",
+            "12_earring_ears.png": "Thick Gold Hoop Earring",
+            "13_armor_torso.png": "Azure-Gold Pauldrons & Ivory Desert Coat",
+            "15_hair_front.png": "Tight Black Hammerfell Cornrows",
+            "16_headgear_horns.png": "Brass & Lapis Sun Circlet"
+          },
+          "clearSlots": [
+            "14_cloak_mantle.png"
+          ]
+        },
+        {
+          "id": "variant_b_alikir",
+          "label": "Alik'r Desert Rogue",
+          "archetype": "skirmisher",
+          "isExpansionPack": false,
+          "layers": {
+            "02_hair_back.png": "/character-layers/redguard_male/variants/variant_b_alikir/02_hair_back.png",
+            "06_mouth.png": "/character-layers/redguard_male/variants/variant_b_alikir/06_mouth.png",
+            "08_eyes.png": "/character-layers/redguard_male/variants/variant_b_alikir/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/redguard_male/variants/variant_b_alikir/09_eyebrows.png",
+            "10_face_markings.png": "/character-layers/redguard_male/variants/variant_b_alikir/10_face_markings.png",
+            "11_facial_hair.png": "/character-layers/redguard_male/variants/variant_b_alikir/11_facial_hair.png",
+            "12_earring_ears.png": "/character-layers/redguard_male/variants/variant_b_alikir/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/redguard_male/variants/variant_b_alikir/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/redguard_male/variants/variant_b_alikir/14_cloak_mantle.png",
+            "15_hair_front.png": "/character-layers/redguard_male/variants/variant_b_alikir/15_hair_front.png",
+            "16_headgear_horns.png": "/character-layers/redguard_male/variants/variant_b_alikir/16_headgear_horns.png"
+          },
+          "slotLabels": {
+            "02_hair_back.png": "Bronze-Cuffed Shoulder Locs",
+            "06_mouth.png": "Hardened Rogue Expression",
+            "08_eyes.png": "Fierce Fiery-Amber Eyes",
+            "09_eyebrows.png": "Furrowed Scarred Brows",
+            "10_face_markings.png": "Diagonal Pale Sword Scar",
+            "11_facial_hair.png": "Rugged Stubble Beard & Mustache",
+            "12_earring_ears.png": "Silver Stud Earring",
+            "13_armor_torso.png": "Studded Indigo Brigandine & Daggers",
+            "14_cloak_mantle.png": "Crimson Desert Keffiyeh Scarf",
+            "15_hair_front.png": "Black Locs Crown",
+            "16_headgear_horns.png": "Indigo & Gold Alik'r Headband"
+          },
+          "clearSlots": []
+        }
+      ]
     },
     {
       "id": "highelf_female",
-      "race_id": "highelf",
-      "race_name": "High Elf",
+      "raceId": "high-elf",
+      "raceName": "High Elf",
       "gender": "female",
-      "manifest_path": "/character-layers/highelf_female/layers_manifest.json",
-      "active_layers": 14
+      "displayName": "High Elf (Female)",
+      "compatibilityGroup": "humanoid_female",
+      "anchor": {
+        "eyeX": 470,
+        "eyeY": 346,
+        "mouthX": 477,
+        "mouthY": 481
+      },
+      "baseLayers": {
+        "01_background.png": "/character-layers/shared/01_background.png",
+        "02_hair_back.png": "/character-layers/highelf_female/02_hair_back.png",
+        "03_body_head_base.png": "/character-layers/highelf_female/03_body_head_base.png",
+        "05_nose.png": "/character-layers/highelf_female/05_nose.png",
+        "06_mouth.png": "/character-layers/highelf_female/06_mouth.png",
+        "08_eyes.png": "/character-layers/highelf_female/08_eyes.png",
+        "09_eyebrows.png": "/character-layers/highelf_female/09_eyebrows.png",
+        "10_face_markings.png": "/character-layers/highelf_female/10_face_markings.png",
+        "12_earring_ears.png": "/character-layers/highelf_female/12_earring_ears.png",
+        "13_armor_torso.png": "/character-layers/highelf_female/13_armor_torso.png",
+        "14_cloak_mantle.png": "/character-layers/highelf_female/14_cloak_mantle.png",
+        "15_hair_front.png": "/character-layers/highelf_female/15_hair_front.png",
+        "16_headgear_horns.png": "/character-layers/highelf_female/16_headgear_horns.png",
+        "17_frame.png": "/character-layers/shared/17_frame.png"
+      },
+      "baseSlotLabels": {
+        "01_background.png": "Nordic glowing cyan rune circle and embers background plate",
+        "02_hair_back.png": "Sleek golden-brown Altmer hair flowing down back of neck",
+        "03_body_head_base.png": "Clean 1:1 Altmer female shaved bald bare-shoulder mannequin base",
+        "04_body_markings.png": "Body markings (empty)",
+        "05_nose.png": "Slender aristocratic Altmer nose",
+        "06_mouth.png": "Defined golden-bronze lips",
+        "07_tusks_whiskers.png": "Tusks / whiskers (empty)",
+        "08_eyes.png": "Luminous golden-amber elven eyes",
+        "09_eyebrows.png": "High arched Altmer eyebrows",
+        "10_face_markings.png": "Golden forehead sun-drop marking gem",
+        "11_facial_hair.png": "Facial hair (empty)",
+        "12_earring_ears.png": "Long upward-swept pointed Altmer elven ear",
+        "13_armor_torso.png": "Sage-green Altmer silk V-neck mage robe with golden sun amulet",
+        "14_cloak_mantle.png": "High-collar ornate gold filigree shoulder mantle with sun medallions",
+        "15_hair_front.png": "Swept-back metallic golden-brown crown hair",
+        "16_headgear_horns.png": "Delicate filigree golden Altmer circlet tiara",
+        "17_frame.png": "Portrait border frame"
+      },
+      "variants": [
+        {
+          "id": "pack_glass_armor",
+          "label": "Gilded Malachite Glass Armor",
+          "archetype": "battlemage",
+          "isExpansionPack": true,
+          "layers": {
+            "02_hair_back.png": "/character-layers/highelf_female/variants/pack_glass_armor/02_hair_back.png",
+            "06_mouth.png": "/character-layers/highelf_female/variants/pack_glass_armor/06_mouth.png",
+            "08_eyes.png": "/character-layers/highelf_female/variants/pack_glass_armor/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/highelf_female/variants/pack_glass_armor/09_eyebrows.png",
+            "10_face_markings.png": "/character-layers/highelf_female/variants/pack_glass_armor/10_face_markings.png",
+            "12_earring_ears.png": "/character-layers/highelf_female/variants/pack_glass_armor/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/highelf_female/variants/pack_glass_armor/13_armor_torso.png",
+            "15_hair_front.png": "/character-layers/highelf_female/variants/pack_glass_armor/15_hair_front.png"
+          },
+          "slotLabels": {
+            "02_hair_back.png": "Shaved Temple Rose-Copper Back Trim",
+            "06_mouth.png": "Serene Elven Expression",
+            "08_eyes.png": "Amber High Elven Eyes",
+            "09_eyebrows.png": "Rose-Brown Brows",
+            "10_face_markings.png": "Neon-Cyan Arcane Circuit Tattoos",
+            "12_earring_ears.png": "Triple Chained Gold Ear Rings",
+            "13_armor_torso.png": "Gilded Malachite Glass Plate",
+            "15_hair_front.png": "Rose-Copper Shaved Cyber Bob"
+          },
+          "clearSlots": [
+            "14_cloak_mantle.png",
+            "16_headgear_horns.png"
+          ]
+        },
+        {
+          "id": "variant_a_thalmor",
+          "label": "Thalmor Justiciar Solar Battlemage",
+          "archetype": "battlemage",
+          "isExpansionPack": false,
+          "layers": {
+            "02_hair_back.png": "/character-layers/highelf_female/variants/variant_a_thalmor/02_hair_back.png",
+            "06_mouth.png": "/character-layers/highelf_female/variants/variant_a_thalmor/06_mouth.png",
+            "08_eyes.png": "/character-layers/highelf_female/variants/variant_a_thalmor/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/highelf_female/variants/variant_a_thalmor/09_eyebrows.png",
+            "12_earring_ears.png": "/character-layers/highelf_female/variants/variant_a_thalmor/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/highelf_female/variants/variant_a_thalmor/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/highelf_female/variants/variant_a_thalmor/14_cloak_mantle.png",
+            "15_hair_front.png": "/character-layers/highelf_female/variants/variant_a_thalmor/15_hair_front.png",
+            "16_headgear_horns.png": "/character-layers/highelf_female/variants/variant_a_thalmor/16_headgear_horns.png"
+          },
+          "slotLabels": {
+            "02_hair_back.png": "Silver-White Straight Back Locks",
+            "06_mouth.png": "Crimson Lipstick Expression",
+            "08_eyes.png": "Solar-Gold Luminous Elven Eyes",
+            "09_eyebrows.png": "Dark Arched High Elven Brows",
+            "12_earring_ears.png": "Gold & Emerald Chain Ear Ornament",
+            "13_armor_torso.png": "Black & Gold Filigree Thalmor Tunic",
+            "14_cloak_mantle.png": "Forest Velvet Cloak & Sunburst Clasps",
+            "15_hair_front.png": "Silver-White Crown & Collar Locks",
+            "16_headgear_horns.png": "Gold & Emerald Thalmor Circlet"
+          },
+          "clearSlots": []
+        },
+        {
+          "id": "variant_b_psijic",
+          "label": "Artaeum Psijic Order Mystic",
+          "archetype": "mage",
+          "isExpansionPack": false,
+          "layers": {
+            "02_hair_back.png": "/character-layers/highelf_female/variants/variant_b_psijic/02_hair_back.png",
+            "06_mouth.png": "/character-layers/highelf_female/variants/variant_b_psijic/06_mouth.png",
+            "08_eyes.png": "/character-layers/highelf_female/variants/variant_b_psijic/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/highelf_female/variants/variant_b_psijic/09_eyebrows.png",
+            "10_face_markings.png": "/character-layers/highelf_female/variants/variant_b_psijic/10_face_markings.png",
+            "12_earring_ears.png": "/character-layers/highelf_female/variants/variant_b_psijic/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/highelf_female/variants/variant_b_psijic/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/highelf_female/variants/variant_b_psijic/14_cloak_mantle.png",
+            "15_hair_front.png": "/character-layers/highelf_female/variants/variant_b_psijic/15_hair_front.png",
+            "16_headgear_horns.png": "/character-layers/highelf_female/variants/variant_b_psijic/16_headgear_horns.png"
+          },
+          "slotLabels": {
+            "02_hair_back.png": "Copper-Auburn Flowing Back Locks",
+            "06_mouth.png": "Serene Elven Expression",
+            "08_eyes.png": "Luminous Pale-Cyan Psijic Eyes",
+            "09_eyebrows.png": "Arched High Elven Brows",
+            "10_face_markings.png": "Silver-Cyan Cheek Rune Sigils",
+            "12_earring_ears.png": "Silver Moonstone Drop Earring",
+            "13_armor_torso.png": "Pearl-White Psijic Silk Robes",
+            "14_cloak_mantle.png": "Cerulean Stole & Crystal Clasp",
+            "15_hair_front.png": "Copper Braided High Crown",
+            "16_headgear_horns.png": "Silver Sapphire Star Circlet"
+          },
+          "clearSlots": []
+        }
+      ]
     },
     {
       "id": "highelf_male",
-      "race_id": "highelf",
-      "race_name": "High Elf",
+      "raceId": "high-elf",
+      "raceName": "High Elf",
       "gender": "male",
-      "manifest_path": "/character-layers/highelf_male/layers_manifest.json",
-      "active_layers": 13
+      "displayName": "High Elf (Male)",
+      "compatibilityGroup": "humanoid_male",
+      "anchor": {
+        "eyeX": 472,
+        "eyeY": 341,
+        "mouthX": 477,
+        "mouthY": 480
+      },
+      "baseLayers": {
+        "01_background.png": "/character-layers/shared/01_background.png",
+        "02_hair_back.png": "/character-layers/highelf_male/02_hair_back.png",
+        "03_body_head_base.png": "/character-layers/highelf_male/03_body_head_base.png",
+        "05_nose.png": "/character-layers/highelf_male/05_nose.png",
+        "06_mouth.png": "/character-layers/highelf_male/06_mouth.png",
+        "08_eyes.png": "/character-layers/highelf_male/08_eyes.png",
+        "09_eyebrows.png": "/character-layers/highelf_male/09_eyebrows.png",
+        "10_face_markings.png": "/character-layers/highelf_male/10_face_markings.png",
+        "12_earring_ears.png": "/character-layers/highelf_male/12_earring_ears.png",
+        "13_armor_torso.png": "/character-layers/highelf_male/13_armor_torso.png",
+        "14_cloak_mantle.png": "/character-layers/highelf_male/14_cloak_mantle.png",
+        "15_hair_front.png": "/character-layers/highelf_male/15_hair_front.png",
+        "17_frame.png": "/character-layers/shared/17_frame.png"
+      },
+      "baseSlotLabels": {
+        "01_background.png": "Nordic glowing cyan rune circle and embers background plate",
+        "02_hair_back.png": "Metallic blonde swept hair behind neck",
+        "03_body_head_base.png": "Clean 1:1 Altmer male shaved bald bare-shoulder mannequin base",
+        "04_body_markings.png": "Body markings (empty)",
+        "05_nose.png": "Long gaunt Altmer nose",
+        "06_mouth.png": "Stern aristocratic lips",
+        "07_tusks_whiskers.png": "Tusks / whiskers (empty)",
+        "08_eyes.png": "Luminous golden-white Altmer eyes",
+        "09_eyebrows.png": "Sharp angled golden-brown eyebrows",
+        "10_face_markings.png": "Luminous gold temple swirl and brow arcane markings",
+        "11_facial_hair.png": "Facial hair (empty)",
+        "12_earring_ears.png": "Long upward-swept pointed Altmer elven ear",
+        "13_armor_torso.png": "Sleeveless draped charcoal-slate Altmer battle tunic",
+        "14_cloak_mantle.png": "Ornate golden shoulder sun medallions and teardrop pendant necklace",
+        "15_hair_front.png": "Swept-back metallic golden-blonde crown hair",
+        "16_headgear_horns.png": "Headgear (empty)",
+        "17_frame.png": "Portrait border frame"
+      },
+      "variants": [
+        {
+          "id": "pack_thalmor_archon",
+          "label": "Thalmor Justiciar Grand Archon",
+          "archetype": "battlemage",
+          "isExpansionPack": true,
+          "layers": {
+            "02_hair_back.png": "/character-layers/highelf_male/variants/pack_thalmor_archon/02_hair_back.png",
+            "06_mouth.png": "/character-layers/highelf_male/variants/pack_thalmor_archon/06_mouth.png",
+            "08_eyes.png": "/character-layers/highelf_male/variants/pack_thalmor_archon/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/highelf_male/variants/pack_thalmor_archon/09_eyebrows.png",
+            "10_face_markings.png": "/character-layers/highelf_male/variants/pack_thalmor_archon/10_face_markings.png",
+            "12_earring_ears.png": "/character-layers/highelf_male/variants/pack_thalmor_archon/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/highelf_male/variants/pack_thalmor_archon/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/highelf_male/variants/pack_thalmor_archon/14_cloak_mantle.png",
+            "15_hair_front.png": "/character-layers/highelf_male/variants/pack_thalmor_archon/15_hair_front.png",
+            "16_headgear_horns.png": "/character-layers/highelf_male/variants/pack_thalmor_archon/16_headgear_horns.png"
+          },
+          "slotLabels": {
+            "02_hair_back.png": "Silver-Blonde Long Flowing Locks",
+            "06_mouth.png": "Stern Archon Expression",
+            "08_eyes.png": "Golden Predator High Elven Eyes",
+            "09_eyebrows.png": "Stern Gold-Brown Brows",
+            "10_face_markings.png": "Silver Nose-to-Cheek Battle Scar",
+            "12_earring_ears.png": "Altmer Pointed Ear",
+            "13_armor_torso.png": "Black & Gold Filigree Thalmor Archon Coat",
+            "14_cloak_mantle.png": "Sculpted Solid-Gold Shoulder Pauldrons",
+            "15_hair_front.png": "Platinum Undercut Noble Crown",
+            "16_headgear_horns.png": "Summerset Gold & Emerald Laurel Crown"
+          },
+          "clearSlots": []
+        },
+        {
+          "id": "variant_a_psijic",
+          "label": "Artaeum Psijic Lorekeeper",
+          "archetype": "mage",
+          "isExpansionPack": false,
+          "layers": {
+            "02_hair_back.png": "/character-layers/highelf_male/variants/variant_a_psijic/02_hair_back.png",
+            "06_mouth.png": "/character-layers/highelf_male/variants/variant_a_psijic/06_mouth.png",
+            "08_eyes.png": "/character-layers/highelf_male/variants/variant_a_psijic/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/highelf_male/variants/variant_a_psijic/09_eyebrows.png",
+            "10_face_markings.png": "/character-layers/highelf_male/variants/variant_a_psijic/10_face_markings.png",
+            "12_earring_ears.png": "/character-layers/highelf_male/variants/variant_a_psijic/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/highelf_male/variants/variant_a_psijic/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/highelf_male/variants/variant_a_psijic/14_cloak_mantle.png",
+            "15_hair_front.png": "/character-layers/highelf_male/variants/variant_a_psijic/15_hair_front.png",
+            "16_headgear_horns.png": "/character-layers/highelf_male/variants/variant_a_psijic/16_headgear_horns.png"
+          },
+          "slotLabels": {
+            "02_hair_back.png": "Silver-White Long Mane",
+            "06_mouth.png": "Stern High Elven Expression",
+            "08_eyes.png": "Luminous Arcane Cyan Eyes",
+            "09_eyebrows.png": "Silver-Grey Arched Brows",
+            "10_face_markings.png": "Luminous Pale-Cyan Cheek Sigils",
+            "12_earring_ears.png": "Altmer Pointed Ear",
+            "13_armor_torso.png": "Pearl-White Psijic High-Collar Robes",
+            "14_cloak_mantle.png": "Cerulean Trim & Sapphire Chest Gem",
+            "15_hair_front.png": "Silver-White Swept Crown",
+            "16_headgear_horns.png": "Silver Vine & Sapphire Circlet"
+          },
+          "clearSlots": []
+        },
+        {
+          "id": "variant_b_auriel",
+          "label": "Auriel Elven Solar Knight",
+          "archetype": "warrior",
+          "isExpansionPack": false,
+          "layers": {
+            "02_hair_back.png": "/character-layers/highelf_male/variants/variant_b_auriel/02_hair_back.png",
+            "06_mouth.png": "/character-layers/highelf_male/variants/variant_b_auriel/06_mouth.png",
+            "08_eyes.png": "/character-layers/highelf_male/variants/variant_b_auriel/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/highelf_male/variants/variant_b_auriel/09_eyebrows.png",
+            "11_facial_hair.png": "/character-layers/highelf_male/variants/variant_b_auriel/11_facial_hair.png",
+            "12_earring_ears.png": "/character-layers/highelf_male/variants/variant_b_auriel/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/highelf_male/variants/variant_b_auriel/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/highelf_male/variants/variant_b_auriel/14_cloak_mantle.png",
+            "15_hair_front.png": "/character-layers/highelf_male/variants/variant_b_auriel/15_hair_front.png"
+          },
+          "slotLabels": {
+            "02_hair_back.png": "Raven-Black Back Locks",
+            "06_mouth.png": "Composed Warrior Expression",
+            "08_eyes.png": "Amber-Gold Elven Eyes",
+            "09_eyebrows.png": "Raven-Black Stern Brows",
+            "11_facial_hair.png": "Tailored Obsidian Van Dyke Goatee",
+            "12_earring_ears.png": "Gold Filigree Ear Cuffs",
+            "13_armor_torso.png": "Winged Elven Plate & Quilted Emerald Tunic",
+            "14_cloak_mantle.png": "Forest Cape & Golden Eagle Clasp",
+            "15_hair_front.png": "Half-Up Braided Warrior Crown"
+          },
+          "clearSlots": []
+        }
+      ]
     },
     {
       "id": "woodelf_female",
-      "race_id": "woodelf",
-      "race_name": "Wood Elf",
+      "raceId": "wood-elf",
+      "raceName": "Wood Elf",
       "gender": "female",
-      "manifest_path": "/character-layers/woodelf_female/layers_manifest.json",
-      "active_layers": 15
+      "displayName": "Wood Elf (Female)",
+      "compatibilityGroup": "humanoid_female",
+      "anchor": {
+        "eyeX": 482,
+        "eyeY": 347,
+        "mouthX": 477,
+        "mouthY": 481
+      },
+      "baseLayers": {
+        "01_background.png": "/character-layers/shared/01_background.png",
+        "02_hair_back.png": "/character-layers/woodelf_female/02_hair_back.png",
+        "03_body_head_base.png": "/character-layers/woodelf_female/03_body_head_base.png",
+        "04_body_markings.png": "/character-layers/woodelf_female/04_body_markings.png",
+        "05_nose.png": "/character-layers/woodelf_female/05_nose.png",
+        "06_mouth.png": "/character-layers/woodelf_female/06_mouth.png",
+        "08_eyes.png": "/character-layers/woodelf_female/08_eyes.png",
+        "09_eyebrows.png": "/character-layers/woodelf_female/09_eyebrows.png",
+        "10_face_markings.png": "/character-layers/woodelf_female/10_face_markings.png",
+        "12_earring_ears.png": "/character-layers/woodelf_female/12_earring_ears.png",
+        "13_armor_torso.png": "/character-layers/woodelf_female/13_armor_torso.png",
+        "14_cloak_mantle.png": "/character-layers/woodelf_female/14_cloak_mantle.png",
+        "15_hair_front.png": "/character-layers/woodelf_female/15_hair_front.png",
+        "16_headgear_horns.png": "/character-layers/woodelf_female/16_headgear_horns.png",
+        "17_frame.png": "/character-layers/shared/17_frame.png"
+      },
+      "baseSlotLabels": {
+        "01_background.png": "Nordic glowing cyan rune circle and embers background plate",
+        "02_hair_back.png": "Flowing wavy auburn locks behind neck and ear",
+        "03_body_head_base.png": "Clean 1:1 Bosmer female shaved bald bare-shoulder mannequin base",
+        "04_body_markings.png": "Dark spiral and armband hunter tattoos on right upper arm",
+        "05_nose.png": "Delicate Bosmer hunter nose",
+        "06_mouth.png": "Defined warm copper lips",
+        "07_tusks_whiskers.png": "Tusks / whiskers (empty)",
+        "08_eyes.png": "Luminous glowing amber-gold Bosmer eyes",
+        "09_eyebrows.png": "Arched dark eyebrows",
+        "10_face_markings.png": "Dark forehead chevron warpaint and vertical under-eye streaks",
+        "11_facial_hair.png": "Facial hair (empty)",
+        "12_earring_ears.png": "Sharp upward-swept pointed Bosmer ear",
+        "13_armor_torso.png": "Olive-brown leather archer vest with crossed straps and bone claw necklace",
+        "14_cloak_mantle.png": "Shaggy grey-white wolf fur shoulder mantle with carved silver medallion",
+        "15_hair_front.png": "Auburn braided ranger hair and twin front chest braids",
+        "16_headgear_horns.png": "Carved bone hunter hairpins",
+        "17_frame.png": "Portrait border frame"
+      },
+      "variants": [
+        {
+          "id": "pack_hircine_huntswoman",
+          "label": "Hircine Savior's Hide Huntswoman",
+          "archetype": "rogue",
+          "isExpansionPack": true,
+          "layers": {
+            "02_hair_back.png": "/character-layers/woodelf_female/variants/pack_hircine_huntswoman/02_hair_back.png",
+            "06_mouth.png": "/character-layers/woodelf_female/variants/pack_hircine_huntswoman/06_mouth.png",
+            "08_eyes.png": "/character-layers/woodelf_female/variants/pack_hircine_huntswoman/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/woodelf_female/variants/pack_hircine_huntswoman/09_eyebrows.png",
+            "10_face_markings.png": "/character-layers/woodelf_female/variants/pack_hircine_huntswoman/10_face_markings.png",
+            "12_earring_ears.png": "/character-layers/woodelf_female/variants/pack_hircine_huntswoman/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/woodelf_female/variants/pack_hircine_huntswoman/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/woodelf_female/variants/pack_hircine_huntswoman/14_cloak_mantle.png",
+            "15_hair_front.png": "/character-layers/woodelf_female/variants/pack_hircine_huntswoman/15_hair_front.png"
+          },
+          "slotLabels": {
+            "02_hair_back.png": "Wild Copper Warrior Locs",
+            "06_mouth.png": "Fierce Huntswoman Expression",
+            "08_eyes.png": "Bloodmoon Crimson-Amber Eyes",
+            "09_eyebrows.png": "Copper Arched Brows",
+            "10_face_markings.png": "White Ash Claw-Mark Warpaint",
+            "12_earring_ears.png": "Feathered Bronze Ear Cuffs",
+            "13_armor_torso.png": "Strapped Leather Hunter Harness",
+            "14_cloak_mantle.png": "Savior's Hide Werewolf Pelt & Antler Clasp",
+            "15_hair_front.png": "Braided Copper Crown & Shoulder Locs"
+          },
+          "clearSlots": [
+            "04_body_markings.png"
+          ]
+        },
+        {
+          "id": "variant_a_wildhunt",
+          "label": "Valenwood Wild Hunt Druidess",
+          "archetype": "druid",
+          "isExpansionPack": false,
+          "layers": {
+            "02_hair_back.png": "/character-layers/woodelf_female/variants/variant_a_wildhunt/02_hair_back.png",
+            "06_mouth.png": "/character-layers/woodelf_female/variants/variant_a_wildhunt/06_mouth.png",
+            "08_eyes.png": "/character-layers/woodelf_female/variants/variant_a_wildhunt/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/woodelf_female/variants/variant_a_wildhunt/09_eyebrows.png",
+            "10_face_markings.png": "/character-layers/woodelf_female/variants/variant_a_wildhunt/10_face_markings.png",
+            "12_earring_ears.png": "/character-layers/woodelf_female/variants/variant_a_wildhunt/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/woodelf_female/variants/variant_a_wildhunt/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/woodelf_female/variants/variant_a_wildhunt/14_cloak_mantle.png",
+            "15_hair_front.png": "/character-layers/woodelf_female/variants/variant_a_wildhunt/15_hair_front.png",
+            "16_headgear_horns.png": "/character-layers/woodelf_female/variants/variant_a_wildhunt/16_headgear_horns.png"
+          },
+          "slotLabels": {
+            "02_hair_back.png": "Auburn Leaf-Woven Back Curls",
+            "06_mouth.png": "Natural Bosmer Expression",
+            "08_eyes.png": "Luminous Emerald Forest Eyes",
+            "09_eyebrows.png": "Auburn Arched Brows",
+            "10_face_markings.png": "Luminous Pale-Green Floral Warpaint",
+            "12_earring_ears.png": "Carved Bone Leaf Earring",
+            "13_armor_torso.png": "Emerald & Hide Valenwood Tunic",
+            "14_cloak_mantle.png": "Raven-Feather Mantle & Amber Tree Medallion",
+            "15_hair_front.png": "Auburn High Twist & Twin Braids",
+            "16_headgear_horns.png": "Antler-and-Amber Druid Circlet"
+          },
+          "clearSlots": [
+            "04_body_markings.png"
+          ]
+        },
+        {
+          "id": "variant_b_shadowbow",
+          "label": "Crimson Shadowbow Nightblade",
+          "archetype": "rogue",
+          "isExpansionPack": false,
+          "layers": {
+            "02_hair_back.png": "/character-layers/woodelf_female/variants/variant_b_shadowbow/02_hair_back.png",
+            "06_mouth.png": "/character-layers/woodelf_female/variants/variant_b_shadowbow/06_mouth.png",
+            "08_eyes.png": "/character-layers/woodelf_female/variants/variant_b_shadowbow/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/woodelf_female/variants/variant_b_shadowbow/09_eyebrows.png",
+            "10_face_markings.png": "/character-layers/woodelf_female/variants/variant_b_shadowbow/10_face_markings.png",
+            "12_earring_ears.png": "/character-layers/woodelf_female/variants/variant_b_shadowbow/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/woodelf_female/variants/variant_b_shadowbow/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/woodelf_female/variants/variant_b_shadowbow/14_cloak_mantle.png",
+            "15_hair_front.png": "/character-layers/woodelf_female/variants/variant_b_shadowbow/15_hair_front.png"
+          },
+          "slotLabels": {
+            "02_hair_back.png": "Shaved Nape Undercut",
+            "06_mouth.png": "Resolute Rogue Expression",
+            "08_eyes.png": "Fiery Amber Predator Eyes",
+            "09_eyebrows.png": "Scarred Dark Arched Brows",
+            "10_face_markings.png": "Brow Scar & Crimson Tear Streaks",
+            "12_earring_ears.png": "Double Silver Ear Hoops",
+            "13_armor_torso.png": "Crimson-Trimmed Nightblade Leather & Bone Harness",
+            "14_cloak_mantle.png": "Charcoal Ribbed Assassin Cowl",
+            "15_hair_front.png": "Obsidian Asymmetrical Undercut Sweep"
+          },
+          "clearSlots": [
+            "04_body_markings.png"
+          ]
+        }
+      ]
     },
     {
       "id": "woodelf_male",
-      "race_id": "woodelf",
-      "race_name": "Wood Elf",
+      "raceId": "wood-elf",
+      "raceName": "Wood Elf",
       "gender": "male",
-      "manifest_path": "/character-layers/woodelf_male/layers_manifest.json",
-      "active_layers": 14
+      "displayName": "Wood Elf (Male)",
+      "compatibilityGroup": "humanoid_male",
+      "anchor": {
+        "eyeX": 474,
+        "eyeY": 342,
+        "mouthX": 477,
+        "mouthY": 474
+      },
+      "baseLayers": {
+        "01_background.png": "/character-layers/shared/01_background.png",
+        "03_body_head_base.png": "/character-layers/woodelf_male/03_body_head_base.png",
+        "04_body_markings.png": "/character-layers/woodelf_male/04_body_markings.png",
+        "05_nose.png": "/character-layers/woodelf_male/05_nose.png",
+        "06_mouth.png": "/character-layers/woodelf_male/06_mouth.png",
+        "08_eyes.png": "/character-layers/woodelf_male/08_eyes.png",
+        "09_eyebrows.png": "/character-layers/woodelf_male/09_eyebrows.png",
+        "10_face_markings.png": "/character-layers/woodelf_male/10_face_markings.png",
+        "11_facial_hair.png": "/character-layers/woodelf_male/11_facial_hair.png",
+        "12_earring_ears.png": "/character-layers/woodelf_male/12_earring_ears.png",
+        "13_armor_torso.png": "/character-layers/woodelf_male/13_armor_torso.png",
+        "14_cloak_mantle.png": "/character-layers/woodelf_male/14_cloak_mantle.png",
+        "15_hair_front.png": "/character-layers/woodelf_male/15_hair_front.png",
+        "17_frame.png": "/character-layers/shared/17_frame.png"
+      },
+      "baseSlotLabels": {
+        "01_background.png": "Nordic glowing cyan rune circle and embers background plate",
+        "02_hair_back.png": "Back hair (empty \u2014 closely shaved sides with topknot)",
+        "03_body_head_base.png": "Clean 1:1 Bosmer male shaved bald bare-shoulder mannequin base",
+        "04_body_markings.png": "Dark tribal shoulder/arm spirals and pectoral band tattoos",
+        "05_nose.png": "Sharp weathered Bosmer hunter nose",
+        "06_mouth.png": "Clean-shaven determined Bosmer mouth",
+        "07_tusks_whiskers.png": "Tusks / whiskers (empty)",
+        "08_eyes.png": "Luminous glowing amber-gold elven eyes",
+        "09_eyebrows.png": "Furrowed dark auburn eyebrows",
+        "10_face_markings.png": "Dark vertical hunter warpaint streaks across forehead and cheeks",
+        "11_facial_hair.png": "Full auburn-brown warrior goatee beard and mustache",
+        "12_earring_ears.png": "Long sharp upward-swept pointed Bosmer elven ear",
+        "13_armor_torso.png": "Crossed rugged leather chest harnesses with silver buckles and bone tusk pendant",
+        "14_cloak_mantle.png": "Shaggy grey-brown wolf fur shoulder mantle with circular carved clasp and quiver",
+        "15_hair_front.png": "Slicked-back auburn topknot bun with shaved sides",
+        "16_headgear_horns.png": "Headgear / horns (empty)",
+        "17_frame.png": "Portrait border frame"
+      },
+      "variants": [
+        {
+          "id": "pack_forsworn_stag",
+          "label": "Hircine Stag-Crown Forsworn",
+          "archetype": "rogue",
+          "isExpansionPack": true,
+          "layers": {
+            "02_hair_back.png": "/character-layers/woodelf_male/variants/pack_forsworn_stag/02_hair_back.png",
+            "06_mouth.png": "/character-layers/woodelf_male/variants/pack_forsworn_stag/06_mouth.png",
+            "08_eyes.png": "/character-layers/woodelf_male/variants/pack_forsworn_stag/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/woodelf_male/variants/pack_forsworn_stag/09_eyebrows.png",
+            "10_face_markings.png": "/character-layers/woodelf_male/variants/pack_forsworn_stag/10_face_markings.png",
+            "12_earring_ears.png": "/character-layers/woodelf_male/variants/pack_forsworn_stag/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/woodelf_male/variants/pack_forsworn_stag/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/woodelf_male/variants/pack_forsworn_stag/14_cloak_mantle.png",
+            "15_hair_front.png": "/character-layers/woodelf_male/variants/pack_forsworn_stag/15_hair_front.png",
+            "16_headgear_horns.png": "/character-layers/woodelf_male/variants/pack_forsworn_stag/16_headgear_horns.png"
+          },
+          "slotLabels": {
+            "02_hair_back.png": "Wild Auburn Forest Dreads",
+            "06_mouth.png": "Stoic Reachmen Hunter Expression",
+            "08_eyes.png": "Glowing Amber-Gold Hunter Eyes",
+            "09_eyebrows.png": "Fierce Dark-Auburn Brows",
+            "10_face_markings.png": "Crimson Ash Cheek & Brow Warpaint",
+            "12_earring_ears.png": "Carved Bone Ear Cuffs",
+            "13_armor_torso.png": "Reachmen Strapped Leather & Bone Tooth Necklace",
+            "14_cloak_mantle.png": "Forsworn Raven-Feather & Fur Shoulder Mantle",
+            "15_hair_front.png": "Braided Chestnut-Auburn Topknot Crest",
+            "16_headgear_horns.png": "Ivory Stag Antlers & Reachmen Headband"
+          },
+          "clearSlots": [
+            "04_body_markings.png",
+            "11_facial_hair.png"
+          ]
+        },
+        {
+          "id": "variant_a_spinner",
+          "label": "Valenwood Sap-Speaker Mage",
+          "archetype": "mage",
+          "isExpansionPack": false,
+          "layers": {
+            "02_hair_back.png": "/character-layers/woodelf_male/variants/variant_a_spinner/02_hair_back.png",
+            "06_mouth.png": "/character-layers/woodelf_male/variants/variant_a_spinner/06_mouth.png",
+            "08_eyes.png": "/character-layers/woodelf_male/variants/variant_a_spinner/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/woodelf_male/variants/variant_a_spinner/09_eyebrows.png",
+            "10_face_markings.png": "/character-layers/woodelf_male/variants/variant_a_spinner/10_face_markings.png",
+            "11_facial_hair.png": "/character-layers/woodelf_male/variants/variant_a_spinner/11_facial_hair.png",
+            "12_earring_ears.png": "/character-layers/woodelf_male/variants/variant_a_spinner/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/woodelf_male/variants/variant_a_spinner/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/woodelf_male/variants/variant_a_spinner/14_cloak_mantle.png",
+            "15_hair_front.png": "/character-layers/woodelf_male/variants/variant_a_spinner/15_hair_front.png",
+            "16_headgear_horns.png": "/character-layers/woodelf_male/variants/variant_a_spinner/16_headgear_horns.png"
+          },
+          "slotLabels": {
+            "02_hair_back.png": "Copper Back Locks",
+            "06_mouth.png": "Serene Bosmer Expression",
+            "08_eyes.png": "Jade-Green Forest Eyes",
+            "09_eyebrows.png": "Copper Arched Brows",
+            "10_face_markings.png": "Luminous Pale-Gold Spinner Markings",
+            "11_facial_hair.png": "Copper Mustache & Goatee",
+            "12_earring_ears.png": "Pointed Bosmer Ear",
+            "13_armor_torso.png": "Moss-Green Embroidered Sap-Speaker Robes",
+            "14_cloak_mantle.png": "Bone-Clasp Mantle & Emerald Medallion",
+            "15_hair_front.png": "Copper Swept Crown & Beaded Braid",
+            "16_headgear_horns.png": "Carved Ivory & Emerald Circlet"
+          },
+          "clearSlots": [
+            "04_body_markings.png"
+          ]
+        },
+        {
+          "id": "variant_b_stalker",
+          "label": "Silver-Thorn Bosmer Ranger Captain",
+          "archetype": "warrior",
+          "isExpansionPack": false,
+          "layers": {
+            "02_hair_back.png": "/character-layers/woodelf_male/variants/variant_b_stalker/02_hair_back.png",
+            "06_mouth.png": "/character-layers/woodelf_male/variants/variant_b_stalker/06_mouth.png",
+            "08_eyes.png": "/character-layers/woodelf_male/variants/variant_b_stalker/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/woodelf_male/variants/variant_b_stalker/09_eyebrows.png",
+            "10_face_markings.png": "/character-layers/woodelf_male/variants/variant_b_stalker/10_face_markings.png",
+            "11_facial_hair.png": "/character-layers/woodelf_male/variants/variant_b_stalker/11_facial_hair.png",
+            "12_earring_ears.png": "/character-layers/woodelf_male/variants/variant_b_stalker/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/woodelf_male/variants/variant_b_stalker/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/woodelf_male/variants/variant_b_stalker/14_cloak_mantle.png",
+            "15_hair_front.png": "/character-layers/woodelf_male/variants/variant_b_stalker/15_hair_front.png"
+          },
+          "slotLabels": {
+            "02_hair_back.png": "Short Obsidian Nape Lock",
+            "06_mouth.png": "Grim Ranger Expression",
+            "08_eyes.png": "Bright Amber Stalker Eyes",
+            "09_eyebrows.png": "Thick Obsidian Brows",
+            "10_face_markings.png": "Vertical Diagonal Eye Scar",
+            "11_facial_hair.png": "Dark Rugged Jaw Stubble",
+            "12_earring_ears.png": "Triple Silver Ear Cuffs",
+            "13_armor_torso.png": "Studded Crimson Leather Pauldrons & Buckled Tunic",
+            "14_cloak_mantle.png": "Grey Wolf-Fur Collar Mantle",
+            "15_hair_front.png": "Black Braided Temple Crown"
+          },
+          "clearSlots": [
+            "04_body_markings.png"
+          ]
+        }
+      ]
     },
     {
       "id": "darkelf_female",
-      "race_id": "darkelf",
-      "race_name": "Dark Elf",
+      "raceId": "dark-elf",
+      "raceName": "Dark Elf",
       "gender": "female",
-      "manifest_path": "/character-layers/darkelf_female/layers_manifest.json",
-      "active_layers": 12
+      "displayName": "Dark Elf (Female)",
+      "compatibilityGroup": "humanoid_female",
+      "anchor": {
+        "eyeX": 467,
+        "eyeY": 344,
+        "mouthX": 474,
+        "mouthY": 476
+      },
+      "baseLayers": {
+        "01_background.png": "/character-layers/shared/01_background.png",
+        "02_hair_back.png": "/character-layers/darkelf_female/02_hair_back.png",
+        "03_body_head_base.png": "/character-layers/darkelf_female/03_body_head_base.png",
+        "05_nose.png": "/character-layers/darkelf_female/05_nose.png",
+        "06_mouth.png": "/character-layers/darkelf_female/06_mouth.png",
+        "08_eyes.png": "/character-layers/darkelf_female/08_eyes.png",
+        "09_eyebrows.png": "/character-layers/darkelf_female/09_eyebrows.png",
+        "12_earring_ears.png": "/character-layers/darkelf_female/12_earring_ears.png",
+        "13_armor_torso.png": "/character-layers/darkelf_female/13_armor_torso.png",
+        "14_cloak_mantle.png": "/character-layers/darkelf_female/14_cloak_mantle.png",
+        "15_hair_front.png": "/character-layers/darkelf_female/15_hair_front.png",
+        "17_frame.png": "/character-layers/shared/17_frame.png"
+      },
+      "baseSlotLabels": {
+        "01_background.png": "Nordic glowing cyan rune circle and embers background plate",
+        "02_hair_back.png": "Straight raven-black hair behind neck, ear, and shoulders",
+        "03_body_head_base.png": "Clean 1:1 Dunmer female shaved bald bare-shoulder mannequin base",
+        "04_body_markings.png": "Body markings (empty)",
+        "05_nose.png": "Sculpted Dunmer female nose",
+        "06_mouth.png": "Dark plum-slate Dunmer lips",
+        "07_tusks_whiskers.png": "Tusks / whiskers (empty)",
+        "08_eyes.png": "Glowing crimson-red Dunmer elven eyes with dark lashlines",
+        "09_eyebrows.png": "Arched dark eyebrows",
+        "10_face_markings.png": "Face markings (empty)",
+        "11_facial_hair.png": "Facial hair (empty)",
+        "12_earring_ears.png": "Long upward-angled pointed Dunmer elven ear",
+        "13_armor_torso.png": "Dark leather and chitin assassin cuirass with tiered pauldron and crossed straps",
+        "14_cloak_mantle.png": "High upturned dark leather nightblade neck collar mantle",
+        "15_hair_front.png": "Center-parted raven-black hair and wispy face-framing tendrils",
+        "16_headgear_horns.png": "Headgear / horns (empty)",
+        "17_frame.png": "Portrait border frame"
+      },
+      "variants": [
+        {
+          "id": "pack_vampire_dusk",
+          "label": "Volkihar Crimson Aristocrat",
+          "archetype": "mage",
+          "isExpansionPack": true,
+          "layers": {
+            "02_hair_back.png": "/character-layers/darkelf_female/variants/pack_vampire_dusk/02_hair_back.png",
+            "06_mouth.png": "/character-layers/darkelf_female/variants/pack_vampire_dusk/06_mouth.png",
+            "08_eyes.png": "/character-layers/darkelf_female/variants/pack_vampire_dusk/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/darkelf_female/variants/pack_vampire_dusk/09_eyebrows.png",
+            "10_face_markings.png": "/character-layers/darkelf_female/variants/pack_vampire_dusk/10_face_markings.png",
+            "12_earring_ears.png": "/character-layers/darkelf_female/variants/pack_vampire_dusk/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/darkelf_female/variants/pack_vampire_dusk/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/darkelf_female/variants/pack_vampire_dusk/14_cloak_mantle.png",
+            "15_hair_front.png": "/character-layers/darkelf_female/variants/pack_vampire_dusk/15_hair_front.png"
+          },
+          "slotLabels": {
+            "02_hair_back.png": "Platinum Flowing Noble Waves",
+            "06_mouth.png": "Dark Wine Lip Expression",
+            "08_eyes.png": "Molten Gold Vampire Eyes",
+            "09_eyebrows.png": "Arched Dunmer Brows",
+            "10_face_markings.png": "Silver Nostril Stud",
+            "12_earring_ears.png": "Gold Spiderweb Chandelier Ear Cuff",
+            "13_armor_torso.png": "Crimson Brocade Vampire High-Collar Corset",
+            "14_cloak_mantle.png": "Obsidian Velvet & Ruby Choker",
+            "15_hair_front.png": "Swept Platinum Vampire Pompadour"
+          },
+          "clearSlots": []
+        },
+        {
+          "id": "variant_a_morag_tong",
+          "label": "Morag Tong Chitin Assassin",
+          "archetype": "rogue",
+          "isExpansionPack": false,
+          "layers": {
+            "02_hair_back.png": "/character-layers/darkelf_female/variants/variant_a_morag_tong/02_hair_back.png",
+            "06_mouth.png": "/character-layers/darkelf_female/variants/variant_a_morag_tong/06_mouth.png",
+            "08_eyes.png": "/character-layers/darkelf_female/variants/variant_a_morag_tong/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/darkelf_female/variants/variant_a_morag_tong/09_eyebrows.png",
+            "10_face_markings.png": "/character-layers/darkelf_female/variants/variant_a_morag_tong/10_face_markings.png",
+            "12_earring_ears.png": "/character-layers/darkelf_female/variants/variant_a_morag_tong/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/darkelf_female/variants/variant_a_morag_tong/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/darkelf_female/variants/variant_a_morag_tong/14_cloak_mantle.png",
+            "15_hair_front.png": "/character-layers/darkelf_female/variants/variant_a_morag_tong/15_hair_front.png"
+          },
+          "slotLabels": {
+            "02_hair_back.png": "Raven-Black Braided Tail",
+            "06_mouth.png": "Ash-Grey Dunmer Expression",
+            "08_eyes.png": "Crimson Dunmer Predator Eyes",
+            "09_eyebrows.png": "Dark Arched Dunmer Brows",
+            "10_face_markings.png": "Crimson Cheek Slash Mark",
+            "12_earring_ears.png": "Silver-Cuffed Pointed Ear",
+            "13_armor_torso.png": "Sculpted Chitin Pauldrons & Crimson Jerkin",
+            "14_cloak_mantle.png": "Ash-Grey Wrapped Assassin Scarf",
+            "15_hair_front.png": "Raven Crown & Silver Hairpin"
+          },
+          "clearSlots": []
+        },
+        {
+          "id": "variant_b_telvanni",
+          "label": "House Telvanni Wizard-Lord",
+          "archetype": "mage",
+          "isExpansionPack": false,
+          "layers": {
+            "02_hair_back.png": "/character-layers/darkelf_female/variants/variant_b_telvanni/02_hair_back.png",
+            "06_mouth.png": "/character-layers/darkelf_female/variants/variant_b_telvanni/06_mouth.png",
+            "08_eyes.png": "/character-layers/darkelf_female/variants/variant_b_telvanni/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/darkelf_female/variants/variant_b_telvanni/09_eyebrows.png",
+            "10_face_markings.png": "/character-layers/darkelf_female/variants/variant_b_telvanni/10_face_markings.png",
+            "12_earring_ears.png": "/character-layers/darkelf_female/variants/variant_b_telvanni/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/darkelf_female/variants/variant_b_telvanni/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/darkelf_female/variants/variant_b_telvanni/14_cloak_mantle.png",
+            "15_hair_front.png": "/character-layers/darkelf_female/variants/variant_b_telvanni/15_hair_front.png",
+            "16_headgear_horns.png": "/character-layers/darkelf_female/variants/variant_b_telvanni/16_headgear_horns.png"
+          },
+          "slotLabels": {
+            "02_hair_back.png": "Silver-White Flowing Waves",
+            "06_mouth.png": "Composed Magister Expression",
+            "08_eyes.png": "Crimson Dunmer Eyes",
+            "09_eyebrows.png": "Dark Arched Dunmer Brows",
+            "10_face_markings.png": "Luminous Amethyst Arcane Sigils",
+            "12_earring_ears.png": "Bronze & Emerald Chandelier Earring",
+            "13_armor_torso.png": "Indigo-Purple Telvanni High-Collar Robes",
+            "14_cloak_mantle.png": "Bronze Shoulder Caps & Emerald Chest Brooch",
+            "15_hair_front.png": "Silver Crown & Amethyst Temple Braid",
+            "16_headgear_horns.png": "Bronze & Emerald Chitin Circlet"
+          },
+          "clearSlots": []
+        }
+      ]
     },
     {
       "id": "darkelf_male",
-      "race_id": "darkelf",
-      "race_name": "Dark Elf",
+      "raceId": "dark-elf",
+      "raceName": "Dark Elf",
       "gender": "male",
-      "manifest_path": "/character-layers/darkelf_male/layers_manifest.json",
-      "active_layers": 13
+      "displayName": "Dark Elf (Male)",
+      "compatibilityGroup": "humanoid_male",
+      "anchor": {
+        "eyeX": 469,
+        "eyeY": 342,
+        "mouthX": 477,
+        "mouthY": 474
+      },
+      "baseLayers": {
+        "01_background.png": "/character-layers/shared/01_background.png",
+        "03_body_head_base.png": "/character-layers/darkelf_male/03_body_head_base.png",
+        "05_nose.png": "/character-layers/darkelf_male/05_nose.png",
+        "06_mouth.png": "/character-layers/darkelf_male/06_mouth.png",
+        "08_eyes.png": "/character-layers/darkelf_male/08_eyes.png",
+        "09_eyebrows.png": "/character-layers/darkelf_male/09_eyebrows.png",
+        "10_face_markings.png": "/character-layers/darkelf_male/10_face_markings.png",
+        "11_facial_hair.png": "/character-layers/darkelf_male/11_facial_hair.png",
+        "12_earring_ears.png": "/character-layers/darkelf_male/12_earring_ears.png",
+        "13_armor_torso.png": "/character-layers/darkelf_male/13_armor_torso.png",
+        "14_cloak_mantle.png": "/character-layers/darkelf_male/14_cloak_mantle.png",
+        "15_hair_front.png": "/character-layers/darkelf_male/15_hair_front.png",
+        "17_frame.png": "/character-layers/shared/17_frame.png"
+      },
+      "baseSlotLabels": {
+        "01_background.png": "Nordic glowing cyan rune circle and embers background plate",
+        "02_hair_back.png": "Back hair (empty \u2014 shaved sides with topknot)",
+        "03_body_head_base.png": "Clean 1:1 Dunmer male shaved bald scarless bare-shoulder mannequin base",
+        "04_body_markings.png": "Body markings (empty)",
+        "05_nose.png": "Gaunt weathered Dunmer nose",
+        "06_mouth.png": "Determined Dunmer mouth",
+        "07_tusks_whiskers.png": "Tusks / whiskers (empty)",
+        "08_eyes.png": "Glowing crimson-red Dunmer eyes",
+        "09_eyebrows.png": "Furrowed dark eyebrows",
+        "10_face_markings.png": "Dunmer battle scars across brow and cheek",
+        "11_facial_hair.png": "Dark charcoal chin goatee beard",
+        "12_earring_ears.png": "Long upward-angled pointed Dunmer elven ear",
+        "13_armor_torso.png": "Studded Dunmer leather armor with segmented pauldrons and crossed straps",
+        "14_cloak_mantle.png": "High upturned leather assassin neck collar mantle",
+        "15_hair_front.png": "Shaved sides with slick black topknot ponytail",
+        "16_headgear_horns.png": "Headgear / horns (empty)",
+        "17_frame.png": "Portrait border frame"
+      },
+      "variants": [
+        {
+          "id": "pack_miraak_cultist",
+          "label": "Apocrypha Miraak Cultist",
+          "archetype": "mage",
+          "isExpansionPack": true,
+          "layers": {
+            "06_mouth.png": "/character-layers/darkelf_male/variants/pack_miraak_cultist/06_mouth.png",
+            "08_eyes.png": "/character-layers/darkelf_male/variants/pack_miraak_cultist/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/darkelf_male/variants/pack_miraak_cultist/09_eyebrows.png",
+            "10_face_markings.png": "/character-layers/darkelf_male/variants/pack_miraak_cultist/10_face_markings.png",
+            "11_facial_hair.png": "/character-layers/darkelf_male/variants/pack_miraak_cultist/11_facial_hair.png",
+            "12_earring_ears.png": "/character-layers/darkelf_male/variants/pack_miraak_cultist/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/darkelf_male/variants/pack_miraak_cultist/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/darkelf_male/variants/pack_miraak_cultist/14_cloak_mantle.png",
+            "16_headgear_horns.png": "/character-layers/darkelf_male/variants/pack_miraak_cultist/16_headgear_horns.png"
+          },
+          "slotLabels": {
+            "06_mouth.png": "Stoic Cultist Expression",
+            "08_eyes.png": "Luminous Eldritch Green Eyes",
+            "09_eyebrows.png": "Dark Dunmer Brows",
+            "10_face_markings.png": "Pale-Jade Apocrypha Scalp & Cheek Runes",
+            "11_facial_hair.png": "Razor-Sharp Black Goatee",
+            "12_earring_ears.png": "Triple Silver Ear Rings",
+            "13_armor_torso.png": "Midnight & Bronze Tentacle-Filigree Robes",
+            "14_cloak_mantle.png": "Hermaeus Mora Green Eye Clasp",
+            "16_headgear_horns.png": "Curved Obsidian Forehead Horns"
+          },
+          "clearSlots": [
+            "02_hair_back.png",
+            "15_hair_front.png"
+          ]
+        },
+        {
+          "id": "variant_a_telvanni",
+          "label": "House Telvanni Magister Sorcerer",
+          "archetype": "mage",
+          "isExpansionPack": false,
+          "layers": {
+            "02_hair_back.png": "/character-layers/darkelf_male/variants/variant_a_telvanni/02_hair_back.png",
+            "06_mouth.png": "/character-layers/darkelf_male/variants/variant_a_telvanni/06_mouth.png",
+            "08_eyes.png": "/character-layers/darkelf_male/variants/variant_a_telvanni/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/darkelf_male/variants/variant_a_telvanni/09_eyebrows.png",
+            "10_face_markings.png": "/character-layers/darkelf_male/variants/variant_a_telvanni/10_face_markings.png",
+            "11_facial_hair.png": "/character-layers/darkelf_male/variants/variant_a_telvanni/11_facial_hair.png",
+            "12_earring_ears.png": "/character-layers/darkelf_male/variants/variant_a_telvanni/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/darkelf_male/variants/variant_a_telvanni/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/darkelf_male/variants/variant_a_telvanni/14_cloak_mantle.png",
+            "15_hair_front.png": "/character-layers/darkelf_male/variants/variant_a_telvanni/15_hair_front.png",
+            "16_headgear_horns.png": "/character-layers/darkelf_male/variants/variant_a_telvanni/16_headgear_horns.png"
+          },
+          "slotLabels": {
+            "02_hair_back.png": "Long Obsidian Mage Mane",
+            "06_mouth.png": "Resolute Magister Expression",
+            "08_eyes.png": "Crimson Dunmer Eyes",
+            "09_eyebrows.png": "Obsidian Arched Brows",
+            "10_face_markings.png": "Ember-Orange Arcane Cheek Runes",
+            "11_facial_hair.png": "Tailored Obsidian Van Dyke & Mustache",
+            "12_earring_ears.png": "Ash-Grey Pointed Ear",
+            "13_armor_torso.png": "Burgundy Telvanni High-Collar Velvet Robes",
+            "14_cloak_mantle.png": "Bronze Magister Mantle & Gold Clasp",
+            "15_hair_front.png": "Obsidian & Silver-Temple Crown",
+            "16_headgear_horns.png": "Gold & Ruby Telvanni Circlet"
+          },
+          "clearSlots": []
+        },
+        {
+          "id": "variant_b_redoran",
+          "label": "House Redoran Bonemold Knight",
+          "archetype": "warrior",
+          "isExpansionPack": false,
+          "layers": {
+            "02_hair_back.png": "/character-layers/darkelf_male/variants/variant_b_redoran/02_hair_back.png",
+            "06_mouth.png": "/character-layers/darkelf_male/variants/variant_b_redoran/06_mouth.png",
+            "08_eyes.png": "/character-layers/darkelf_male/variants/variant_b_redoran/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/darkelf_male/variants/variant_b_redoran/09_eyebrows.png",
+            "10_face_markings.png": "/character-layers/darkelf_male/variants/variant_b_redoran/10_face_markings.png",
+            "11_facial_hair.png": "/character-layers/darkelf_male/variants/variant_b_redoran/11_facial_hair.png",
+            "12_earring_ears.png": "/character-layers/darkelf_male/variants/variant_b_redoran/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/darkelf_male/variants/variant_b_redoran/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/darkelf_male/variants/variant_b_redoran/14_cloak_mantle.png",
+            "15_hair_front.png": "/character-layers/darkelf_male/variants/variant_b_redoran/15_hair_front.png"
+          },
+          "slotLabels": {
+            "02_hair_back.png": "Cropped Ash-Brown Nape Trim",
+            "06_mouth.png": "Stern Warrior Expression",
+            "08_eyes.png": "Crimson Dunmer Warrior Eyes",
+            "09_eyebrows.png": "Scarred Dark Dunmer Brows",
+            "10_face_markings.png": "Vertical Diagonal Brow-to-Cheek Scar",
+            "11_facial_hair.png": "Dark Rugged Dunmer Stubble",
+            "12_earring_ears.png": "Triple Brass Ear Cuffs",
+            "13_armor_torso.png": "Sculpted Redoran Bonemold Pauldrons & Chestplate",
+            "14_cloak_mantle.png": "Charcoal Wrapped Ash Scarf",
+            "15_hair_front.png": "Ash-Brown Cropped War-Cut"
+          },
+          "clearSlots": []
+        }
+      ]
     },
     {
       "id": "orc_female",
-      "race_id": "orc",
-      "race_name": "Orc",
+      "raceId": "orc",
+      "raceName": "Orc",
       "gender": "female",
-      "manifest_path": "/character-layers/orc_female/layers_manifest.json",
-      "active_layers": 14
+      "displayName": "Orc (Female)",
+      "compatibilityGroup": "orc_female",
+      "anchor": {
+        "eyeX": 469,
+        "eyeY": 343,
+        "mouthX": 477,
+        "mouthY": 476
+      },
+      "baseLayers": {
+        "01_background.png": "/character-layers/shared/01_background.png",
+        "02_hair_back.png": "/character-layers/orc_female/02_hair_back.png",
+        "03_body_head_base.png": "/character-layers/orc_female/03_body_head_base.png",
+        "05_nose.png": "/character-layers/orc_female/05_nose.png",
+        "06_mouth.png": "/character-layers/orc_female/06_mouth.png",
+        "07_tusks_whiskers.png": "/character-layers/orc_female/07_tusks_whiskers.png",
+        "08_eyes.png": "/character-layers/orc_female/08_eyes.png",
+        "09_eyebrows.png": "/character-layers/orc_female/09_eyebrows.png",
+        "10_face_markings.png": "/character-layers/orc_female/10_face_markings.png",
+        "12_earring_ears.png": "/character-layers/orc_female/12_earring_ears.png",
+        "13_armor_torso.png": "/character-layers/orc_female/13_armor_torso.png",
+        "14_cloak_mantle.png": "/character-layers/orc_female/14_cloak_mantle.png",
+        "15_hair_front.png": "/character-layers/orc_female/15_hair_front.png",
+        "17_frame.png": "/character-layers/shared/17_frame.png"
+      },
+      "baseSlotLabels": {
+        "01_background.png": "Nordic glowing cyan rune circle and embers background plate",
+        "02_hair_back.png": "Swept-back coarse black warrior hair behind neck and ear",
+        "03_body_head_base.png": "Clean 1:1 Orsimer female shaved bald tuskless bare-shoulder mannequin base",
+        "04_body_markings.png": "Body markings (empty)",
+        "05_nose.png": "Broad sculpted Orsimer nose",
+        "06_mouth.png": "Firm olive-green Orsimer lips",
+        "07_tusks_whiskers.png": "Two prominent upward-curved ivory lower canine tusks",
+        "08_eyes.png": "Fierce glowing amber-gold Orsimer eyes",
+        "09_eyebrows.png": "Heavy dark eyebrows",
+        "10_face_markings.png": "Diagonal pale battle scar across brow and cheek",
+        "11_facial_hair.png": "Facial hair (empty)",
+        "12_earring_ears.png": "Sharp pointed outward-angled Orsimer ear",
+        "13_armor_torso.png": "Battle-worn tiered dark Orcish steel plate cuirass and pauldrons",
+        "14_cloak_mantle.png": "Shaggy fur collar lining, buckled leather neck strap, and brass medallion clasp",
+        "15_hair_front.png": "Swept-back jet-black warrior hair and front tendril",
+        "16_headgear_horns.png": "Headgear / horns (empty)",
+        "17_frame.png": "Portrait border frame"
+      },
+      "variants": [
+        {
+          "id": "pack_dawnguard",
+          "label": "Dawnguard Rune Vanguard",
+          "archetype": "warrior",
+          "isExpansionPack": true,
+          "layers": {
+            "02_hair_back.png": "/character-layers/orc_female/variants/pack_dawnguard/02_hair_back.png",
+            "06_mouth.png": "/character-layers/orc_female/variants/pack_dawnguard/06_mouth.png",
+            "07_tusks_whiskers.png": "/character-layers/orc_female/variants/pack_dawnguard/07_tusks_whiskers.png",
+            "08_eyes.png": "/character-layers/orc_female/variants/pack_dawnguard/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/orc_female/variants/pack_dawnguard/09_eyebrows.png",
+            "10_face_markings.png": "/character-layers/orc_female/variants/pack_dawnguard/10_face_markings.png",
+            "12_earring_ears.png": "/character-layers/orc_female/variants/pack_dawnguard/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/orc_female/variants/pack_dawnguard/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/orc_female/variants/pack_dawnguard/14_cloak_mantle.png",
+            "15_hair_front.png": "/character-layers/orc_female/variants/pack_dawnguard/15_hair_front.png"
+          },
+          "slotLabels": {
+            "02_hair_back.png": "Crimson-Copper Long Nape Braid",
+            "06_mouth.png": "Fierce Vanguard Expression",
+            "07_tusks_whiskers.png": "Silver-Ringed Ivory Orcish Tusks",
+            "08_eyes.png": "Molten Amber Orsimer Eyes",
+            "09_eyebrows.png": "Fierce Dark Brows",
+            "10_face_markings.png": "Eyebrow Battle Scar & Shaved Temple Fade",
+            "12_earring_ears.png": "Triple Silver Ear Rings",
+            "13_armor_torso.png": "Dawnguard Steel Cuirass & Studded Gambeson Collar",
+            "14_cloak_mantle.png": "Meridia Sunburst Bronze-Inlaid Pauldrons",
+            "15_hair_front.png": "Crimson-Copper Braided Warrior Crest"
+          },
+          "clearSlots": []
+        },
+        {
+          "id": "variant_a_forgesmith",
+          "label": "Orsinium Stronghold Forge-Smith",
+          "archetype": "warrior",
+          "isExpansionPack": false,
+          "layers": {
+            "02_hair_back.png": "/character-layers/orc_female/variants/variant_a_forgesmith/02_hair_back.png",
+            "06_mouth.png": "/character-layers/orc_female/variants/variant_a_forgesmith/06_mouth.png",
+            "07_tusks_whiskers.png": "/character-layers/orc_female/variants/variant_a_forgesmith/07_tusks_whiskers.png",
+            "08_eyes.png": "/character-layers/orc_female/variants/variant_a_forgesmith/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/orc_female/variants/variant_a_forgesmith/09_eyebrows.png",
+            "10_face_markings.png": "/character-layers/orc_female/variants/variant_a_forgesmith/10_face_markings.png",
+            "12_earring_ears.png": "/character-layers/orc_female/variants/variant_a_forgesmith/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/orc_female/variants/variant_a_forgesmith/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/orc_female/variants/variant_a_forgesmith/14_cloak_mantle.png",
+            "15_hair_front.png": "/character-layers/orc_female/variants/variant_a_forgesmith/15_hair_front.png"
+          },
+          "slotLabels": {
+            "02_hair_back.png": "Thick Obsidian Warrior Braid",
+            "06_mouth.png": "Fierce Orsimer Expression",
+            "07_tusks_whiskers.png": "Twin Ivory Lower Orcish Tusks",
+            "08_eyes.png": "Amber Orsimer Eyes",
+            "09_eyebrows.png": "Furrowed Dark Orsimer Brows",
+            "10_face_markings.png": "Crimson Clan Stripe Warpaint",
+            "12_earring_ears.png": "Iron Hoop Orsimer Ear",
+            "13_armor_torso.png": "Riveted Orsimer Steel Pauldrons & Forge Apron",
+            "14_cloak_mantle.png": "Heavy Wolf-Fur Shoulder Mantle",
+            "15_hair_front.png": "Braided Mohawk Topknot & Iron Rings"
+          },
+          "clearSlots": []
+        },
+        {
+          "id": "variant_b_shaman",
+          "label": "Malacath Wise-Woman Shaman",
+          "archetype": "mage",
+          "isExpansionPack": false,
+          "layers": {
+            "02_hair_back.png": "/character-layers/orc_female/variants/variant_b_shaman/02_hair_back.png",
+            "06_mouth.png": "/character-layers/orc_female/variants/variant_b_shaman/06_mouth.png",
+            "07_tusks_whiskers.png": "/character-layers/orc_female/variants/variant_b_shaman/07_tusks_whiskers.png",
+            "08_eyes.png": "/character-layers/orc_female/variants/variant_b_shaman/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/orc_female/variants/variant_b_shaman/09_eyebrows.png",
+            "10_face_markings.png": "/character-layers/orc_female/variants/variant_b_shaman/10_face_markings.png",
+            "12_earring_ears.png": "/character-layers/orc_female/variants/variant_b_shaman/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/orc_female/variants/variant_b_shaman/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/orc_female/variants/variant_b_shaman/14_cloak_mantle.png",
+            "15_hair_front.png": "/character-layers/orc_female/variants/variant_b_shaman/15_hair_front.png",
+            "16_headgear_horns.png": "/character-layers/orc_female/variants/variant_b_shaman/16_headgear_horns.png"
+          },
+          "slotLabels": {
+            "02_hair_back.png": "Feathered Raven & Silver Back Braids",
+            "06_mouth.png": "Solemn Shaman Expression",
+            "07_tusks_whiskers.png": "Ivory Lower Orcish Tusks",
+            "08_eyes.png": "Amber Orsimer Eyes",
+            "09_eyebrows.png": "Painted Dark Orsimer Brows",
+            "10_face_markings.png": "Pale-Ochre Ritual Warpaint",
+            "12_earring_ears.png": "Carved Bone Fang Earring",
+            "13_armor_torso.png": "Moss-Green Open Shaman Tunic",
+            "14_cloak_mantle.png": "Wolf-Fur Mantle & Bone Fang Necklace",
+            "15_hair_front.png": "Silver-Streaked Dreadlocks & Bone Beads",
+            "16_headgear_horns.png": "Bone & Obsidian Crescent Circlet"
+          },
+          "clearSlots": []
+        }
+      ]
     },
     {
       "id": "orc_male",
-      "race_id": "orc",
-      "race_name": "Orc",
+      "raceId": "orc",
+      "raceName": "Orc",
       "gender": "male",
-      "manifest_path": "/character-layers/orc_male/layers_manifest.json",
-      "active_layers": 13
+      "displayName": "Orc (Male)",
+      "compatibilityGroup": "orc_male",
+      "anchor": {
+        "eyeX": 470,
+        "eyeY": 343,
+        "mouthX": 473,
+        "mouthY": 477
+      },
+      "baseLayers": {
+        "01_background.png": "/character-layers/shared/01_background.png",
+        "03_body_head_base.png": "/character-layers/orc_male/03_body_head_base.png",
+        "05_nose.png": "/character-layers/orc_male/05_nose.png",
+        "06_mouth.png": "/character-layers/orc_male/06_mouth.png",
+        "07_tusks_whiskers.png": "/character-layers/orc_male/07_tusks_whiskers.png",
+        "08_eyes.png": "/character-layers/orc_male/08_eyes.png",
+        "09_eyebrows.png": "/character-layers/orc_male/09_eyebrows.png",
+        "10_face_markings.png": "/character-layers/orc_male/10_face_markings.png",
+        "12_earring_ears.png": "/character-layers/orc_male/12_earring_ears.png",
+        "13_armor_torso.png": "/character-layers/orc_male/13_armor_torso.png",
+        "14_cloak_mantle.png": "/character-layers/orc_male/14_cloak_mantle.png",
+        "15_hair_front.png": "/character-layers/orc_male/15_hair_front.png",
+        "17_frame.png": "/character-layers/shared/17_frame.png"
+      },
+      "baseSlotLabels": {
+        "01_background.png": "Nordic glowing cyan rune circle and embers background plate",
+        "02_hair_back.png": "Back hair (empty \u2014 shaved skull with top crest)",
+        "03_body_head_base.png": "Clean 1:1 Orsimer male shaved bald scarless tuskless bare-torso mannequin base",
+        "04_body_markings.png": "Pectoral battle scar on bare chest",
+        "05_nose.png": "Broad flattened Orsimer nose",
+        "06_mouth.png": "Heavy grim Orsimer mouth",
+        "07_tusks_whiskers.png": "Two large curved ivory lower canine tusks",
+        "08_eyes.png": "Intense glowing amber Orsimer eyes",
+        "09_eyebrows.png": "Heavy furrowed dark eyebrows",
+        "10_face_markings.png": "Battle scars on temple, brow ridge, and cheek",
+        "11_facial_hair.png": "Facial hair (empty)",
+        "12_earring_ears.png": "Pointed outward-angled Orsimer ear",
+        "13_armor_torso.png": "Crossed brown leather chest harness with forged steel rings",
+        "14_cloak_mantle.png": "Massive tiered hammered dark iron shoulder pauldron",
+        "15_hair_front.png": "Coarse black top crown mohawk hair tuft",
+        "16_headgear_horns.png": "Headgear / horns (empty)",
+        "17_frame.png": "Portrait border frame"
+      },
+      "variants": [
+        {
+          "id": "pack_dwemer_artificer",
+          "label": "Dwarven Aetherium Artificer",
+          "archetype": "warrior",
+          "isExpansionPack": true,
+          "layers": {
+            "06_mouth.png": "/character-layers/orc_male/variants/pack_dwemer_artificer/06_mouth.png",
+            "07_tusks_whiskers.png": "/character-layers/orc_male/variants/pack_dwemer_artificer/07_tusks_whiskers.png",
+            "08_eyes.png": "/character-layers/orc_male/variants/pack_dwemer_artificer/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/orc_male/variants/pack_dwemer_artificer/09_eyebrows.png",
+            "10_face_markings.png": "/character-layers/orc_male/variants/pack_dwemer_artificer/10_face_markings.png",
+            "11_facial_hair.png": "/character-layers/orc_male/variants/pack_dwemer_artificer/11_facial_hair.png",
+            "12_earring_ears.png": "/character-layers/orc_male/variants/pack_dwemer_artificer/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/orc_male/variants/pack_dwemer_artificer/13_armor_torso.png",
+            "15_hair_front.png": "/character-layers/orc_male/variants/pack_dwemer_artificer/15_hair_front.png",
+            "16_headgear_horns.png": "/character-layers/orc_male/variants/pack_dwemer_artificer/16_headgear_horns.png"
+          },
+          "slotLabels": {
+            "06_mouth.png": "Stern Artificer Expression",
+            "07_tusks_whiskers.png": "Brass-Capped Lower Orcish Tusks",
+            "08_eyes.png": "Amber Orsimer Left Eye",
+            "09_eyebrows.png": "Stern Dark Brow",
+            "10_face_markings.png": "Geometric Dwemer Shaved-Scalp Ink",
+            "11_facial_hair.png": "Salt-and-Pepper Mutton Chops",
+            "12_earring_ears.png": "Pointed Orsimer Ear",
+            "13_armor_torso.png": "Golden-Bronze Dwemer Aetherium Plate",
+            "15_hair_front.png": "Swept Salt-and-Pepper Undercut Crest",
+            "16_headgear_horns.png": "Glowing Aetherium Brass Monocle"
+          },
+          "clearSlots": [
+            "02_hair_back.png",
+            "14_cloak_mantle.png"
+          ]
+        },
+        {
+          "id": "variant_a_warchief",
+          "label": "Stronghold Orichalcum Warchief",
+          "archetype": "warrior",
+          "isExpansionPack": false,
+          "layers": {
+            "02_hair_back.png": "/character-layers/orc_male/variants/variant_a_warchief/02_hair_back.png",
+            "06_mouth.png": "/character-layers/orc_male/variants/variant_a_warchief/06_mouth.png",
+            "07_tusks_whiskers.png": "/character-layers/orc_male/variants/variant_a_warchief/07_tusks_whiskers.png",
+            "08_eyes.png": "/character-layers/orc_male/variants/variant_a_warchief/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/orc_male/variants/variant_a_warchief/09_eyebrows.png",
+            "10_face_markings.png": "/character-layers/orc_male/variants/variant_a_warchief/10_face_markings.png",
+            "11_facial_hair.png": "/character-layers/orc_male/variants/variant_a_warchief/11_facial_hair.png",
+            "12_earring_ears.png": "/character-layers/orc_male/variants/variant_a_warchief/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/orc_male/variants/variant_a_warchief/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/orc_male/variants/variant_a_warchief/14_cloak_mantle.png",
+            "15_hair_front.png": "/character-layers/orc_male/variants/variant_a_warchief/15_hair_front.png"
+          },
+          "slotLabels": {
+            "02_hair_back.png": "Braided Topknot Tail",
+            "06_mouth.png": "Grim Warchief Expression",
+            "07_tusks_whiskers.png": "Curved Ivory Lower Warchief Tusks",
+            "08_eyes.png": "Amber Orsimer Eyes",
+            "09_eyebrows.png": "Heavy Ash-Black Brows",
+            "10_face_markings.png": "Black Ash Eye-Band Warpaint",
+            "11_facial_hair.png": "Triple-Braided Brass-Beaded Beard",
+            "12_earring_ears.png": "Double Iron Ear Cuffs",
+            "13_armor_torso.png": "Spiked Orichalcum Pauldrons",
+            "14_cloak_mantle.png": "Dark Wolf-Pelt Neck Collar",
+            "15_hair_front.png": "Braided Obsidian Topknot"
+          },
+          "clearSlots": []
+        },
+        {
+          "id": "variant_b_berserker",
+          "label": "Malacath Berserker Mystic",
+          "archetype": "warrior",
+          "isExpansionPack": false,
+          "layers": {
+            "02_hair_back.png": "/character-layers/orc_male/variants/variant_b_berserker/02_hair_back.png",
+            "06_mouth.png": "/character-layers/orc_male/variants/variant_b_berserker/06_mouth.png",
+            "07_tusks_whiskers.png": "/character-layers/orc_male/variants/variant_b_berserker/07_tusks_whiskers.png",
+            "08_eyes.png": "/character-layers/orc_male/variants/variant_b_berserker/08_eyes.png",
+            "09_eyebrows.png": "/character-layers/orc_male/variants/variant_b_berserker/09_eyebrows.png",
+            "10_face_markings.png": "/character-layers/orc_male/variants/variant_b_berserker/10_face_markings.png",
+            "11_facial_hair.png": "/character-layers/orc_male/variants/variant_b_berserker/11_facial_hair.png",
+            "12_earring_ears.png": "/character-layers/orc_male/variants/variant_b_berserker/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/orc_male/variants/variant_b_berserker/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/orc_male/variants/variant_b_berserker/14_cloak_mantle.png",
+            "15_hair_front.png": "/character-layers/orc_male/variants/variant_b_berserker/15_hair_front.png"
+          },
+          "slotLabels": {
+            "02_hair_back.png": "Wild Iron-Grey Warrior Mane",
+            "06_mouth.png": "Fierce Scarred Expression",
+            "07_tusks_whiskers.png": "Strong Ivory Lower Tusks",
+            "08_eyes.png": "Amber Berserker Eyes",
+            "09_eyebrows.png": "Furrowed Iron-Grey Brows",
+            "10_face_markings.png": "Crimson Blood-Rune Warpaint",
+            "11_facial_hair.png": "Trimmed Iron-Grey Full Beard",
+            "12_earring_ears.png": "Silver Ringed Pointed Ear",
+            "13_armor_torso.png": "Studded Hide Cuirass & Crimson Harness",
+            "14_cloak_mantle.png": "Chained Wolf-Fur Shoulder Mantle",
+            "15_hair_front.png": "Iron-Grey Swept Crown & Shoulder Braids"
+          },
+          "clearSlots": []
+        }
+      ]
     },
     {
       "id": "khajiit_female",
-      "race_id": "khajiit",
-      "race_name": "Khajiit",
+      "raceId": "khajiit",
+      "raceName": "Khajiit",
       "gender": "female",
-      "manifest_path": "/character-layers/khajiit_female/layers_manifest.json",
-      "active_layers": 13
+      "displayName": "Khajiit (Female)",
+      "compatibilityGroup": "khajiit_female",
+      "anchor": {
+        "eyeX": 460,
+        "eyeY": 342,
+        "mouthX": 484,
+        "mouthY": 509
+      },
+      "baseLayers": {
+        "01_background.png": "/character-layers/shared/01_background.png",
+        "02_hair_back.png": "/character-layers/khajiit_female/02_hair_back.png",
+        "03_body_head_base.png": "/character-layers/khajiit_female/03_body_head_base.png",
+        "05_nose.png": "/character-layers/khajiit_female/05_nose.png",
+        "06_mouth.png": "/character-layers/khajiit_female/06_mouth.png",
+        "07_tusks_whiskers.png": "/character-layers/khajiit_female/07_tusks_whiskers.png",
+        "08_eyes.png": "/character-layers/khajiit_female/08_eyes.png",
+        "09_eyebrows.png": "/character-layers/khajiit_female/09_eyebrows.png",
+        "12_earring_ears.png": "/character-layers/khajiit_female/12_earring_ears.png",
+        "13_armor_torso.png": "/character-layers/khajiit_female/13_armor_torso.png",
+        "14_cloak_mantle.png": "/character-layers/khajiit_female/14_cloak_mantle.png",
+        "15_hair_front.png": "/character-layers/khajiit_female/15_hair_front.png",
+        "17_frame.png": "/character-layers/shared/17_frame.png"
+      },
+      "baseSlotLabels": {
+        "01_background.png": "Nordic glowing cyan rune circle and embers background plate",
+        "02_hair_back.png": "Swept-back jet-black feline mane flowing behind ears and neck",
+        "03_body_head_base.png": "Clean 1:1 Khajiit female maneless whiskerless armor-free leopard-spotted bust base",
+        "04_body_markings.png": "Body markings (empty \u2014 leopard rosette fur is part of base)",
+        "05_nose.png": "Feline bridge and dark cat nose leather",
+        "06_mouth.png": "Cream-white feline muzzle and firm jaw",
+        "07_tusks_whiskers.png": "Crisp white feline whiskers",
+        "08_eyes.png": "Glowing golden slit-pupil feline eyes with dark eyeliner rim",
+        "09_eyebrows.png": "Dark spotted feline brow markings",
+        "10_face_markings.png": "Face markings (empty)",
+        "11_facial_hair.png": "Facial hair (empty)",
+        "12_earring_ears.png": "Pointed leopard/lynx cat ears",
+        "13_armor_torso.png": "Tiered dark steel-and-leather cuirass, pauldrons, and crossed straps",
+        "14_cloak_mantle.png": "Shaggy wolf fur collar pelt lining",
+        "15_hair_front.png": "Coarse swept-back black feline mane crown crest",
+        "16_headgear_horns.png": "Headgear / horns (empty)",
+        "17_frame.png": "Portrait border frame"
+      },
+      "variants": [
+        {
+          "id": "pack_nightingale",
+          "label": "Nightingale Senche Shadow Agent",
+          "archetype": "assassin",
+          "isExpansionPack": true,
+          "layers": {
+            "02_hair_back.png": "/character-layers/khajiit_female/variants/pack_nightingale/02_hair_back.png",
+            "08_eyes.png": "/character-layers/khajiit_female/variants/pack_nightingale/08_eyes.png",
+            "10_face_markings.png": "/character-layers/khajiit_female/variants/pack_nightingale/10_face_markings.png",
+            "12_earring_ears.png": "/character-layers/khajiit_female/variants/pack_nightingale/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/khajiit_female/variants/pack_nightingale/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/khajiit_female/variants/pack_nightingale/14_cloak_mantle.png",
+            "15_hair_front.png": "/character-layers/khajiit_female/variants/pack_nightingale/15_hair_front.png"
+          },
+          "slotLabels": {
+            "02_hair_back.png": "Silver-Black Temple Braid",
+            "08_eyes.png": "Violet & Frost Heterochromia Feline Eyes",
+            "10_face_markings.png": "Silver Cat-Nose Ring",
+            "12_earring_ears.png": "Snow-White Lynx Ear Tufts & Silver Hoops",
+            "13_armor_torso.png": "Quilted Black Nightingale Leather",
+            "14_cloak_mantle.png": "Dropped Shadow Hood & Feather Mantle",
+            "15_hair_front.png": "Silver-Streaked Braided Crest"
+          },
+          "clearSlots": []
+        },
+        {
+          "id": "variant_a_lunar_mystic",
+          "label": "Elsweyr Lunar Mane Mystic",
+          "archetype": "mage",
+          "isExpansionPack": false,
+          "layers": {
+            "07_tusks_whiskers.png": "/character-layers/khajiit_female/variants/variant_a_lunar_mystic/07_tusks_whiskers.png",
+            "08_eyes.png": "/character-layers/khajiit_female/variants/variant_a_lunar_mystic/08_eyes.png",
+            "10_face_markings.png": "/character-layers/khajiit_female/variants/variant_a_lunar_mystic/10_face_markings.png",
+            "12_earring_ears.png": "/character-layers/khajiit_female/variants/variant_a_lunar_mystic/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/khajiit_female/variants/variant_a_lunar_mystic/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/khajiit_female/variants/variant_a_lunar_mystic/14_cloak_mantle.png",
+            "16_headgear_horns.png": "/character-layers/khajiit_female/variants/variant_a_lunar_mystic/16_headgear_horns.png"
+          },
+          "slotLabels": {
+            "07_tusks_whiskers.png": "Silver-Tipped Feline Whiskers",
+            "08_eyes.png": "Amber Feline Eyes",
+            "10_face_markings.png": "Silver Crescent Moon Cheek Sigils",
+            "12_earring_ears.png": "Gold Ear Rings & Crimson Silk Tassels",
+            "13_armor_torso.png": "Crimson & Gold Elsweyr Silk Sari",
+            "14_cloak_mantle.png": "Crescent Moon Clasp & Turquoise Bead Chains",
+            "16_headgear_horns.png": "Golden Lunar Moonstone Diadem"
+          },
+          "clearSlots": [
+            "02_hair_back.png",
+            "15_hair_front.png"
+          ]
+        },
+        {
+          "id": "variant_b_night_prowler",
+          "label": "Baandari Shadow Prowler",
+          "archetype": "rogue",
+          "isExpansionPack": false,
+          "layers": {
+            "02_hair_back.png": "/character-layers/khajiit_female/variants/variant_b_night_prowler/02_hair_back.png",
+            "08_eyes.png": "/character-layers/khajiit_female/variants/variant_b_night_prowler/08_eyes.png",
+            "10_face_markings.png": "/character-layers/khajiit_female/variants/variant_b_night_prowler/10_face_markings.png",
+            "12_earring_ears.png": "/character-layers/khajiit_female/variants/variant_b_night_prowler/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/khajiit_female/variants/variant_b_night_prowler/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/khajiit_female/variants/variant_b_night_prowler/14_cloak_mantle.png",
+            "15_hair_front.png": "/character-layers/khajiit_female/variants/variant_b_night_prowler/15_hair_front.png"
+          },
+          "slotLabels": {
+            "02_hair_back.png": "Dark Auburn Back Tufts",
+            "08_eyes.png": "Emerald Feline Predator Eyes",
+            "10_face_markings.png": "Indigo Shadow-Mask Streaks & Nose Scar",
+            "12_earring_ears.png": "Silver Cat-Ear Hoops",
+            "13_armor_torso.png": "Studded Midnight Pauldrons & Buckled Harness",
+            "14_cloak_mantle.png": "Charcoal Silk Prowler Cowl",
+            "15_hair_front.png": "Swept Auburn Crown & Hanging Temple Braid"
+          },
+          "clearSlots": []
+        }
+      ]
     },
     {
       "id": "khajiit_male",
-      "race_id": "khajiit",
-      "race_name": "Khajiit",
+      "raceId": "khajiit",
+      "raceName": "Khajiit",
       "gender": "male",
-      "manifest_path": "/character-layers/khajiit_male/layers_manifest.json",
-      "active_layers": 13
+      "displayName": "Khajiit (Male)",
+      "compatibilityGroup": "khajiit_male",
+      "anchor": {
+        "eyeX": 466,
+        "eyeY": 342,
+        "mouthX": 486,
+        "mouthY": 509
+      },
+      "baseLayers": {
+        "01_background.png": "/character-layers/shared/01_background.png",
+        "02_hair_back.png": "/character-layers/khajiit_male/02_hair_back.png",
+        "03_body_head_base.png": "/character-layers/khajiit_male/03_body_head_base.png",
+        "05_nose.png": "/character-layers/khajiit_male/05_nose.png",
+        "06_mouth.png": "/character-layers/khajiit_male/06_mouth.png",
+        "07_tusks_whiskers.png": "/character-layers/khajiit_male/07_tusks_whiskers.png",
+        "08_eyes.png": "/character-layers/khajiit_male/08_eyes.png",
+        "09_eyebrows.png": "/character-layers/khajiit_male/09_eyebrows.png",
+        "12_earring_ears.png": "/character-layers/khajiit_male/12_earring_ears.png",
+        "13_armor_torso.png": "/character-layers/khajiit_male/13_armor_torso.png",
+        "14_cloak_mantle.png": "/character-layers/khajiit_male/14_cloak_mantle.png",
+        "15_hair_front.png": "/character-layers/khajiit_male/15_hair_front.png",
+        "17_frame.png": "/character-layers/shared/17_frame.png"
+      },
+      "baseSlotLabels": {
+        "01_background.png": "Nordic glowing cyan rune circle and embers background plate",
+        "02_hair_back.png": "Dark coarse mane behind left ear and neck",
+        "03_body_head_base.png": "Clean 1:1 Khajiit male maneless whiskerless armor-free leopard-spotted bust base",
+        "04_body_markings.png": "Body markings (empty \u2014 leopard rosette fur is part of base)",
+        "05_nose.png": "Feline bridge and dark cat nose leather",
+        "06_mouth.png": "Cream-white feline muzzle and strong jaw",
+        "07_tusks_whiskers.png": "Long crisp white feline whiskers",
+        "08_eyes.png": "Glowing golden slit-pupil feline eyes",
+        "09_eyebrows.png": "Dark spotted feline brow markings",
+        "10_face_markings.png": "Face markings (empty)",
+        "11_facial_hair.png": "Facial hair (empty)",
+        "12_earring_ears.png": "Pointed dark-tipped lynx cat ears",
+        "13_armor_torso.png": "Dark studded leather cuirass and crossed buckled chest straps",
+        "14_cloak_mantle.png": "Tiered riveted bronze-brown shoulder pauldrons",
+        "15_hair_front.png": "Coarse swept-back dark black-brown mane crest",
+        "16_headgear_horns.png": "Headgear / horns (empty)",
+        "17_frame.png": "Portrait border frame"
+      },
+      "variants": [
+        {
+          "id": "pack_corsair",
+          "label": "Elsweyr Corsair Sea-Captain",
+          "archetype": "rogue",
+          "isExpansionPack": true,
+          "layers": {
+            "08_eyes.png": "/character-layers/khajiit_male/variants/pack_corsair/08_eyes.png",
+            "10_face_markings.png": "/character-layers/khajiit_male/variants/pack_corsair/10_face_markings.png",
+            "11_facial_hair.png": "/character-layers/khajiit_male/variants/pack_corsair/11_facial_hair.png",
+            "12_earring_ears.png": "/character-layers/khajiit_male/variants/pack_corsair/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/khajiit_male/variants/pack_corsair/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/khajiit_male/variants/pack_corsair/14_cloak_mantle.png",
+            "16_headgear_horns.png": "/character-layers/khajiit_male/variants/pack_corsair/16_headgear_horns.png"
+          },
+          "slotLabels": {
+            "08_eyes.png": "Glowing Emerald-Gold Feline Eye",
+            "10_face_markings.png": "Leather Pirate Eyepatch & Strap",
+            "11_facial_hair.png": "Silver-Beaded Chin Braid Tufts",
+            "12_earring_ears.png": "Gold Hoop Lynx Ear",
+            "13_armor_torso.png": "Crimson & Gold-Trimmed Corsair Frock Coat",
+            "14_cloak_mantle.png": "Studded Leather Pistol Bandolier",
+            "16_headgear_horns.png": "Weathered Leather Tricorne & Crimson Plume"
+          },
+          "clearSlots": [
+            "02_hair_back.png",
+            "09_eyebrows.png",
+            "15_hair_front.png"
+          ]
+        },
+        {
+          "id": "variant_a_sunguard",
+          "label": "Anequina Sun-Guard Captain",
+          "archetype": "warrior",
+          "isExpansionPack": false,
+          "layers": {
+            "02_hair_back.png": "/character-layers/khajiit_male/variants/variant_a_sunguard/02_hair_back.png",
+            "08_eyes.png": "/character-layers/khajiit_male/variants/variant_a_sunguard/08_eyes.png",
+            "10_face_markings.png": "/character-layers/khajiit_male/variants/variant_a_sunguard/10_face_markings.png",
+            "11_facial_hair.png": "/character-layers/khajiit_male/variants/variant_a_sunguard/11_facial_hair.png",
+            "12_earring_ears.png": "/character-layers/khajiit_male/variants/variant_a_sunguard/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/khajiit_male/variants/variant_a_sunguard/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/khajiit_male/variants/variant_a_sunguard/14_cloak_mantle.png",
+            "15_hair_front.png": "/character-layers/khajiit_male/variants/variant_a_sunguard/15_hair_front.png",
+            "16_headgear_horns.png": "/character-layers/khajiit_male/variants/variant_a_sunguard/16_headgear_horns.png"
+          },
+          "slotLabels": {
+            "02_hair_back.png": "Auburn Braided Lion Mane",
+            "08_eyes.png": "Amber Cathay Warrior Eyes",
+            "10_face_markings.png": "Vertical Claw Scar Over Eye",
+            "11_facial_hair.png": "Auburn Chin Tuft Beard",
+            "12_earring_ears.png": "Gold Hoop Cat-Ear",
+            "13_armor_torso.png": "Crimson Quilted Desert Tunic",
+            "14_cloak_mantle.png": "Hammered Bronze Scale Pauldrons & Gorget",
+            "15_hair_front.png": "Auburn Crown & Beaded Collar Braids",
+            "16_headgear_horns.png": "Bronze Sun-Disc Circlet"
+          },
+          "clearSlots": []
+        },
+        {
+          "id": "variant_b_warlock",
+          "label": "Rimmen Moon-Bishop Warlock",
+          "archetype": "mage",
+          "isExpansionPack": false,
+          "layers": {
+            "08_eyes.png": "/character-layers/khajiit_male/variants/variant_b_warlock/08_eyes.png",
+            "10_face_markings.png": "/character-layers/khajiit_male/variants/variant_b_warlock/10_face_markings.png",
+            "11_facial_hair.png": "/character-layers/khajiit_male/variants/variant_b_warlock/11_facial_hair.png",
+            "12_earring_ears.png": "/character-layers/khajiit_male/variants/variant_b_warlock/12_earring_ears.png",
+            "13_armor_torso.png": "/character-layers/khajiit_male/variants/variant_b_warlock/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/khajiit_male/variants/variant_b_warlock/14_cloak_mantle.png"
+          },
+          "slotLabels": {
+            "08_eyes.png": "Luminous Mystical Cyan Feline Eyes",
+            "10_face_markings.png": "Glowing Azure Lunar Cheek Runes",
+            "11_facial_hair.png": "Braided Whisker Chin Beard & Moon Beads",
+            "12_earring_ears.png": "Gold & Turquoise Bead Ear Chains",
+            "13_armor_torso.png": "High-Collared Teal-Violet & Gold Silk Vestments",
+            "14_cloak_mantle.png": "Sapphire Crescent Moon Pendant Necklace"
+          },
+          "clearSlots": [
+            "02_hair_back.png",
+            "15_hair_front.png"
+          ]
+        }
+      ]
     },
     {
       "id": "argonian_female",
-      "race_id": "argonian",
-      "race_name": "Argonian",
+      "raceId": "argonian",
+      "raceName": "Argonian",
       "gender": "female",
-      "manifest_path": "/character-layers/argonian_female/layers_manifest.json",
-      "active_layers": 11
+      "displayName": "Argonian (Female)",
+      "compatibilityGroup": "argonian_female",
+      "anchor": {
+        "eyeX": 427,
+        "eyeY": 331,
+        "mouthX": 507,
+        "mouthY": 488
+      },
+      "baseLayers": {
+        "01_background.png": "/character-layers/shared/01_background.png",
+        "03_body_head_base.png": "/character-layers/argonian_female/03_body_head_base.png",
+        "05_nose.png": "/character-layers/argonian_female/05_nose.png",
+        "06_mouth.png": "/character-layers/argonian_female/06_mouth.png",
+        "07_tusks_whiskers.png": "/character-layers/argonian_female/07_tusks_whiskers.png",
+        "08_eyes.png": "/character-layers/argonian_female/08_eyes.png",
+        "09_eyebrows.png": "/character-layers/argonian_female/09_eyebrows.png",
+        "13_armor_torso.png": "/character-layers/argonian_female/13_armor_torso.png",
+        "14_cloak_mantle.png": "/character-layers/argonian_female/14_cloak_mantle.png",
+        "16_headgear_horns.png": "/character-layers/argonian_female/16_headgear_horns.png",
+        "17_frame.png": "/character-layers/shared/17_frame.png"
+      },
+      "baseSlotLabels": {
+        "01_background.png": "Nordic glowing cyan rune circle and embers background plate",
+        "02_hair_back.png": "Back hair (empty \u2014 Argonian horns and dorsal crests render in 16_headgear_horns)",
+        "03_body_head_base.png": "Clean 1:1 Argonian female hornless spineless armor-free scaly bust base",
+        "04_body_markings.png": "Body markings (empty \u2014 reptilian scales are part of base)",
+        "05_nose.png": "Scaled olive-green Argonian snout and nostrils",
+        "06_mouth.png": "Serrated toothline and reptilian jaw",
+        "07_tusks_whiskers.png": "Sharp scaly cheek, jaw, and chin spikes",
+        "08_eyes.png": "Glowing amber-gold slit-pupil reptilian eye",
+        "09_eyebrows.png": "Heavy spiked scaly supraorbital brow ridges",
+        "10_face_markings.png": "Face markings (empty)",
+        "11_facial_hair.png": "Facial hair (empty)",
+        "12_earring_ears.png": "Ears / earrings (empty)",
+        "13_armor_torso.png": "Copper-bronze spiked scale pauldrons, tiered cuirass, crossed straps, and sleeves",
+        "14_cloak_mantle.png": "Chain-scale gorget neck collar with pale bone amulet toggles",
+        "15_hair_front.png": "Front hair (empty)",
+        "16_headgear_horns.png": "Swept curved obsidian horns, dorsal cranial spikes, and back neck spines",
+        "17_frame.png": "Portrait border frame"
+      },
+      "variants": [
+        {
+          "id": "pack_dragonbone",
+          "label": "Dragonbone Sovereign Oracle",
+          "archetype": "warrior",
+          "isExpansionPack": true,
+          "layers": {
+            "02_hair_back.png": "/character-layers/argonian_female/variants/pack_dragonbone/02_hair_back.png",
+            "08_eyes.png": "/character-layers/argonian_female/variants/pack_dragonbone/08_eyes.png",
+            "10_face_markings.png": "/character-layers/argonian_female/variants/pack_dragonbone/10_face_markings.png",
+            "13_armor_torso.png": "/character-layers/argonian_female/variants/pack_dragonbone/13_armor_torso.png",
+            "16_headgear_horns.png": "/character-layers/argonian_female/variants/pack_dragonbone/16_headgear_horns.png"
+          },
+          "slotLabels": {
+            "02_hair_back.png": "Magenta & Teal Iridescent Aquatic Fins",
+            "08_eyes.png": "Molten Amber Dragon Eyes",
+            "10_face_markings.png": "Bioluminescent Violet Hist Snout Runes",
+            "13_armor_torso.png": "Carved Skyrim Dragonbone Pauldrons & Plate",
+            "16_headgear_horns.png": "Quadruple Pearlescent Drake Horns"
+          },
+          "clearSlots": [
+            "07_tusks_whiskers.png",
+            "14_cloak_mantle.png"
+          ]
+        },
+        {
+          "id": "variant_a_histspeaker",
+          "label": "Black Marsh Hist-Speaker Oracle",
+          "archetype": "mage",
+          "isExpansionPack": false,
+          "layers": {
+            "02_hair_back.png": "/character-layers/argonian_female/variants/variant_a_histspeaker/02_hair_back.png",
+            "08_eyes.png": "/character-layers/argonian_female/variants/variant_a_histspeaker/08_eyes.png",
+            "10_face_markings.png": "/character-layers/argonian_female/variants/variant_a_histspeaker/10_face_markings.png",
+            "13_armor_torso.png": "/character-layers/argonian_female/variants/variant_a_histspeaker/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/argonian_female/variants/variant_a_histspeaker/14_cloak_mantle.png",
+            "16_headgear_horns.png": "/character-layers/argonian_female/variants/variant_a_histspeaker/16_headgear_horns.png"
+          },
+          "slotLabels": {
+            "02_hair_back.png": "Teal & Amber Swamp Feather Plumes",
+            "08_eyes.png": "Warm Amber Slit Eyes",
+            "10_face_markings.png": "Glowing Amber Hist-Sap Scale Dots",
+            "13_armor_torso.png": "Jade-Scale Collar & Emerald Silk Vestments",
+            "14_cloak_mantle.png": "Turquoise Bead Chain & Amber Hist Amulet",
+            "16_headgear_horns.png": "Polished Ivory-Gold Drake Horns"
+          },
+          "clearSlots": [
+            "07_tusks_whiskers.png"
+          ]
+        },
+        {
+          "id": "variant_b_shadowscale",
+          "label": "Shadowscale Night-Blade Assassin",
+          "archetype": "rogue",
+          "isExpansionPack": false,
+          "layers": {
+            "02_hair_back.png": "/character-layers/argonian_female/variants/variant_b_shadowscale/02_hair_back.png",
+            "08_eyes.png": "/character-layers/argonian_female/variants/variant_b_shadowscale/08_eyes.png",
+            "10_face_markings.png": "/character-layers/argonian_female/variants/variant_b_shadowscale/10_face_markings.png",
+            "13_armor_torso.png": "/character-layers/argonian_female/variants/variant_b_shadowscale/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/argonian_female/variants/variant_b_shadowscale/14_cloak_mantle.png",
+            "16_headgear_horns.png": "/character-layers/argonian_female/variants/variant_b_shadowscale/16_headgear_horns.png"
+          },
+          "slotLabels": {
+            "02_hair_back.png": "Crimson Razor Fin Crest",
+            "08_eyes.png": "Crimson Predator Slit Eyes",
+            "10_face_markings.png": "Blood-Stripe Snout & Cheek Warpaint",
+            "13_armor_torso.png": "Shadowscale Riveted Leather & Bone Harness",
+            "14_cloak_mantle.png": "Charcoal Wrapped Assassin Scarf",
+            "16_headgear_horns.png": "Obsidian Skull Horns & Gold Rings"
+          },
+          "clearSlots": [
+            "07_tusks_whiskers.png"
+          ]
+        }
+      ]
     },
     {
       "id": "argonian_male",
-      "race_id": "argonian",
-      "race_name": "Argonian",
+      "raceId": "argonian",
+      "raceName": "Argonian",
       "gender": "male",
-      "manifest_path": "/character-layers/argonian_male/layers_manifest.json",
-      "active_layers": 11
+      "displayName": "Argonian (Male)",
+      "compatibilityGroup": "argonian_male",
+      "anchor": {
+        "eyeX": 428,
+        "eyeY": 334,
+        "mouthX": 500,
+        "mouthY": 484
+      },
+      "baseLayers": {
+        "01_background.png": "/character-layers/shared/01_background.png",
+        "03_body_head_base.png": "/character-layers/argonian_male/03_body_head_base.png",
+        "05_nose.png": "/character-layers/argonian_male/05_nose.png",
+        "06_mouth.png": "/character-layers/argonian_male/06_mouth.png",
+        "07_tusks_whiskers.png": "/character-layers/argonian_male/07_tusks_whiskers.png",
+        "08_eyes.png": "/character-layers/argonian_male/08_eyes.png",
+        "09_eyebrows.png": "/character-layers/argonian_male/09_eyebrows.png",
+        "13_armor_torso.png": "/character-layers/argonian_male/13_armor_torso.png",
+        "14_cloak_mantle.png": "/character-layers/argonian_male/14_cloak_mantle.png",
+        "16_headgear_horns.png": "/character-layers/argonian_male/16_headgear_horns.png",
+        "17_frame.png": "/character-layers/shared/17_frame.png"
+      },
+      "baseSlotLabels": {
+        "01_background.png": "Nordic glowing cyan rune circle and embers background plate",
+        "02_hair_back.png": "Back hair (empty \u2014 Argonian horns and dorsal crests render in 16_headgear_horns)",
+        "03_body_head_base.png": "Clean 1:1 Argonian male hornless spineless armor-free scaly bust base",
+        "04_body_markings.png": "Body markings (empty \u2014 reptilian scales are part of base)",
+        "05_nose.png": "Heavy scaly Argonian snout and nostrils",
+        "06_mouth.png": "Serrated reptilian toothline and strong jaw",
+        "07_tusks_whiskers.png": "Sharp scaly cheek, jaw, and chin spikes",
+        "08_eyes.png": "Fierce glowing amber-orange slit-pupil reptilian eye",
+        "09_eyebrows.png": "Thick spiked scaly supraorbital brow ridges",
+        "10_face_markings.png": "Face markings (empty)",
+        "11_facial_hair.png": "Facial hair (empty)",
+        "12_earring_ears.png": "Ears / earrings (empty)",
+        "13_armor_torso.png": "Tiered gunmetal steel pauldrons, cuirass breastplate, crossed buckled leather straps, and sleeves",
+        "14_cloak_mantle.png": "Layered high gunmetal steel neck gorget guard",
+        "15_hair_front.png": "Front hair (empty)",
+        "16_headgear_horns.png": "Curved obsidian horns, sawtooth dorsal crest, and back neck spines",
+        "17_frame.png": "Portrait border frame"
+      },
+      "variants": [
+        {
+          "id": "pack_dragonplate",
+          "label": "Black-Marsh Dragonplate Shadowknight",
+          "archetype": "warrior",
+          "isExpansionPack": true,
+          "layers": {
+            "06_mouth.png": "/character-layers/argonian_male/variants/pack_dragonplate/06_mouth.png",
+            "08_eyes.png": "/character-layers/argonian_male/variants/pack_dragonplate/08_eyes.png",
+            "10_face_markings.png": "/character-layers/argonian_male/variants/pack_dragonplate/10_face_markings.png",
+            "13_armor_torso.png": "/character-layers/argonian_male/variants/pack_dragonplate/13_armor_torso.png",
+            "16_headgear_horns.png": "/character-layers/argonian_male/variants/pack_dragonplate/16_headgear_horns.png"
+          },
+          "slotLabels": {
+            "06_mouth.png": "Stoic Closed Reptilian Jaw",
+            "08_eyes.png": "Volcanic Ember Dragon Eye",
+            "10_face_markings.png": "Crimson Hist Brow & Snout Warpaint",
+            "13_armor_torso.png": "Sculpted Skyrim Dragonplate Rib Plate & Mail",
+            "16_headgear_horns.png": "Gold-Banded Obsidian Volcanic Drake Horns"
+          },
+          "clearSlots": [
+            "07_tusks_whiskers.png",
+            "09_eyebrows.png",
+            "14_cloak_mantle.png"
+          ]
+        },
+        {
+          "id": "variant_a_amber_behemoth",
+          "label": "An-Xileel Amber-Scale Behemoth",
+          "archetype": "warrior",
+          "isExpansionPack": false,
+          "layers": {
+            "07_tusks_whiskers.png": "/character-layers/argonian_male/variants/variant_a_amber_behemoth/07_tusks_whiskers.png",
+            "08_eyes.png": "/character-layers/argonian_male/variants/variant_a_amber_behemoth/08_eyes.png",
+            "10_face_markings.png": "/character-layers/argonian_male/variants/variant_a_amber_behemoth/10_face_markings.png",
+            "13_armor_torso.png": "/character-layers/argonian_male/variants/variant_a_amber_behemoth/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/argonian_male/variants/variant_a_amber_behemoth/14_cloak_mantle.png",
+            "16_headgear_horns.png": "/character-layers/argonian_male/variants/variant_a_amber_behemoth/16_headgear_horns.png"
+          },
+          "slotLabels": {
+            "07_tusks_whiskers.png": "Bronze-Ringed Ivory Jaw Spikes",
+            "08_eyes.png": "Slit Amber Warden Eyes",
+            "10_face_markings.png": "Pale-Gold Brow & Snout Warpaint",
+            "13_armor_torso.png": "Spiked An-Xileel Pauldrons & Crimson Tunic",
+            "14_cloak_mantle.png": "Hung Ivory Fang & Bone Fetish",
+            "16_headgear_horns.png": "Massive Banded Obsidian & Gold Drake Horns"
+          },
+          "clearSlots": []
+        },
+        {
+          "id": "variant_b_hist_mage",
+          "label": "Murkmire Sap-Shaman Mystic",
+          "archetype": "mage",
+          "isExpansionPack": false,
+          "layers": {
+            "02_hair_back.png": "/character-layers/argonian_male/variants/variant_b_hist_mage/02_hair_back.png",
+            "07_tusks_whiskers.png": "/character-layers/argonian_male/variants/variant_b_hist_mage/07_tusks_whiskers.png",
+            "08_eyes.png": "/character-layers/argonian_male/variants/variant_b_hist_mage/08_eyes.png",
+            "10_face_markings.png": "/character-layers/argonian_male/variants/variant_b_hist_mage/10_face_markings.png",
+            "13_armor_torso.png": "/character-layers/argonian_male/variants/variant_b_hist_mage/13_armor_torso.png",
+            "14_cloak_mantle.png": "/character-layers/argonian_male/variants/variant_b_hist_mage/14_cloak_mantle.png",
+            "16_headgear_horns.png": "/character-layers/argonian_male/variants/variant_b_hist_mage/16_headgear_horns.png"
+          },
+          "slotLabels": {
+            "02_hair_back.png": "Turquoise & Gold Spiny Frills",
+            "07_tusks_whiskers.png": "Luminescent Cyan Jaw Spines",
+            "08_eyes.png": "Luminous Emerald-Cyan Mystic Eyes",
+            "10_face_markings.png": "Bioluminescent Cyan Hist Markings",
+            "13_armor_torso.png": "Jade-and-Gold Murkmire Shaman Robes",
+            "14_cloak_mantle.png": "Feathered Swamp Mantle & Hist-Resin Orb",
+            "16_headgear_horns.png": "Turquoise Coral Crest Horns"
+          },
+          "clearSlots": []
+        }
+      ]
     }
   ]
 }

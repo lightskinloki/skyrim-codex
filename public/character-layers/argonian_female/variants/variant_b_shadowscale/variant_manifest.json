@@ -1,0 +1,18 @@
+{
+  "character_id": "argonian_female",
+  "variant_id": "variant_b_shadowscale",
+  "label": "Shadowscale Night-Blade Assassin",
+  "archetype": "rogue",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\scratch\\flow_chrome_bridge\\outputs\\argonian_female_variant_b_shadowscale_v1.jpg",
+  "clear_slots": [
+    "07_tusks_whiskers.png"
+  ],
+  "provided_slots": {
+    "02_hair_back.png": "Crimson Razor Fin Crest",
+    "08_eyes.png": "Crimson Predator Slit Eyes",
+    "10_face_markings.png": "Blood-Stripe Snout & Cheek Warpaint",
+    "13_armor_torso.png": "Shadowscale Riveted Leather & Bone Harness",
+    "14_cloak_mantle.png": "Charcoal Wrapped Assassin Scarf",
+    "16_headgear_horns.png": "Obsidian Skull Horns & Gold Rings"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "character_id": "khajiit_female",
+  "variant_id": "variant_b_night_prowler",
+  "label": "Baandari Shadow Prowler",
+  "archetype": "rogue",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\scratch\\flow_chrome_bridge\\outputs\\khajiit_female_variant_b_night_prowler_v1.jpg",
+  "provided_slots": {
+    "02_hair_back.png": "Dark Auburn Back Tufts",
+    "08_eyes.png": "Emerald Feline Predator Eyes",
+    "10_face_markings.png": "Indigo Shadow-Mask Streaks & Nose Scar",
+    "12_earring_ears.png": "Silver Cat-Ear Hoops",
+    "13_armor_torso.png": "Studded Midnight Pauldrons & Buckled Harness",
+    "14_cloak_mantle.png": "Charcoal Silk Prowler Cowl",
+    "15_hair_front.png": "Swept Auburn Crown & Hanging Temple Braid"
+  }
+}

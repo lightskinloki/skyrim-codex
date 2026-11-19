@@ -1,0 +1,19 @@
+{
+  "character_id": "darkelf_female",
+  "variant_id": "variant_b_telvanni",
+  "label": "House Telvanni Wizard-Lord",
+  "archetype": "mage",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\female_dunmer_telvanni_wizard_lord_1794947657434.jpg",
+  "provided_slots": {
+    "02_hair_back.png": "Silver-White Flowing Waves",
+    "06_mouth.png": "Composed Magister Expression",
+    "08_eyes.png": "Crimson Dunmer Eyes",
+    "09_eyebrows.png": "Dark Arched Dunmer Brows",
+    "10_face_markings.png": "Luminous Amethyst Arcane Sigils",
+    "12_earring_ears.png": "Bronze & Emerald Chandelier Earring",
+    "13_armor_torso.png": "Indigo-Purple Telvanni High-Collar Robes",
+    "14_cloak_mantle.png": "Bronze Shoulder Caps & Emerald Chest Brooch",
+    "15_hair_front.png": "Silver Crown & Amethyst Temple Braid",
+    "16_headgear_horns.png": "Bronze & Emerald Chitin Circlet"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "character_id": "khajiit_male",
+  "variant_id": "variant_a_sunguard",
+  "label": "Anequina Sun-Guard Captain",
+  "archetype": "warrior",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\scratch\\flow_chrome_bridge\\outputs\\khajiit_male_variant_a_sunguard_v1.jpg",
+  "provided_slots": {
+    "02_hair_back.png": "Auburn Braided Lion Mane",
+    "08_eyes.png": "Amber Cathay Warrior Eyes",
+    "10_face_markings.png": "Vertical Claw Scar Over Eye",
+    "11_facial_hair.png": "Auburn Chin Tuft Beard",
+    "12_earring_ears.png": "Gold Hoop Cat-Ear",
+    "13_armor_torso.png": "Crimson Quilted Desert Tunic",
+    "14_cloak_mantle.png": "Hammered Bronze Scale Pauldrons & Gorget",
+    "15_hair_front.png": "Auburn Crown & Beaded Collar Braids",
+    "16_headgear_horns.png": "Bronze Sun-Disc Circlet"
+  }
+}

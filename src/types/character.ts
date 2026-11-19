@@ -96,6 +96,86 @@ export interface CustomAbility {
   limitation?: 'per combat' | 'per adventure';
 }
 
+export interface PortraitTint {
+  hueRotate: number;
+  saturate: number;
+  brightness: number;
+}
+
+export interface PortraitSlotOffset {
+  dx: number;
+  dy: number;
+}
+
+export type PortraitBackdropStyle = 'rune' | 'crimson' | 'void' | 'gold' | 'emerald';
+
+export type PortraitBodyType =
+  | 'lean'
+  | 'wiry'
+  | 'athletic'
+  | 'muscular'
+  | 'broad'
+  | 'curvy'
+  | 'stout'
+  | 'heavy'
+  | 'hulking';
+
+export type PortraitRenderExpression =
+  | 'stoic'
+  | 'fierce'
+  | 'cold'
+  | 'arcane'
+  | 'smirk'
+  | 'warm'
+  | 'haunted'
+  | 'serene';
+
+export type PortraitRenderAge =
+  | 'youthful'
+  | 'young-adult'
+  | 'seasoned'
+  | 'veteran'
+  | 'elder';
+
+export interface PortraitRenderOptions {
+  usePreRenderOnly: boolean;
+  bodyType: PortraitBodyType;
+  customBodyNote?: string;
+  expression: PortraitRenderExpression;
+  customExpressionNote?: string;
+  age: PortraitRenderAge;
+  customAgeNote?: string;
+}
+
+export interface PortraitRenderHistoryItem {
+  id: string;
+  createdAt: string;
+  bodyType: PortraitBodyType;
+  expression: PortraitRenderExpression;
+  age: PortraitRenderAge;
+  promptSummary: string;
+}
+
+export interface PortraitConfig {
+  baseCharacterId: string;
+  presetVariantId?: string;
+  slots: Record<string, string | null>;
+  slotOffsets?: Record<string, PortraitSlotOffset>;
+  tints: {
+    skin: PortraitTint;
+    hair: PortraitTint;
+    eyes: PortraitTint;
+    warpaint: PortraitTint;
+    gear: PortraitTint;
+    cloak: PortraitTint;
+  };
+  unlockAllRaces?: boolean;
+  backdropStyle?: PortraitBackdropStyle;
+  renderOptions?: PortraitRenderOptions;
+  renderedPortraitId?: string;
+  renderHistory?: PortraitRenderHistoryItem[];
+}
+
 export interface Character {
   id: string;
   name: string;
@@ -127,6 +207,7 @@ export interface Character {
       fp: number;
     };
   };
+  portrait?: PortraitConfig;
   usedAbilities?: string[];
   combatMode?: boolean;
   notes?: string;

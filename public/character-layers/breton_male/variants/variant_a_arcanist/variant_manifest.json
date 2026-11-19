@@ -1,0 +1,18 @@
+{
+  "character_id": "breton_male",
+  "variant_id": "variant_a_arcanist",
+  "label": "Wayrest Royal Court Arcanist",
+  "archetype": "mage",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\male_breton_variant_a_arcanist_flow.png",
+  "provided_slots": {
+    "06_mouth.png": "Poised Scholarly Expression",
+    "08_eyes.png": "Luminous Emerald Arcane Eyes",
+    "09_eyebrows.png": "Calm Arched Dark Brows",
+    "10_face_markings.png": "Clean Unscarred Complexion",
+    "11_facial_hair.png": "Clean-Shaven Jawline",
+    "13_armor_torso.png": "Burgundy & Gold Court Robes",
+    "14_cloak_mantle.png": "Emerald Mantle & Sun-Crest Clasp",
+    "15_hair_front.png": "Silver-Streaked Swept Scholar Locks",
+    "16_headgear_horns.png": "Bronze & Emerald Arcane Circlet"
+  }
+}

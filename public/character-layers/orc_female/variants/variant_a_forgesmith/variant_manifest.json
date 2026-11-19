@@ -1,0 +1,19 @@
+{
+  "character_id": "orc_female",
+  "variant_id": "variant_a_forgesmith",
+  "label": "Orsinium Stronghold Forge-Smith",
+  "archetype": "warrior",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\orsinium_forge_smith_orc_1794947664091.jpg",
+  "provided_slots": {
+    "02_hair_back.png": "Thick Obsidian Warrior Braid",
+    "06_mouth.png": "Fierce Orsimer Expression",
+    "07_tusks_whiskers.png": "Twin Ivory Lower Orcish Tusks",
+    "08_eyes.png": "Amber Orsimer Eyes",
+    "09_eyebrows.png": "Furrowed Dark Orsimer Brows",
+    "10_face_markings.png": "Crimson Clan Stripe Warpaint",
+    "12_earring_ears.png": "Iron Hoop Orsimer Ear",
+    "13_armor_torso.png": "Riveted Orsimer Steel Pauldrons & Forge Apron",
+    "14_cloak_mantle.png": "Heavy Wolf-Fur Shoulder Mantle",
+    "15_hair_front.png": "Braided Mohawk Topknot & Iron Rings"
+  }
+}

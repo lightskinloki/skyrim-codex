@@ -1,0 +1,19 @@
+{
+  "character_id": "darkelf_female",
+  "variant_id": "pack_vampire_dusk",
+  "label": "Volkihar Crimson Aristocrat",
+  "archetype": "mage",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\scratch\\flow_chrome_bridge\\outputs\\pack_darkelf_female_vampire_dusk_v1.jpg",
+  "provided_slots": {
+    "02_hair_back.png": "Platinum Flowing Noble Waves",
+    "06_mouth.png": "Dark Wine Lip Expression",
+    "08_eyes.png": "Molten Gold Vampire Eyes",
+    "09_eyebrows.png": "Arched Dunmer Brows",
+    "10_face_markings.png": "Silver Nostril Stud",
+    "12_earring_ears.png": "Gold Spiderweb Chandelier Ear Cuff",
+    "13_armor_torso.png": "Crimson Brocade Vampire High-Collar Corset",
+    "14_cloak_mantle.png": "Obsidian Velvet & Ruby Choker",
+    "15_hair_front.png": "Swept Platinum Vampire Pompadour"
+  },
+  "clear_slots": []
+}

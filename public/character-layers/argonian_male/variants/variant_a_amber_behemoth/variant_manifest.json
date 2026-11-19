@@ -1,0 +1,15 @@
+{
+  "character_id": "argonian_male",
+  "variant_id": "variant_a_amber_behemoth",
+  "label": "An-Xileel Amber-Scale Behemoth",
+  "archetype": "warrior",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\scratch\\flow_chrome_bridge\\outputs\\argonian_male_variant_a_amber_behemoth_v1.jpg",
+  "provided_slots": {
+    "07_tusks_whiskers.png": "Bronze-Ringed Ivory Jaw Spikes",
+    "08_eyes.png": "Slit Amber Warden Eyes",
+    "10_face_markings.png": "Pale-Gold Brow & Snout Warpaint",
+    "13_armor_torso.png": "Spiked An-Xileel Pauldrons & Crimson Tunic",
+    "14_cloak_mantle.png": "Hung Ivory Fang & Bone Fetish",
+    "16_headgear_horns.png": "Massive Banded Obsidian & Gold Drake Horns"
+  }
+}

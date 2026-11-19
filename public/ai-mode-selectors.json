@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "aiModeUrl": "https://www.google.com/search?udm=50",
+  "plusButtonSelectors": [
+    "button[aria-label*='Add' i]",
+    "button[aria-label*='More' i]",
+    "button[aria-label*='Upload' i]",
+    "button[aria-label*='Insert' i]",
+    "button:has(svg path[d*='M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z'])"
+  ],
+  "createImagesMenuText": [
+    "Create images",
+    "Create image",
+    "Generate image"
+  ],
+  "fileInputSelectors": [
+    "input[type='file'][accept*='image']",
+    "input[type='file']"
+  ],
+  "promptInputSelectors": [
+    "textarea[aria-label]",
+    "textarea",
+    "div[contenteditable='true'][role='textbox']",
+    "div[contenteditable='true']"
+  ],
+  "submitButtonSelectors": [
+    "button[aria-label*='Send' i]",
+    "button[aria-label*='Submit' i]",
+    "button[aria-label*='Search' i]",
+    "button[type='submit']"
+  ],
+  "captchaSelectors": [
+    "iframe[src*='recaptcha']",
+    "form#captcha-form",
+    "#recaptcha",
+    "div[class*='g-recaptcha']"
+  ]
+}

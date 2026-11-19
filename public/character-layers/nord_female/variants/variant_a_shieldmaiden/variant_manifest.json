@@ -1,0 +1,19 @@
+{
+  "character_id": "nord_female",
+  "variant_id": "variant_a_shieldmaiden",
+  "label": "Stormcloak Steel Shieldmaiden",
+  "archetype": "warrior",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\female_nord_stormcloak_shieldmaiden_1794927826665.jpg",
+  "provided_slots": {
+    "02_hair_back.png": "Auburn Flowing Back Waves",
+    "06_mouth.png": "Battle-Ready Smirk",
+    "08_eyes.png": "Fierce Ice-Blue Gaze",
+    "09_eyebrows.png": "Determined Arched Brows",
+    "10_face_markings.png": "Crimson Chevron & Nose Scar",
+    "12_earring_ears.png": "Silver Warrior Hoop",
+    "13_armor_torso.png": "Carved Nordic Steel & Blue Sash",
+    "14_cloak_mantle.png": "Charcoal Wolf-Pelt Mantle",
+    "15_hair_front.png": "Auburn Waves & Ringed Braid",
+    "16_headgear_horns.png": "Engraved Silver Sapphire Circlet"
+  }
+}

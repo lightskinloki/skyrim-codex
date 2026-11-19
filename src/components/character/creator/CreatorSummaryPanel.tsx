@@ -1,12 +1,15 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Race, StandingStone, Kit, CharacterSkill, Stats } from "@/types/character";
+import { Race, StandingStone, Kit, CharacterSkill, Stats, PortraitConfig } from "@/types/character";
 import { calculateFinalStats, calculateMaxHP, calculateMaxFP, calculateTotalDR } from "@/utils/characterCalculations";
 import { skills } from "@/data/skills";
+import { CharacterPortraitCanvas } from "../CharacterPortraitCanvas";
+import { useStoredPortrait } from "@/lib/portraitStorage";
 
 interface CreatorSummaryPanelProps {
   race: Race | null;
+  portrait?: PortraitConfig;
   stone: StandingStone | null;
   skills: CharacterSkill[];
   kit: Kit | null;
@@ -16,13 +19,17 @@ interface CreatorSummaryPanelProps {
 
 export function CreatorSummaryPanel({ 
   race, 
+  portrait,
   stone, 
   skills: selectedSkills, 
   kit, 
   characterName,
   currentStep 
 }: CreatorSummaryPanelProps) {
-  
+  const renderedFinalUrl = useStoredPortrait(
+    portrait?.renderedPortraitId,
+    Boolean(portrait?.renderOptions?.usePreRenderOnly)
+  );
   const finalStats = race && stone ? calculateFinalStats(stone.baseStats, race) : null;
   
   const getStatDisplay = (stat: keyof Stats, value: number) => {
@@ -64,8 +71,27 @@ export function CreatorSummaryPanel({
       </CardHeader>
       
       <CardContent className="flex-1 space-y-4 overflow-y-auto">
+        {(portrait || race?.image) && (
+          <div className="mx-auto w-40 aspect-[764/1024] rounded-lg overflow-hidden border border-primary/40 shadow-md bg-[#0c1d24]">
+            {renderedFinalUrl ? (
+              <img
+                src={renderedFinalUrl}
+                alt={characterName || race?.name || "Final rendered portrait"}
+                className="w-full h-full object-cover object-top"
+              />
+            ) : (
+              <CharacterPortraitCanvas
+                portrait={portrait}
+                fallbackRaceImage={race?.image}
+                fallbackAlt={race?.name || "Character preview"}
+                className="w-full h-full"
+              />
+            )}
+          </div>
+        )}
+
         {/* Character Name */}
-        {currentStep >= 4 && characterName && (
+        {currentStep >= 5 && characterName && (
           <Card>
             <CardContent className="p-3">
               <h3 className="font-cinzel text-lg text-center">
@@ -176,7 +202,7 @@ export function CreatorSummaryPanel({
         )}
 
         {/* Final Resources */}
-        {finalResources && currentStep >= 4 && (
+        {finalResources && currentStep >= 5 && (
           <Card>
             <CardContent className="p-3">
               <h4 className="font-semibold text-primary text-center mb-3">Final Resources</h4>

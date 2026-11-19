@@ -1,0 +1,18 @@
+{
+  "character_id": "breton_female",
+  "variant_id": "variant_b_knight",
+  "label": "Daggerfall Arcane Knight",
+  "archetype": "warrior",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\female_breton_variant_b_knight_flow.png",
+  "provided_slots": {
+    "02_hair_back.png": "Copper Braided Ponytail",
+    "06_mouth.png": "Resolute Knight Lips",
+    "08_eyes.png": "Focused Steel-Blue Eyes",
+    "09_eyebrows.png": "Determined Auburn Brows",
+    "10_face_markings.png": "Thin Cheek Scar & Freckles",
+    "12_earring_ears.png": "Twin Silver Ear Cuffs",
+    "13_armor_torso.png": "Silver Gorget, Pauldrons & Gambeson",
+    "14_cloak_mantle.png": "Crimson Half-Cape Trim",
+    "15_hair_front.png": "Copper Swept Half-Up Bangs"
+  }
+}

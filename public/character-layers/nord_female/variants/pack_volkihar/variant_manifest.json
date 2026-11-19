@@ -1,0 +1,20 @@
+{
+  "character_id": "nord_female",
+  "variant_id": "pack_volkihar",
+  "label": "Volkihar Royal Vampire",
+  "archetype": "mage",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\scratch\\flow_chrome_bridge\\outputs\\pack_nord_female_volkihar_v1.jpg",
+  "provided_slots": {
+    "02_hair_back.png": "Midnight Braided Nape",
+    "06_mouth.png": "Dark Plum Lips & Silver Lip Ring",
+    "08_eyes.png": "Glowing Blood-Crimson Vampire Eyes",
+    "09_eyebrows.png": "Sharp Dark Vampire Brows",
+    "10_face_markings.png": "Gothic Crimson Cheek Lace Tattoos",
+    "12_earring_ears.png": "Garnet Drop Vampire Earring",
+    "13_armor_torso.png": "Volkihar High-Collar Velvet & Silver Corset",
+    "15_hair_front.png": "Midnight-Black Silver-Streaked Braid Crown"
+  },
+  "clear_slots": [
+    "14_cloak_mantle.png"
+  ]
+}

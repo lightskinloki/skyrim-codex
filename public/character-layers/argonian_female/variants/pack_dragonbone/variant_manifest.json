@@ -1,0 +1,18 @@
+{
+  "character_id": "argonian_female",
+  "variant_id": "pack_dragonbone",
+  "label": "Dragonbone Sovereign Oracle",
+  "archetype": "warrior",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\scratch\\flow_chrome_bridge\\outputs\\pack_argonian_female_dragonbone_v1.jpg",
+  "provided_slots": {
+    "02_hair_back.png": "Magenta & Teal Iridescent Aquatic Fins",
+    "08_eyes.png": "Molten Amber Dragon Eyes",
+    "10_face_markings.png": "Bioluminescent Violet Hist Snout Runes",
+    "13_armor_torso.png": "Carved Skyrim Dragonbone Pauldrons & Plate",
+    "16_headgear_horns.png": "Quadruple Pearlescent Drake Horns"
+  },
+  "clear_slots": [
+    "07_tusks_whiskers.png",
+    "14_cloak_mantle.png"
+  ]
+}

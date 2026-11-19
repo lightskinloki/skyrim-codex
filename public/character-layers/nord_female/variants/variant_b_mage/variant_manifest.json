@@ -1,0 +1,18 @@
+{
+  "character_id": "nord_female",
+  "variant_id": "variant_b_mage",
+  "label": "Winterhold Seer / Archmage",
+  "archetype": "mage",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\female_nord_winterhold_seer_archmage_1794927825090.jpg",
+  "provided_slots": {
+    "06_mouth.png": "Serene Composed Lips",
+    "08_eyes.png": "Luminous Arcane Pale-Ice Eyes",
+    "09_eyebrows.png": "Soft Dark Arched Brows",
+    "10_face_markings.png": "Glowing Frost-Rune Cheeks",
+    "12_earring_ears.png": "Dangling Moonstone Pendant",
+    "13_armor_torso.png": "Winterhold Indigo Robes & Medallion",
+    "14_cloak_mantle.png": "Snow-Fox White Fur Stole",
+    "15_hair_front.png": "Charcoal Fringe & Beaded Braids",
+    "16_headgear_horns.png": "Midnight Nordic Knotwork Hood"
+  }
+}

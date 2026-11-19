@@ -1,0 +1,19 @@
+{
+  "character_id": "nord_male",
+  "variant_id": "variant_a_jarl",
+  "label": "Nordic Carved Steel Jarl",
+  "archetype": "warrior",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\male_nord_variant_a_jarl_flow.png",
+  "provided_slots": {
+    "02_hair_back.png": "Golden Swept Back Locks",
+    "08_eyes.png": "Fierce Northern Gaze",
+    "09_eyebrows.png": "Heavy Furrowed Jarl Brows",
+    "10_face_markings.png": "Pale Diagonal Cheek & Brow Scar",
+    "11_facial_hair.png": "Ringed Braided Viking Fork-Beard",
+    "12_earring_ears.png": "Forged Iron Ear Cuff",
+    "13_armor_torso.png": "Nordic Carved Steel & Wolf Pauldrons",
+    "14_cloak_mantle.png": "Royal Crimson Shoulder Cloak",
+    "15_hair_front.png": "Golden Mane & Temple Braid",
+    "16_headgear_horns.png": "Forged Steel Knotwork Circlet"
+  }
+}

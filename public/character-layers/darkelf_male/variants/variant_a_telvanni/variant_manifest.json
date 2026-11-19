@@ -1,0 +1,20 @@
+{
+  "character_id": "darkelf_male",
+  "variant_id": "variant_a_telvanni",
+  "label": "House Telvanni Magister Sorcerer",
+  "archetype": "mage",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\dunmer_telvanni_magister_sorcerer_1794947666547.jpg",
+  "provided_slots": {
+    "02_hair_back.png": "Long Obsidian Mage Mane",
+    "06_mouth.png": "Resolute Magister Expression",
+    "08_eyes.png": "Crimson Dunmer Eyes",
+    "09_eyebrows.png": "Obsidian Arched Brows",
+    "10_face_markings.png": "Ember-Orange Arcane Cheek Runes",
+    "11_facial_hair.png": "Tailored Obsidian Van Dyke & Mustache",
+    "12_earring_ears.png": "Ash-Grey Pointed Ear",
+    "13_armor_torso.png": "Burgundy Telvanni High-Collar Velvet Robes",
+    "14_cloak_mantle.png": "Bronze Magister Mantle & Gold Clasp",
+    "15_hair_front.png": "Obsidian & Silver-Temple Crown",
+    "16_headgear_horns.png": "Gold & Ruby Telvanni Circlet"
+  }
+}

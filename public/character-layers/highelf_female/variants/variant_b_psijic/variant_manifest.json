@@ -1,0 +1,19 @@
+{
+  "character_id": "highelf_female",
+  "variant_id": "variant_b_psijic",
+  "label": "Artaeum Psijic Order Mystic",
+  "archetype": "mage",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\female_highelf_variant_b_psijic_flow.png",
+  "provided_slots": {
+    "02_hair_back.png": "Copper-Auburn Flowing Back Locks",
+    "06_mouth.png": "Serene Elven Expression",
+    "08_eyes.png": "Luminous Pale-Cyan Psijic Eyes",
+    "09_eyebrows.png": "Arched High Elven Brows",
+    "10_face_markings.png": "Silver-Cyan Cheek Rune Sigils",
+    "12_earring_ears.png": "Silver Moonstone Drop Earring",
+    "13_armor_torso.png": "Pearl-White Psijic Silk Robes",
+    "14_cloak_mantle.png": "Cerulean Stole & Crystal Clasp",
+    "15_hair_front.png": "Copper Braided High Crown",
+    "16_headgear_horns.png": "Silver Sapphire Star Circlet"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "character_id": "orc_male",
+  "variant_id": "variant_a_warchief",
+  "label": "Stronghold Orichalcum Warchief",
+  "archetype": "warrior",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\scratch\\flow_chrome_bridge\\outputs\\orc_male_variant_a_warchief_v1.jpg",
+  "provided_slots": {
+    "02_hair_back.png": "Braided Topknot Tail",
+    "06_mouth.png": "Grim Warchief Expression",
+    "07_tusks_whiskers.png": "Curved Ivory Lower Warchief Tusks",
+    "08_eyes.png": "Amber Orsimer Eyes",
+    "09_eyebrows.png": "Heavy Ash-Black Brows",
+    "10_face_markings.png": "Black Ash Eye-Band Warpaint",
+    "11_facial_hair.png": "Triple-Braided Brass-Beaded Beard",
+    "12_earring_ears.png": "Double Iron Ear Cuffs",
+    "13_armor_torso.png": "Spiked Orichalcum Pauldrons",
+    "14_cloak_mantle.png": "Dark Wolf-Pelt Neck Collar",
+    "15_hair_front.png": "Braided Obsidian Topknot"
+  }
+}

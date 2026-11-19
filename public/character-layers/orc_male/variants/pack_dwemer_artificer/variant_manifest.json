@@ -1,0 +1,23 @@
+{
+  "character_id": "orc_male",
+  "variant_id": "pack_dwemer_artificer",
+  "label": "Dwarven Aetherium Artificer",
+  "archetype": "warrior",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\scratch\\flow_chrome_bridge\\outputs\\pack_orc_male_dwemer_artificer_v1.jpg",
+  "provided_slots": {
+    "06_mouth.png": "Stern Artificer Expression",
+    "07_tusks_whiskers.png": "Brass-Capped Lower Orcish Tusks",
+    "08_eyes.png": "Amber Orsimer Left Eye",
+    "09_eyebrows.png": "Stern Dark Brow",
+    "10_face_markings.png": "Geometric Dwemer Shaved-Scalp Ink",
+    "11_facial_hair.png": "Salt-and-Pepper Mutton Chops",
+    "12_earring_ears.png": "Pointed Orsimer Ear",
+    "13_armor_torso.png": "Golden-Bronze Dwemer Aetherium Plate",
+    "15_hair_front.png": "Swept Salt-and-Pepper Undercut Crest",
+    "16_headgear_horns.png": "Glowing Aetherium Brass Monocle"
+  },
+  "clear_slots": [
+    "02_hair_back.png",
+    "14_cloak_mantle.png"
+  ]
+}

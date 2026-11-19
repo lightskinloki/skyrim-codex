@@ -1,0 +1,22 @@
+{
+  "character_id": "redguard_male",
+  "variant_id": "variant_a_sword_singer",
+  "label": "Yokudan Sword-Singer Paladin",
+  "archetype": "warrior",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\male_redguard_variant_a_sword_singer_flow.png",
+  "clear_slots": [
+    "14_cloak_mantle.png"
+  ],
+  "provided_slots": {
+    "02_hair_back.png": "Gold-Cuffed Cornrow Tail",
+    "06_mouth.png": "Composed Paladin Lips",
+    "08_eyes.png": "Luminous Pale-Gold Sword-Singer Eyes",
+    "09_eyebrows.png": "Stern Dark Brows",
+    "10_face_markings.png": "White Tribal Cheek & Temple Paint",
+    "11_facial_hair.png": "Sculpted Black Royal Goatee",
+    "12_earring_ears.png": "Thick Gold Hoop Earring",
+    "13_armor_torso.png": "Azure-Gold Pauldrons & Ivory Desert Coat",
+    "15_hair_front.png": "Tight Black Hammerfell Cornrows",
+    "16_headgear_horns.png": "Brass & Lapis Sun Circlet"
+  }
+}

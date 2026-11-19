@@ -1,0 +1,20 @@
+{
+  "character_id": "orc_male",
+  "variant_id": "variant_b_berserker",
+  "label": "Malacath Berserker Mystic",
+  "archetype": "warrior",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\scratch\\flow_chrome_bridge\\outputs\\orc_male_variant_b_berserker_v1.jpg",
+  "provided_slots": {
+    "02_hair_back.png": "Wild Iron-Grey Warrior Mane",
+    "06_mouth.png": "Fierce Scarred Expression",
+    "07_tusks_whiskers.png": "Strong Ivory Lower Tusks",
+    "08_eyes.png": "Amber Berserker Eyes",
+    "09_eyebrows.png": "Furrowed Iron-Grey Brows",
+    "10_face_markings.png": "Crimson Blood-Rune Warpaint",
+    "11_facial_hair.png": "Trimmed Iron-Grey Full Beard",
+    "12_earring_ears.png": "Silver Ringed Pointed Ear",
+    "13_armor_torso.png": "Studded Hide Cuirass & Crimson Harness",
+    "14_cloak_mantle.png": "Chained Wolf-Fur Shoulder Mantle",
+    "15_hair_front.png": "Iron-Grey Swept Crown & Shoulder Braids"
+  }
+}

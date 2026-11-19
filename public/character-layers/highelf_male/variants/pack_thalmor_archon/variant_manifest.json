@@ -1,0 +1,20 @@
+{
+  "character_id": "highelf_male",
+  "variant_id": "pack_thalmor_archon",
+  "label": "Thalmor Justiciar Grand Archon",
+  "archetype": "battlemage",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\scratch\\flow_chrome_bridge\\outputs\\pack_highelf_male_thalmor_archon_v1.jpg",
+  "provided_slots": {
+    "02_hair_back.png": "Silver-Blonde Long Flowing Locks",
+    "06_mouth.png": "Stern Archon Expression",
+    "08_eyes.png": "Golden Predator High Elven Eyes",
+    "09_eyebrows.png": "Stern Gold-Brown Brows",
+    "10_face_markings.png": "Silver Nose-to-Cheek Battle Scar",
+    "12_earring_ears.png": "Altmer Pointed Ear",
+    "13_armor_torso.png": "Black & Gold Filigree Thalmor Archon Coat",
+    "14_cloak_mantle.png": "Sculpted Solid-Gold Shoulder Pauldrons",
+    "15_hair_front.png": "Platinum Undercut Noble Crown",
+    "16_headgear_horns.png": "Summerset Gold & Emerald Laurel Crown"
+  },
+  "clear_slots": []
+}

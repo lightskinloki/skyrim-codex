@@ -1,0 +1,20 @@
+{
+  "character_id": "woodelf_male",
+  "variant_id": "variant_a_spinner",
+  "label": "Valenwood Sap-Speaker Mage",
+  "archetype": "mage",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\male_wood_elf_sap_speaker_mage_1794947435190.jpg",
+  "provided_slots": {
+    "02_hair_back.png": "Copper Back Locks",
+    "06_mouth.png": "Serene Bosmer Expression",
+    "08_eyes.png": "Jade-Green Forest Eyes",
+    "09_eyebrows.png": "Copper Arched Brows",
+    "10_face_markings.png": "Luminous Pale-Gold Spinner Markings",
+    "11_facial_hair.png": "Copper Mustache & Goatee",
+    "12_earring_ears.png": "Pointed Bosmer Ear",
+    "13_armor_torso.png": "Moss-Green Embroidered Sap-Speaker Robes",
+    "14_cloak_mantle.png": "Bone-Clasp Mantle & Emerald Medallion",
+    "15_hair_front.png": "Copper Swept Crown & Beaded Braid",
+    "16_headgear_horns.png": "Carved Ivory & Emerald Circlet"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "character_id": "imperial_female",
+  "variant_id": "pack_dragonscale",
+  "label": "Bone Dragonscale Valkyrie",
+  "archetype": "warrior",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\scratch\\flow_chrome_bridge\\outputs\\pack_imperial_female_dragonscale_v1.jpg",
+  "provided_slots": {
+    "02_hair_back.png": "Thick Brass-Ringed Copper Ponytail",
+    "06_mouth.png": "Stoic Shieldmaiden Expression",
+    "08_eyes.png": "Blind Scarred Eye & Amber Left Eye",
+    "09_eyebrows.png": "Copper-Brown Arched Brows",
+    "10_face_markings.png": "Reachmen Geometric Brow Warpaint & Eye Scar",
+    "12_earring_ears.png": "Quadruple Gold Ear Cuffs",
+    "13_armor_torso.png": "Carved Bone Dragonscale Plate & Harness",
+    "15_hair_front.png": "High Braided Copper Valkyrie Crown"
+  },
+  "clear_slots": [
+    "14_cloak_mantle.png",
+    "16_headgear_horns.png"
+  ]
+}

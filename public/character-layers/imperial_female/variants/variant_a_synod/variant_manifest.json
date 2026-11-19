@@ -1,0 +1,17 @@
+{
+  "character_id": "imperial_female",
+  "variant_id": "variant_a_synod",
+  "label": "Cyrodiil Synod Imperial Mage",
+  "archetype": "mage",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\female_imperial_variant_a_synod_flow.png",
+  "provided_slots": {
+    "06_mouth.png": "Composed Bronze-Rose Smile",
+    "08_eyes.png": "Bright Amber-Gold Arcane Eyes",
+    "09_eyebrows.png": "Finely Arched Dark Brows",
+    "12_earring_ears.png": "Gold & Ruby Laurel Drop",
+    "13_armor_torso.png": "Crimson Gold-Brocaded Synod Robes",
+    "14_cloak_mantle.png": "Ivory Gold Cape & Ruby Medallions",
+    "15_hair_front.png": "Jet-Black Braided Roman Halo",
+    "16_headgear_horns.png": "Golden Roman Laurel & Ruby Circlet"
+  }
+}

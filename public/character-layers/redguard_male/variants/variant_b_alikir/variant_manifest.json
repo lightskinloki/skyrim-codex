@@ -1,0 +1,20 @@
+{
+  "character_id": "redguard_male",
+  "variant_id": "variant_b_alikir",
+  "label": "Alik'r Desert Rogue",
+  "archetype": "skirmisher",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\male_redguard_variant_b_alikir_flow.png",
+  "provided_slots": {
+    "02_hair_back.png": "Bronze-Cuffed Shoulder Locs",
+    "06_mouth.png": "Hardened Rogue Expression",
+    "08_eyes.png": "Fierce Fiery-Amber Eyes",
+    "09_eyebrows.png": "Furrowed Scarred Brows",
+    "10_face_markings.png": "Diagonal Pale Sword Scar",
+    "11_facial_hair.png": "Rugged Stubble Beard & Mustache",
+    "12_earring_ears.png": "Silver Stud Earring",
+    "13_armor_torso.png": "Studded Indigo Brigandine & Daggers",
+    "14_cloak_mantle.png": "Crimson Desert Keffiyeh Scarf",
+    "15_hair_front.png": "Black Locs Crown",
+    "16_headgear_horns.png": "Indigo & Gold Alik'r Headband"
+  }
+}

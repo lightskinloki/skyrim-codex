@@ -1,0 +1,17 @@
+{
+  "character_id": "imperial_male",
+  "variant_id": "variant_a_tribune",
+  "label": "Cyrodiil Arcane Tribune",
+  "archetype": "mage",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\male_imperial_variant_a_tribune_flow.png",
+  "provided_slots": {
+    "06_mouth.png": "Dignified Tribune Expression",
+    "08_eyes.png": "Luminous Amber-Gold Arcane Eyes",
+    "09_eyebrows.png": "Composed Dark Roman Brows",
+    "11_facial_hair.png": "Trimmed Charcoal Royal Goatee",
+    "13_armor_torso.png": "Crimson & Gold Tribune Robes",
+    "14_cloak_mantle.png": "Ivory & Purple Toga with Eagle Brooch",
+    "15_hair_front.png": "Silver-Streaked Dark Roman Curls",
+    "16_headgear_horns.png": "Golden Roman Laurel & Ruby Diadem"
+  }
+}

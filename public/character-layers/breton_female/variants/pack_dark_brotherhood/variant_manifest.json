@@ -1,0 +1,21 @@
+{
+  "character_id": "breton_female",
+  "variant_id": "pack_dark_brotherhood",
+  "label": "Dark Brotherhood Shrouded",
+  "archetype": "assassin",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\scratch\\flow_chrome_bridge\\outputs\\pack_breton_female_dark_brotherhood_v1.jpg",
+  "provided_slots": {
+    "02_hair_back.png": "Undercut Short Nape",
+    "06_mouth.png": "Composed Expression",
+    "08_eyes.png": "Heterochromia Violet & Emerald Eyes",
+    "09_eyebrows.png": "Dark Assassin Brows",
+    "10_face_markings.png": "Cross-Cheek Scar & Silver Septum Ring",
+    "12_earring_ears.png": "Pointed Ear",
+    "13_armor_torso.png": "Dark Brotherhood Shrouded Leather",
+    "14_cloak_mantle.png": "Rolled Crimson Shrouded Cowl",
+    "15_hair_front.png": "Crimson-Streaked Cyber Undercut Bob"
+  },
+  "clear_slots": [
+    "16_headgear_horns.png"
+  ]
+}

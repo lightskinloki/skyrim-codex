@@ -1,0 +1,16 @@
+{
+  "character_id": "argonian_male",
+  "variant_id": "variant_b_hist_mage",
+  "label": "Murkmire Sap-Shaman Mystic",
+  "archetype": "mage",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\scratch\\flow_chrome_bridge\\outputs\\argonian_male_variant_b_hist_mage_v1.jpg",
+  "provided_slots": {
+    "02_hair_back.png": "Turquoise & Gold Spiny Frills",
+    "07_tusks_whiskers.png": "Luminescent Cyan Jaw Spines",
+    "08_eyes.png": "Luminous Emerald-Cyan Mystic Eyes",
+    "10_face_markings.png": "Bioluminescent Cyan Hist Markings",
+    "13_armor_torso.png": "Jade-and-Gold Murkmire Shaman Robes",
+    "14_cloak_mantle.png": "Feathered Swamp Mantle & Hist-Resin Orb",
+    "16_headgear_horns.png": "Turquoise Coral Crest Horns"
+  }
+}

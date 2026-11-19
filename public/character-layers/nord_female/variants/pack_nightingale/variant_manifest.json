@@ -1,0 +1,19 @@
+{
+  "character_id": "nord_female",
+  "variant_id": "pack_nightingale",
+  "label": "Nightingale Shadow Agent",
+  "archetype": "assassin",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\scratch\\flow_chrome_bridge\\outputs\\pack_nord_female_nightingale_v1.jpg",
+  "provided_slots": {
+    "02_hair_back.png": "Platinum Shaved-Side Back Braid",
+    "06_mouth.png": "Fierce Nightingale Expression",
+    "08_eyes.png": "Luminous Nocturnal Violet Eyes",
+    "09_eyebrows.png": "Pierced Nordic Brows",
+    "10_face_markings.png": "Vertical Eye Scar & Silver Brow Ring",
+    "12_earring_ears.png": "Quadruple Silver Ear Hoops",
+    "13_armor_torso.png": "Obsidian Quilted Nightingale Leather",
+    "14_cloak_mantle.png": "Raven-Feathered Nightingale Collar",
+    "15_hair_front.png": "Platinum Braided Cyber-Mohawk"
+  },
+  "clear_slots": []
+}

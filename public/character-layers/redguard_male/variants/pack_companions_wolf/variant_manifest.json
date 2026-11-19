@@ -1,0 +1,20 @@
+{
+  "character_id": "redguard_male",
+  "variant_id": "pack_companions_wolf",
+  "label": "Companions Skyforge Harbinger",
+  "archetype": "warrior",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\scratch\\flow_chrome_bridge\\outputs\\pack_redguard_male_companions_wolf_v1.jpg",
+  "provided_slots": {
+    "02_hair_back.png": "Thick Black Back Dreadlocs",
+    "06_mouth.png": "Pierced Warrior Expression",
+    "08_eyes.png": "Dark Piercing Warrior Eyes",
+    "09_eyebrows.png": "Silver-Ringed Brow",
+    "10_face_markings.png": "White Fang Warpaint & Lip/Brow Rings",
+    "11_facial_hair.png": "Close-Trimmed Warrior Beard",
+    "12_earring_ears.png": "Redguard Ear",
+    "13_armor_torso.png": "Skyforge Steel Companions Wolf Plate",
+    "14_cloak_mantle.png": "Silver Wolf-Pelt Shoulder Mantle",
+    "15_hair_front.png": "Bone-Beaded Black Dreadlocs"
+  },
+  "clear_slots": []
+}

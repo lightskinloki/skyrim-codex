@@ -1,0 +1,18 @@
+{
+  "character_id": "highelf_male",
+  "variant_id": "variant_b_auriel",
+  "label": "Auriel Elven Solar Knight",
+  "archetype": "warrior",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\auriel_elven_solar_knight_1794947298430.jpg",
+  "provided_slots": {
+    "02_hair_back.png": "Raven-Black Back Locks",
+    "06_mouth.png": "Composed Warrior Expression",
+    "08_eyes.png": "Amber-Gold Elven Eyes",
+    "09_eyebrows.png": "Raven-Black Stern Brows",
+    "11_facial_hair.png": "Tailored Obsidian Van Dyke Goatee",
+    "12_earring_ears.png": "Gold Filigree Ear Cuffs",
+    "13_armor_torso.png": "Winged Elven Plate & Quilted Emerald Tunic",
+    "14_cloak_mantle.png": "Forest Cape & Golden Eagle Clasp",
+    "15_hair_front.png": "Half-Up Braided Warrior Crown"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "character_id": "nord_male",
+  "variant_id": "variant_b_battlemage",
+  "label": "Winterhold Battlemage",
+  "archetype": "mage",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\male_nord_variant_b_battlemage_flow.png",
+  "provided_slots": {
+    "06_mouth.png": "Composed Firm Lips",
+    "08_eyes.png": "Luminous Arcane Cyan Eyes",
+    "09_eyebrows.png": "Dark Sharp Battlemage Brows",
+    "10_face_markings.png": "Glowing Pale-Blue Frost Runes",
+    "11_facial_hair.png": "Trimmed Anchor Goatee",
+    "13_armor_torso.png": "Winterhold Indigo Gambeson & Strap",
+    "14_cloak_mantle.png": "Storm-Grey Wolf Fur Collar",
+    "15_hair_front.png": "Ash-Brown Swept Undercut"
+  }
+}

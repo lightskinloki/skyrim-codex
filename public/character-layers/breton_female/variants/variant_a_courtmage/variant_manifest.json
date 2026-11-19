@@ -1,0 +1,17 @@
+{
+  "character_id": "breton_female",
+  "variant_id": "variant_a_courtmage",
+  "label": "High Rock Royal Court Battlemage",
+  "archetype": "mage",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\female_breton_variant_a_courtmage_flow.png",
+  "provided_slots": {
+    "06_mouth.png": "Berry-Tinted Noble Smile",
+    "08_eyes.png": "Luminous Royal Violet Eyes",
+    "09_eyebrows.png": "Refined Espresso Arched Brows",
+    "12_earring_ears.png": "Gold & Amethyst Drop Earring",
+    "13_armor_torso.png": "Sapphire Filigree Robes & Silk Ruff",
+    "14_cloak_mantle.png": "Amethyst-Clasped Violet Velvet Mantle",
+    "15_hair_front.png": "Espresso Braided Chignon Updo",
+    "16_headgear_horns.png": "Filigree Gold & Amethyst Circlet"
+  }
+}

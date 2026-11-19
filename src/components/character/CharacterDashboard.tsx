@@ -9,6 +9,7 @@ import { FPSpendModal } from "./FPSpendModal";
 import { AdvancementModal } from "./AdvancementModal";
 import { GrantAPModal } from "./GrantAPModal";
 import { EquipmentModal } from "./EquipmentModal";
+import { AppearanceStudioModal } from "./AppearanceStudioModal";
 import { AbilityTracker } from "./AbilityTracker";
 import { PlayerCombatPortal } from "@/components/combat/player/PlayerCombatPortal";
 import { Button } from "@/components/ui/button";
@@ -351,6 +352,7 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
   const [showAdvancement, setShowAdvancement] = useState(false);
   const [showGrantAP, setShowGrantAP] = useState(false);
   const [showEquipment, setShowEquipment] = useState(false);
+  const [showAppearance, setShowAppearance] = useState(false);
   const [goldModal, setGoldModal] = useState<{
     isOpen: boolean;
     type: 'add' | 'remove';
@@ -977,6 +979,10 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
               <Package className="w-3.5 h-3.5 mr-1.5" />
               Equipment
             </Button>
+            <Button size="sm" onClick={() => setShowAppearance(true)} variant="outline" className="flex-shrink-0 border-primary/40 text-primary hover:bg-primary/10">
+              <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+              Face Sculptor
+            </Button>
             <Button size="sm" onClick={handleExportCharacter} variant="outline" className="flex-shrink-0">
               <Download className="w-3.5 h-3.5 mr-1.5" />
               Export
@@ -1041,7 +1047,10 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
           
           {/* Left Column - Stats & Resources */}
           <div className="space-y-6">
-            <CharacterCard character={currentCharacter} />
+            <CharacterCard
+              character={currentCharacter}
+              onEditAppearance={() => setShowAppearance(true)}
+            />
             
             <StatBlock stats={currentCharacter.stats} />
             
@@ -1631,6 +1640,13 @@ export function CharacterDashboard({ character, onUpdateCharacter, onCreateNewCh
         />
         
         <GoldModal />
+
+        <AppearanceStudioModal
+          isOpen={showAppearance}
+          onClose={() => setShowAppearance(false)}
+          character={currentCharacter}
+          onSavePortrait={(portrait) => handleUpdateCharacter({ ...currentCharacter, portrait })}
+        />
 
         {/* Exit / new-character warning dialog */}
         <Dialog open={showExitWarning} onOpenChange={setShowExitWarning}>

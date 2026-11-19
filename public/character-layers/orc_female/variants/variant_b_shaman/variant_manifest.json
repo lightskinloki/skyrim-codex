@@ -1,0 +1,20 @@
+{
+  "character_id": "orc_female",
+  "variant_id": "variant_b_shaman",
+  "label": "Malacath Wise-Woman Shaman",
+  "archetype": "mage",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\scratch\\flow_chrome_bridge\\outputs\\orc_female_variant_b_shaman_v1.jpg",
+  "provided_slots": {
+    "02_hair_back.png": "Feathered Raven & Silver Back Braids",
+    "06_mouth.png": "Solemn Shaman Expression",
+    "07_tusks_whiskers.png": "Ivory Lower Orcish Tusks",
+    "08_eyes.png": "Amber Orsimer Eyes",
+    "09_eyebrows.png": "Painted Dark Orsimer Brows",
+    "10_face_markings.png": "Pale-Ochre Ritual Warpaint",
+    "12_earring_ears.png": "Carved Bone Fang Earring",
+    "13_armor_torso.png": "Moss-Green Open Shaman Tunic",
+    "14_cloak_mantle.png": "Wolf-Fur Mantle & Bone Fang Necklace",
+    "15_hair_front.png": "Silver-Streaked Dreadlocks & Bone Beads",
+    "16_headgear_horns.png": "Bone & Obsidian Crescent Circlet"
+  }
+}

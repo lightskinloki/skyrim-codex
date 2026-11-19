@@ -1,0 +1,17 @@
+{
+  "character_id": "khajiit_female",
+  "variant_id": "pack_nightingale",
+  "label": "Nightingale Senche Shadow Agent",
+  "archetype": "assassin",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\scratch\\flow_chrome_bridge\\outputs\\pack_khajiit_female_nightingale_v1.jpg",
+  "provided_slots": {
+    "02_hair_back.png": "Silver-Black Temple Braid",
+    "08_eyes.png": "Violet & Frost Heterochromia Feline Eyes",
+    "10_face_markings.png": "Silver Cat-Nose Ring",
+    "12_earring_ears.png": "Snow-White Lynx Ear Tufts & Silver Hoops",
+    "13_armor_torso.png": "Quilted Black Nightingale Leather",
+    "14_cloak_mantle.png": "Dropped Shadow Hood & Feather Mantle",
+    "15_hair_front.png": "Silver-Streaked Braided Crest"
+  },
+  "clear_slots": []
+}

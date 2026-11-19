@@ -1,0 +1,18 @@
+{
+  "character_id": "darkelf_female",
+  "variant_id": "variant_a_morag_tong",
+  "label": "Morag Tong Chitin Assassin",
+  "archetype": "rogue",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\female_dunmer_morag_tong_assassin_1794947656414.jpg",
+  "provided_slots": {
+    "02_hair_back.png": "Raven-Black Braided Tail",
+    "06_mouth.png": "Ash-Grey Dunmer Expression",
+    "08_eyes.png": "Crimson Dunmer Predator Eyes",
+    "09_eyebrows.png": "Dark Arched Dunmer Brows",
+    "10_face_markings.png": "Crimson Cheek Slash Mark",
+    "12_earring_ears.png": "Silver-Cuffed Pointed Ear",
+    "13_armor_torso.png": "Sculpted Chitin Pauldrons & Crimson Jerkin",
+    "14_cloak_mantle.png": "Ash-Grey Wrapped Assassin Scarf",
+    "15_hair_front.png": "Raven Crown & Silver Hairpin"
+  }
+}

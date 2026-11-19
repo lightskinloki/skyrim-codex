@@ -1,0 +1,19 @@
+{
+  "character_id": "redguard_female",
+  "variant_id": "variant_b_seer",
+  "label": "Alik'r Sword-Singer Mystic",
+  "archetype": "mage",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\female_redguard_variant_b_seer_flow.png",
+  "provided_slots": {
+    "02_hair_back.png": "Swept Black Gold-Cuffed Coils",
+    "06_mouth.png": "Serene Mystic Expression",
+    "08_eyes.png": "Glowing Pale-Cyan Mystic Eyes",
+    "09_eyebrows.png": "Dark Arched Mystic Brows",
+    "10_face_markings.png": "Gold Geometric Brow & Chin Dots",
+    "12_earring_ears.png": "Turquoise-Gold Drop Earrings",
+    "13_armor_torso.png": "Ivory & Brass Pauldron Silk Robes",
+    "14_cloak_mantle.png": "Amber Silk Mantle & Sapphire Clasp",
+    "15_hair_front.png": "Braided Black Crown Coils",
+    "16_headgear_horns.png": "Hammered Sun-Crescent Circlet"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "character_id": "highelf_female",
+  "variant_id": "variant_a_thalmor",
+  "label": "Thalmor Justiciar Solar Battlemage",
+  "archetype": "battlemage",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\female_high_elf_thalmor_justiciar_solar_battlemage_1794947290429.jpg",
+  "provided_slots": {
+    "02_hair_back.png": "Silver-White Straight Back Locks",
+    "06_mouth.png": "Crimson Lipstick Expression",
+    "08_eyes.png": "Solar-Gold Luminous Elven Eyes",
+    "09_eyebrows.png": "Dark Arched High Elven Brows",
+    "12_earring_ears.png": "Gold & Emerald Chain Ear Ornament",
+    "13_armor_torso.png": "Black & Gold Filigree Thalmor Tunic",
+    "14_cloak_mantle.png": "Forest Velvet Cloak & Sunburst Clasps",
+    "15_hair_front.png": "Silver-White Crown & Collar Locks",
+    "16_headgear_horns.png": "Gold & Emerald Thalmor Circlet"
+  }
+}

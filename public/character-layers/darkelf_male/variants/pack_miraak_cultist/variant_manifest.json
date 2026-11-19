@@ -1,0 +1,22 @@
+{
+  "character_id": "darkelf_male",
+  "variant_id": "pack_miraak_cultist",
+  "label": "Apocrypha Miraak Cultist",
+  "archetype": "mage",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\scratch\\flow_chrome_bridge\\outputs\\pack_darkelf_male_miraak_cultist_v1.jpg",
+  "provided_slots": {
+    "06_mouth.png": "Stoic Cultist Expression",
+    "08_eyes.png": "Luminous Eldritch Green Eyes",
+    "09_eyebrows.png": "Dark Dunmer Brows",
+    "10_face_markings.png": "Pale-Jade Apocrypha Scalp & Cheek Runes",
+    "11_facial_hair.png": "Razor-Sharp Black Goatee",
+    "12_earring_ears.png": "Triple Silver Ear Rings",
+    "13_armor_torso.png": "Midnight & Bronze Tentacle-Filigree Robes",
+    "14_cloak_mantle.png": "Hermaeus Mora Green Eye Clasp",
+    "16_headgear_horns.png": "Curved Obsidian Forehead Horns"
+  },
+  "clear_slots": [
+    "02_hair_back.png",
+    "15_hair_front.png"
+  ]
+}

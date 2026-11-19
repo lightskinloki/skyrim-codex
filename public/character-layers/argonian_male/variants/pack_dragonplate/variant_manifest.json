@@ -1,0 +1,19 @@
+{
+  "character_id": "argonian_male",
+  "variant_id": "pack_dragonplate",
+  "label": "Black-Marsh Dragonplate Shadowknight",
+  "archetype": "warrior",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\scratch\\flow_chrome_bridge\\outputs\\pack_argonian_male_dragonplate_v1.jpg",
+  "provided_slots": {
+    "06_mouth.png": "Stoic Closed Reptilian Jaw",
+    "08_eyes.png": "Volcanic Ember Dragon Eye",
+    "10_face_markings.png": "Crimson Hist Brow & Snout Warpaint",
+    "13_armor_torso.png": "Sculpted Skyrim Dragonplate Rib Plate & Mail",
+    "16_headgear_horns.png": "Gold-Banded Obsidian Volcanic Drake Horns"
+  },
+  "clear_slots": [
+    "07_tusks_whiskers.png",
+    "09_eyebrows.png",
+    "14_cloak_mantle.png"
+  ]
+}

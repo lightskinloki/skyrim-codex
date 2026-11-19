@@ -1,0 +1,21 @@
+{
+  "character_id": "khajiit_male",
+  "variant_id": "pack_corsair",
+  "label": "Elsweyr Corsair Sea-Captain",
+  "archetype": "rogue",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\scratch\\flow_chrome_bridge\\outputs\\pack_khajiit_male_corsair_v1.jpg",
+  "provided_slots": {
+    "08_eyes.png": "Glowing Emerald-Gold Feline Eye",
+    "10_face_markings.png": "Leather Pirate Eyepatch & Strap",
+    "11_facial_hair.png": "Silver-Beaded Chin Braid Tufts",
+    "12_earring_ears.png": "Gold Hoop Lynx Ear",
+    "13_armor_torso.png": "Crimson & Gold-Trimmed Corsair Frock Coat",
+    "14_cloak_mantle.png": "Studded Leather Pistol Bandolier",
+    "16_headgear_horns.png": "Weathered Leather Tricorne & Crimson Plume"
+  },
+  "clear_slots": [
+    "02_hair_back.png",
+    "09_eyebrows.png",
+    "15_hair_front.png"
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "character_id": "redguard_female",
+  "variant_id": "variant_a_corsair",
+  "label": "Abecean Corsair Captain",
+  "archetype": "skirmisher",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\female_redguard_variant_a_corsair_flow.png",
+  "provided_slots": {
+    "06_mouth.png": "Confident Battle Smirk",
+    "08_eyes.png": "Kohl-Lined Golden-Amber Eyes",
+    "09_eyebrows.png": "Sharp Arched Brows",
+    "10_face_markings.png": "Gold Cheek & Temple Henna Marks",
+    "12_earring_ears.png": "Large Engraved Gold Hoop Earring",
+    "13_armor_torso.png": "Turquoise Gold Vest & Sabre Belts",
+    "14_cloak_mantle.png": "Crimson Silk Shoulder Sash",
+    "15_hair_front.png": "Cornrow Crown & High Braided Bun",
+    "16_headgear_horns.png": "Crimson & Gold Coin Headwrap"
+  }
+}

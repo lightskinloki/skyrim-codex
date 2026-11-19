@@ -1,0 +1,20 @@
+{
+  "character_id": "imperial_male",
+  "variant_id": "pack_ebony",
+  "label": "Gilded Ebony Knight",
+  "archetype": "warrior",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\scratch\\flow_chrome_bridge\\outputs\\pack_imperial_male_ebony_v1.jpg",
+  "provided_slots": {
+    "06_mouth.png": "Steely Commander Expression",
+    "08_eyes.png": "Amber Veteran Left Eye",
+    "09_eyebrows.png": "Salt-and-Pepper Brow",
+    "11_facial_hair.png": "Silver-Streaked Mutton Chops & Mustache",
+    "12_earring_ears.png": "Human Ear",
+    "13_armor_torso.png": "Jet-Black Gilded Ebony Plate",
+    "15_hair_front.png": "Slicked Silver-Temple Pompadour",
+    "16_headgear_horns.png": "Black Leather Commander Eyepatch"
+  },
+  "clear_slots": [
+    "14_cloak_mantle.png"
+  ]
+}

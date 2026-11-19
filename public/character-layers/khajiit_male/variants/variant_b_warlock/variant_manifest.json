@@ -1,0 +1,15 @@
+{
+  "character_id": "khajiit_male",
+  "variant_id": "variant_b_warlock",
+  "label": "Rimmen Moon-Bishop Warlock",
+  "archetype": "mage",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\scratch\\flow_chrome_bridge\\outputs\\khajiit_male_variant_b_warlock_v1.jpg",
+  "provided_slots": {
+    "08_eyes.png": "Luminous Mystical Cyan Feline Eyes",
+    "10_face_markings.png": "Glowing Azure Lunar Cheek Runes",
+    "11_facial_hair.png": "Braided Whisker Chin Beard & Moon Beads",
+    "12_earring_ears.png": "Gold & Turquoise Bead Ear Chains",
+    "13_armor_torso.png": "High-Collared Teal-Violet & Gold Silk Vestments",
+    "14_cloak_mantle.png": "Sapphire Crescent Moon Pendant Necklace"
+  }
+}

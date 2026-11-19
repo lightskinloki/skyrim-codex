@@ -1,0 +1,18 @@
+{
+  "character_id": "argonian_female",
+  "variant_id": "variant_a_histspeaker",
+  "label": "Black Marsh Hist-Speaker Oracle",
+  "archetype": "mage",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\scratch\\flow_chrome_bridge\\outputs\\argonian_female_variant_a_histspeaker_v1.jpg",
+  "clear_slots": [
+    "07_tusks_whiskers.png"
+  ],
+  "provided_slots": {
+    "02_hair_back.png": "Teal & Amber Swamp Feather Plumes",
+    "08_eyes.png": "Warm Amber Slit Eyes",
+    "10_face_markings.png": "Glowing Amber Hist-Sap Scale Dots",
+    "13_armor_torso.png": "Jade-Scale Collar & Emerald Silk Vestments",
+    "14_cloak_mantle.png": "Turquoise Bead Chain & Amber Hist Amulet",
+    "16_headgear_horns.png": "Polished Ivory-Gold Drake Horns"
+  }
+}

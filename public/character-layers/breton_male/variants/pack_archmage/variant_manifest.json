@@ -1,0 +1,20 @@
+{
+  "character_id": "breton_male",
+  "variant_id": "pack_archmage",
+  "label": "Winterhold Archmage Robes",
+  "archetype": "mage",
+  "source_bust": "C:\\Users\\fbrown\\.gemini\\antigravity\\brain\\ac48dd77-b7c4-4aef-8695-b94445428f7c\\scratch\\flow_chrome_bridge\\outputs\\pack_breton_male_archmage_v1.jpg",
+  "provided_slots": {
+    "02_hair_back.png": "Long Silver Flowing Mane",
+    "06_mouth.png": "Calm Archmage Expression",
+    "08_eyes.png": "Blind Scarred Eye & Arcane Azure Eye",
+    "09_eyebrows.png": "Silver-White Stern Brows",
+    "10_face_markings.png": "Celestial Gold Third-Eye Rune",
+    "11_facial_hair.png": "Trimmed Silver Archmage Beard",
+    "12_earring_ears.png": "Human Ear",
+    "13_armor_torso.png": "Archmage Brown & Gold Rune Silk Robes",
+    "14_cloak_mantle.png": "Snow-Pelt Mantle & Arcane Chain Clasp",
+    "15_hair_front.png": "Silver Aristocrat Sweep & Collar Lock"
+  },
+  "clear_slots": []
+}
