@@ -17,7 +17,11 @@ import { AdvancedForge } from "./AdvancedForge";
 import { buildSampleModule } from "./wizard/sampleModule";
 import { pushSnapshot } from "./wizard/history";
 import { SAMPLE } from "./wizard/sampleText";
-import { BUNDLED_MODULES } from "@/data/bundledModules";
+import { BUNDLED_MODULES as EXISTING_BUNDLED_MODULES } from "@/data/bundledModules";
+import { BLEEDING_STAIR_RETURN } from "@/data/bleedingStairReturn";
+
+// Session content only; the existing Forge/Live Play workflow is unchanged.
+const BUNDLED_MODULES = [BLEEDING_STAIR_RETURN, ...EXISTING_BUNDLED_MODULES];
 
 export function ModuleBuilder({ onRunModule }: { onRunModule?: (moduleId: string) => void }) {
   const { campaign, update } = useCampaign();
